@@ -192,3 +192,11 @@ imports:
         src: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr4_defconfig
         src_sha256: 24013855fefbe911cf664301940e8b6b514e4961ed414f324dae491f56d6bfe4
         dest_sha256: dd01c067d6761c21a68299d1cdc8a0100902d73366261d635f3c6951b986882c
+  - name: knulli-h700-vendor
+    submodule: third_party/knulli
+    sha: d0e0324d49f534c4cb14ef36a288293333ef8ab0
+    files:
+      - dest: soc/allwinner-h700/vendor/linux/linux.config.fragment
+        src: board/batocera/allwinner/h700/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
