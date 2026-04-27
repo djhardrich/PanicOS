@@ -15,6 +15,9 @@ endif
 # "cannot attach stdin to a TTY-enabled container".
 DOCKER_TTY := $(shell test -t 1 && echo -t)
 
+# Run docker as the host user so Buildroot doesn't refuse (it bails on root).
+DOCKER_USER := $(shell id -u):$(shell id -g)
+
 # ---- Container re-exec ----------------------------------------------------
 ifeq ($(IN_CONTAINER),)
 
@@ -32,18 +35,22 @@ Makefile: ;
 # Re-exec any other goal inside the container.
 %: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
+		--user $(DOCKER_USER) \
 		-v $(PANICOS_ROOT):/work \
 		-w /work \
 		-e IN_CONTAINER=1 \
+		-e HOME=/tmp \
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		make $@
 
 .PHONY: shell
 shell: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
+		--user $(DOCKER_USER) \
 		-v $(PANICOS_ROOT):/work \
 		-w /work \
 		-e IN_CONTAINER=1 \
+		-e HOME=/tmp \
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		bash
 
