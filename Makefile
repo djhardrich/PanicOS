@@ -88,15 +88,15 @@ KERNEL ?=
 
 .PHONY: harness-smoke
 harness-smoke:
-	$(MAKE) _build DEVICE=harness-smoke
+	$(MAKE) _build DEVICE=harness-smoke FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: rg35xx-pro
 rg35xx-pro:
-	$(MAKE) _build DEVICE=rg35xx-pro
+	$(MAKE) _build DEVICE=rg35xx-pro FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: rg35xx-pro-lpddr3
 rg35xx-pro-lpddr3:
-	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3
+	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3 FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: _build
 _build:
