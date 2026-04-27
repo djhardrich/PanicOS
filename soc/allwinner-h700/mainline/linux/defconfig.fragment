@@ -1,0 +1,21 @@
+# Linux kernel — Allwinner H700 mainline flavor.
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="7.0.1"
+# Buildroot constructs the kernel.org URL from the version string.
+
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/linux/patches"
+
+BR2_LINUX_KERNEL_USE_DEFCONFIG=y
+BR2_LINUX_KERNEL_DEFCONFIG="defconfig"
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/linux/linux.config.fragment $(O)/panicos-extras.config.fragment"
+
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+BR2_LINUX_KERNEL_CUSTOM_DTS_PATH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/linux/dts/allwinner"
+
+# Build all H700 DTBs. Implementer fills this list with every
+# basename(.dts) under soc/.../dts/allwinner/ at execution time.
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="allwinner/sun50i-h700-anbernic-rg28xx allwinner/sun50i-h700-anbernic-rg34xx allwinner/sun50i-h700-anbernic-rg34xx-sp allwinner/sun50i-h700-anbernic-rg35xx-2024-rev6-panel allwinner/sun50i-h700-anbernic-rg35xx-h-rev6-panel allwinner/sun50i-h700-anbernic-rg35xx-plus-rev6-panel allwinner/sun50i-h700-anbernic-rg35xx-pro allwinner/sun50i-h700-anbernic-rg35xx-sp-v2-panel allwinner/sun50i-h700-anbernic-rg40xx-h allwinner/sun50i-h700-anbernic-rg40xx-h-v2-panel allwinner/sun50i-h700-anbernic-rg40xx-v allwinner/sun50i-h700-anbernic-rg40xx-v-v2-panel allwinner/sun50i-h700-anbernic-rgcubexx"
+
+BR2_LINUX_KERNEL_GZIP=y
