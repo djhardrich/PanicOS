@@ -97,6 +97,11 @@ rg35xx-pro:
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@# Relax Buildroot's apply-patches.sh from fuzz=0 to fuzz=2. Handheld-distro
+	@# kernel patches drift against upstream kernel point releases; strict fuzz=0
+	@# rejects them on cosmetic context shifts. Idempotent — sed is a no-op once
+	@# applied.
+	@sed -i 's/patch -F0 /patch -F2 /' "$(BUILDROOT)/support/scripts/apply-patches.sh"
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
 	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
