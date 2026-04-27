@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
         git \
         gzip \
+        libgnutls28-dev \
         libncurses-dev \
         libssl-dev \
         locales \
