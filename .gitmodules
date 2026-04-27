@@ -5,3 +5,7 @@
 	path = third_party/rocknix
 	url = https://github.com/ROCKNIX/distribution.git
 	branch = next
+[submodule "third_party/knulli"]
+	path = third_party/knulli
+	url = https://github.com/knulli-cfw/distribution.git
+	branch = knulli-main
