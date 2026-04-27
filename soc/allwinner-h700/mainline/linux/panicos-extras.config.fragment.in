@@ -17,3 +17,10 @@ CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
 CONFIG_INITRAMFS_SOURCE="@PANICOS_INITRAMFS_PATH@"
 CONFIG_INITRAMFS_COMPRESSION_GZIP=y
+
+# Don't bake external firmware blobs into the kernel image — ROCKNIX's
+# linux.aarch64.conf sets CONFIG_EXTRA_FIRMWARE for blobs they ship via
+# their kernel-firmware package. We install firmware in /lib/firmware
+# of the rootfs instead (later plans).
+CONFIG_EXTRA_FIRMWARE=""
+CONFIG_EXTRA_FIRMWARE_DIR=""
