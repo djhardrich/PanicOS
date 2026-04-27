@@ -13,8 +13,11 @@ BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="7.0.1"
 
 BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/linux/patches"
 
-BR2_LINUX_KERNEL_USE_DEFCONFIG=y
-BR2_LINUX_KERNEL_DEFCONFIG="defconfig"
+# Use the kernel's arch-default defconfig (arch/arm64/configs/defconfig).
+# BR2_LINUX_KERNEL_USE_DEFCONFIG appends "_defconfig" to whatever value you
+# pick — for the literal arch default, USE_ARCH_DEFAULT_CONFIG is the right
+# knob.
+BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/linux/linux.config.fragment $(O)/panicos-extras.config.fragment"
 
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
