@@ -33,6 +33,8 @@ container-image:
 Makefile: ;
 
 # Re-exec any other goal inside the container.
+# $(MAKEOVERRIDES) propagates user-supplied command-line var assignments
+# (e.g. KERNEL=vendor, FLAVOR=desktop) into the container's make.
 %: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
 		--user $(DOCKER_USER) \
@@ -41,7 +43,7 @@ Makefile: ;
 		-e IN_CONTAINER=1 \
 		-e HOME=/tmp \
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
-		make $@
+		make $@ $(MAKEOVERRIDES)
 
 .PHONY: shell
 shell: container-image
