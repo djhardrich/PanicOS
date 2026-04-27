@@ -24,9 +24,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         patch \
         perl \
         python3 \
+        python3-dev \
         rsync \
         sed \
         squashfs-tools \
+        swig \
         tar \
         u-boot-tools \
         unzip \
