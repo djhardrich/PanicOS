@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         gzip \
         libncurses-dev \
+        libssl-dev \
         locales \
         make \
         mtools \
