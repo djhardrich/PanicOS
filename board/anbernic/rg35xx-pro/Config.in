@@ -1,0 +1,6 @@
+config PANICOS_DEVICE_RG35XX_PRO
+	bool "anbernic/rg35xx-pro (Allwinner H700)"
+	select PANICOS_SOC_ALLWINNER_H700
+	help
+	  Anbernic RG35XX Pro. Allwinner H700. Default kernel flavor:
+	  mainline (via ROCKNIX). Vendor flavor is reserved for Plan 03.

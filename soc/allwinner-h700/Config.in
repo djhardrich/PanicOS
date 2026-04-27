@@ -1,0 +1,9 @@
+config PANICOS_SOC_ALLWINNER_H700
+	bool "Allwinner H700 (sun50i-h700)"
+	help
+	  Allwinner H700. Used by the Anbernic RG35XX family (H, Plus,
+	  Pro, 2024, SP), RG28XX, RG34XX, RG40XX, and RGCubeXX.
+
+if PANICOS_SOC_ALLWINNER_H700
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-h700/mainline/Config.in"
+endif
