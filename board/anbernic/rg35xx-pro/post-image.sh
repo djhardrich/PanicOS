@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Buildroot post-image for Anbernic RG35XX Pro.
-# $1 = genimage template path (BR2_ROOTFS_POST_SCRIPT_ARGS).
-# Buildroot exports BINARIES_DIR, BR2_EXTERNAL_PANICOS_PATH, BR2_CONFIG.
+# Buildroot calls post-image scripts as:
+#   $0 $BINARIES_DIR $BR2_ROOTFS_POST_SCRIPT_ARGS $BR2_ROOTFS_POST_IMAGE_SCRIPT_ARGS
+# So $1 = BINARIES_DIR (also exported as env), $2 = our genimage template path.
 # CWD when this script runs is the Buildroot source tree, NOT $BINARIES_DIR.
 
 set -euo pipefail
 
+shift  # drop the BINARIES_DIR arg; we use the env var.
 GENIMAGE_TEMPLATE="$1"
 : "${BINARIES_DIR:?BINARIES_DIR not set by Buildroot}"
 SOC="allwinner-h700"
