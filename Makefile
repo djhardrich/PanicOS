@@ -79,7 +79,7 @@ list-devices:
 
 # Resolve <device> -> <soc> by reading board/*/<device>/Config.in.
 define _device_soc
-$(shell awk '/select PANICOS_SOC_/ { sub(/select PANICOS_SOC_/,""); gsub(/_/,"-"); print tolower($$0); exit }' \
+$(shell awk '/select PANICOS_SOC_/ { sub(/^[[:space:]]+/,""); sub(/select PANICOS_SOC_/,""); gsub(/_/,"-"); print tolower($$0); exit }' \
     $(shell find board -mindepth 3 -maxdepth 3 -path "*/$(1)/Config.in" 2>/dev/null | head -1) 2>/dev/null)
 endef
 

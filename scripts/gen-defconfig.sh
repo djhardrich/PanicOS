@@ -3,8 +3,11 @@
 #
 # A defconfig = concatenation of:
 #   board/*/<device>/defconfig.fragment
-#   flavors/<flavor>/defconfig.fragment   (optional, may not exist yet)
-#   soc/<soc>/<kernel>/defconfig.fragment (optional, only when --kernel given)
+#   flavors/<flavor>/defconfig.fragment              (optional)
+#   soc/<soc>/<kernel>/**/defconfig.fragment         (all, recursive, when --kernel given)
+#
+# The soc tree may have subdirs (e.g. linux/, uboot/) each with their own
+# defconfig.fragment; we concatenate every one we find.
 #
 # Empty fragments are tolerated. Missing device fragment is an error.
 
@@ -42,9 +45,16 @@ if [ -z "$DEVICE_FRAGMENT" ] || [ ! -f "$DEVICE_FRAGMENT" ]; then
 fi
 
 FLAVOR_FRAGMENT="$ROOT/flavors/$FLAVOR/defconfig.fragment"
-SOC_FRAGMENT=""
+
+# Collect soc fragments (sorted, recursive) when --soc + --kernel are given.
+SOC_FRAGMENTS=()
 if [ -n "$KERNEL" ] && [ -n "$SOC" ]; then
-	SOC_FRAGMENT="$ROOT/soc/$SOC/$KERNEL/defconfig.fragment"
+	SOC_DIR="$ROOT/soc/$SOC/$KERNEL"
+	if [ -d "$SOC_DIR" ]; then
+		while IFS= read -r f; do
+			SOC_FRAGMENTS+=("$f")
+		done < <(find "$SOC_DIR" -name 'defconfig.fragment' -type f | LC_ALL=C sort)
+	fi
 fi
 
 mkdir -p "$(dirname "$OUTPUT")"
@@ -54,5 +64,12 @@ mkdir -p "$(dirname "$OUTPUT")"
 	echo
 	cat "$DEVICE_FRAGMENT"
 	[ -f "$FLAVOR_FRAGMENT" ] && { echo; cat "$FLAVOR_FRAGMENT"; } || true
-	[ -n "$SOC_FRAGMENT" ] && [ -f "$SOC_FRAGMENT" ] && { echo; cat "$SOC_FRAGMENT"; } || true
+	if [ ${#SOC_FRAGMENTS[@]} -gt 0 ]; then
+		for f in "${SOC_FRAGMENTS[@]}"; do
+			[ -f "$f" ] || continue
+			echo
+			echo "# from: ${f#$ROOT/}"
+			cat "$f"
+		done
+	fi
 } > "$OUTPUT"
