@@ -1,0 +1,29 @@
+# Linux kernel — Allwinner H700 vendor (Knulli BSP) flavor.
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_GIT=y
+BR2_LINUX_KERNEL_CUSTOM_REPO_URL="https://github.com/orangepi-xunlong/linux-orangepi.git"
+BR2_LINUX_KERNEL_CUSTOM_REPO_VERSION="orange-pi-4.9-sun50iw9"
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="4.9.170"
+
+# Patches (initially empty; RT and other tweaks land here later).
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/vendor/linux/patches"
+
+# Vendor BSP has no upstream defconfig that matches our needs — use
+# Knulli's full kernel config (concatenated with panicos-extras at build
+# time by the Makefile; see Task 7).
+BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
+BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="$(O)/vendor-linux.config"
+
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+# DTBs come from the BSP kernel's own arch/arm64/boot/dts/allwinner/.
+# Implementer fills with Knulli's BR2_LINUX_KERNEL_INTREE_DTS_NAME at
+# execution time (verified against Knulli's defconfig + actual files in
+# the kernel tree once it's checked out).
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="<fill-in>"
+
+BR2_LINUX_KERNEL_GZIP=y
+
+# Toolchain headers — the closest pre-defined Buildroot LTS that doesn't
+# patch-conflict with our vendor source. 4.9 → 5.10 should be safe.
+BR2_KERNEL_HEADERS_5_10=y
