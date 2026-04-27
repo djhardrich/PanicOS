@@ -108,12 +108,12 @@ cat third_party/rocknix/projects/ROCKNIX/devices/H700/packages/u-boot/package.mk
 
 - [ ] **Step 2.3: Determine which Buildroot mechanism applies**
 
-For each (kernel and U-Boot), one of these:
-- **Tarball from a known site** → use Buildroot's `..._VERSION` + `..._SITE` (custom tarball)
-- **Git checkout at a tag/SHA** → use `..._VERSION` + `..._SITE` with `..._SITE_METHOD=git`
-- **Custom kernel.org tarball that doesn't exist there (e.g. ROCKNIX's `7.0.1` URL)** → ROCKNIX is hosting it themselves or applying patches over a real upstream version. Use `BR2_LINUX_KERNEL_CUSTOM_TARBALL` pointing at the real reachable URL.
+For each (kernel and U-Boot), one of:
+- **Tarball from kernel.org or a known site** → use Buildroot's `..._VERSION` + the upstream `..._SITE` (kernel.org `v7.x/`, denx, etc.)
+- **GitHub release tarball** → `..._VERSION` + `..._SITE` pointing at the release tarball URL
+- **Git checkout at a tag/SHA** → `..._VERSION` + `..._SITE` with `..._SITE_METHOD=git`
 
-If the URL in ROCKNIX's package.mk doesn't actually resolve (e.g. 404 from kernel.org for `v7.x`), report this as a `DONE_WITH_CONCERNS` and surface the resolution: ROCKNIX likely fetches an upstream version (e.g. 6.13.x) and applies a patch series that bumps version strings. Use the **upstream** version in our `source.mk`. The patch series we copy in Task 3 will handle the rest.
+For reference at the time of this plan: Linux **7.0.1** (released 2026-04-22) is current stable on kernel.org under `pub/linux/kernel/v7.x/`. U-Boot **v2025.07-rc3** is a real GitHub release tarball. Both URLs in ROCKNIX's `package.mk` should resolve directly — no version translation needed. If either URL is unreachable at execution time, fall back to the closest stable release at kernel.org / U-Boot's GitHub releases and document the substitution in `source.manifest`.
 
 - [ ] **Step 2.4: Write `soc/allwinner-h700/vendor/linux/source.mk`**
 
