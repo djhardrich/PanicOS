@@ -15,6 +15,18 @@ DEFAULT_DTB="sun50i-h700-anbernic-rg35xx-pro.dtb"
 
 echo ">>> post-image: assembling RG35XX Pro disk image"
 
+# Buildroot's u-boot package only copies a subset of build outputs. The
+# combined SPL+ATF+U-Boot blob u-boot-sunxi-with-spl.bin is produced by
+# binman during U-Boot's build but isn't in UBOOT_BINS, so we fetch it
+# directly from the build dir.
+UBOOT_BUILD_DIR="${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/uboot-custom"
+if [ -f "$UBOOT_BUILD_DIR/u-boot-sunxi-with-spl.bin" ]; then
+    cp "$UBOOT_BUILD_DIR/u-boot-sunxi-with-spl.bin" "$BINARIES_DIR/"
+elif [ ! -f "$BINARIES_DIR/u-boot-sunxi-with-spl.bin" ]; then
+    echo "error: u-boot-sunxi-with-spl.bin not found in $UBOOT_BUILD_DIR" >&2
+    exit 1
+fi
+
 mkdir -p "$BINARIES_DIR/dtbs/$SOC"
 cp "$BINARIES_DIR"/*.dtb "$BINARIES_DIR/dtbs/$SOC/" 2>/dev/null || true
 
