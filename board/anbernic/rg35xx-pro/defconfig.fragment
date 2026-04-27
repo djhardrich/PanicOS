@@ -6,7 +6,8 @@ BR2_TARGET_GENERIC_ISSUE="PanicOS — RG35XX Pro (LPDDR4)"
 # RG35XX Pro retail-default DRAM variant: LPDDR4 (DCDC3 = 1100 mV).
 # For LPDDR3 hardware (less common variant), build the rg35xx-pro-lpddr3
 # device target instead.
-BR2_TARGET_UBOOT_DEFCONFIG="anbernic_rg35xx_h700_lpddr4"
+# BOARDNAME drives `make <BOARDNAME>_defconfig` in U-Boot's source.
+BR2_TARGET_UBOOT_BOARDNAME="anbernic_rg35xx_h700_lpddr4"
 
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro/post-image.sh"
 BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro/genimage.cfg.in"

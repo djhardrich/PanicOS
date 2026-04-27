@@ -4,7 +4,8 @@ BR2_TARGET_GENERIC_HOSTNAME="panicos-rg35xx-pro-lpddr3"
 BR2_TARGET_GENERIC_ISSUE="PanicOS — RG35XX Pro (LPDDR3)"
 
 # RG35XX Pro LPDDR3 DRAM variant: DCDC3 = 1200 mV, LPDDR3-specific timings.
-BR2_TARGET_UBOOT_DEFCONFIG="anbernic_rg35xx_h700_lpddr3"
+# BOARDNAME drives `make <BOARDNAME>_defconfig` in U-Boot's source.
+BR2_TARGET_UBOOT_BOARDNAME="anbernic_rg35xx_h700_lpddr3"
 
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro-lpddr3/post-image.sh"
 BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro-lpddr3/genimage.cfg.in"
