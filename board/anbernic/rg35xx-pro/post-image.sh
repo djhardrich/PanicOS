@@ -11,9 +11,23 @@ shift  # drop the BINARIES_DIR arg; we use the env var.
 GENIMAGE_TEMPLATE="$1"
 : "${BINARIES_DIR:?BINARIES_DIR not set by Buildroot}"
 SOC="allwinner-h700"
-DEFAULT_DTB="sun50i-h700-anbernic-rg35xx-pro.dtb"
 
-echo ">>> post-image: assembling RG35XX Pro disk image"
+# Read the kernel flavor (mainline | vendor) from Buildroot .config so the
+# DTB-handling logic can dispatch. mainline produces ~17 mainline-named DTBs
+# (sun50i-h700-anbernic-*); vendor produces a single BSP DTB (sun50iw9p1-soc).
+read_kconfig() {
+    local key="$1" def="$2"
+    grep "^${key}=" "$BR2_CONFIG" | head -1 | cut -d= -f2- | tr -d '"' || echo "$def"
+}
+KERNEL_FLAVOR="$(read_kconfig PANICOS_KERNEL_FLAVOR_NAME mainline)"
+
+if [ "$KERNEL_FLAVOR" = "vendor" ]; then
+    DEFAULT_DTB="sun50iw9p1-soc.dtb"
+else
+    DEFAULT_DTB="sun50i-h700-anbernic-rg35xx-pro.dtb"
+fi
+
+echo ">>> post-image: assembling RG35XX Pro disk image (kernel: $KERNEL_FLAVOR)"
 
 # Buildroot's u-boot package only copies a subset of build outputs. The
 # combined SPL+ATF+U-Boot blob u-boot-sunxi-with-spl.bin is produced by
