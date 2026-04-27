@@ -1,0 +1,4 @@
+output/
+.cache/
+*.swp
+.env.local
