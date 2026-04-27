@@ -1,0 +1,9 @@
+# harness-smoke: minimum to make Buildroot produce a rootfs.
+BR2_aarch64=y
+BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+BR2_TARGET_GENERIC_HOSTNAME="panicos-smoke"
+BR2_TARGET_GENERIC_ISSUE="PanicOS smoke"
+BR2_TARGET_ROOTFS_TAR=y
+# No kernel, no bootloader: smoke test only validates the harness.
+# BR2_LINUX_KERNEL is not set
+# BR2_TARGET_UBOOT is not set

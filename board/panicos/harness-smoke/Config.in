@@ -1,0 +1,6 @@
+config PANICOS_DEVICE_HARNESS_SMOKE
+	bool "harness-smoke (generic ARM64, no real device)"
+	help
+	  Pseudo-device used to smoke-test the PanicOS build harness.
+	  Builds a generic AArch64 rootfs with BusyBox. Not flashable
+	  to any real hardware.
