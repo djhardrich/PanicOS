@@ -10,6 +10,11 @@ ifeq ($(DOCKER_TAG),)
 DOCKER_TAG := dev
 endif
 
+# Pass -t to docker only when stdout is a TTY (interactive shell).
+# Without this, non-interactive invocations (CI, background, piped) fail with
+# "cannot attach stdin to a TTY-enabled container".
+DOCKER_TTY := $(shell test -t 1 && echo -t)
+
 # ---- Container re-exec ----------------------------------------------------
 ifeq ($(IN_CONTAINER),)
 
@@ -26,7 +31,7 @@ Makefile: ;
 
 # Re-exec any other goal inside the container.
 %: container-image
-	@docker run --rm -it \
+	@docker run --rm -i $(DOCKER_TTY) \
 		-v $(PANICOS_ROOT):/work \
 		-w /work \
 		-e IN_CONTAINER=1 \
@@ -35,7 +40,7 @@ Makefile: ;
 
 .PHONY: shell
 shell: container-image
-	@docker run --rm -it \
+	@docker run --rm -i $(DOCKER_TTY) \
 		-v $(PANICOS_ROOT):/work \
 		-w /work \
 		-e IN_CONTAINER=1 \
