@@ -1,6 +1,8 @@
 menu "PanicOS"
 
 source "$BR2_EXTERNAL_PANICOS_PATH/kconfig/devices.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/kconfig/socs.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/kconfig/flavors.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/kconfig/sizes.in"
 
 endmenu

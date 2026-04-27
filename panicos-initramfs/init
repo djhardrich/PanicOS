@@ -1,0 +1,58 @@
+#!/bin/sh
+# PanicOS initramfs — loop-mount the selected squashfs and switch_root.
+#
+# Reads /boot/panicos-active.cfg of the form:
+#     IMAGE=panicos-stable.squashfs
+# and mounts /system/$IMAGE.
+
+set -e
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+mkdir -p /proc /sys /dev /run /boot /system /sysroot
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mount -t tmpfs tmpfs /run
+
+panic() {
+    echo "PANIC: $*" >&2
+    echo "Dropping to shell. Type exit to reboot." >&2
+    /bin/sh
+    reboot -f
+}
+
+BOOT_DEV=/dev/mmcblk0p1
+SYSTEM_DEV=/dev/mmcblk0p2
+
+mount -o ro -t vfat "$BOOT_DEV" /boot \
+    || panic "could not mount boot partition $BOOT_DEV"
+
+IMAGE=panicos-rg35xx-pro-minimal.squashfs
+if [ -f /boot/panicos-active.cfg ]; then
+    # shellcheck disable=SC1091
+    . /boot/panicos-active.cfg
+fi
+[ -n "$IMAGE" ] || panic "IMAGE not set in panicos-active.cfg"
+
+echo ">>> PanicOS initramfs: booting $IMAGE"
+
+mount -o ro -t ext4 "$SYSTEM_DEV" /system \
+    || panic "could not mount system partition $SYSTEM_DEV"
+
+[ -f "/system/$IMAGE" ] || panic "/system/$IMAGE not found"
+
+LOOPDEV=$(losetup -f)
+losetup -r "$LOOPDEV" "/system/$IMAGE" \
+    || panic "losetup of /system/$IMAGE failed"
+
+mount -o ro -t squashfs "$LOOPDEV" /sysroot \
+    || panic "mount of squashfs failed"
+
+for m in proc sys dev run boot system; do
+    mkdir -p "/sysroot/$m"
+    mount --move "/$m" "/sysroot/$m"
+done
+
+exec switch_root /sysroot /sbin/init

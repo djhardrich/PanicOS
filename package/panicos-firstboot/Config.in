@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PANICOS_FIRSTBOOT
+	bool "panicos-firstboot"
+	depends on BR2_INIT_SYSTEMD
+	select BR2_PACKAGE_UTIL_LINUX
+	select BR2_PACKAGE_E2FSPROGS
+	help
+	  PanicOS first-boot service: grows the overlay partition and
+	  ext4 to fill remaining free space. Self-disabling.

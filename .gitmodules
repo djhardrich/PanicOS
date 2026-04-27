@@ -1,3 +1,7 @@
 [submodule "third_party/buildroot"]
 	path = third_party/buildroot
 	url = https://gitlab.com/buildroot.org/buildroot.git
+[submodule "third_party/rocknix"]
+	path = third_party/rocknix
+	url = https://github.com/ROCKNIX/distribution.git
+	branch = next

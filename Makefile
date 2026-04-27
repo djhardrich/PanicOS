@@ -77,8 +77,12 @@ list-devices:
 	@find board -mindepth 3 -maxdepth 3 -name Config.in \
 		-printf '%h\n' | sed 's|^board/||' | sort
 
-# Per-device target: build with a generated defconfig.
-# Usage: make <device> [FLAVOR=minimal] [KERNEL=vendor]
+# Resolve <device> -> <soc> by reading board/*/<device>/Config.in.
+define _device_soc
+$(shell awk '/select PANICOS_SOC_/ { sub(/^[[:space:]]+/,""); sub(/select PANICOS_SOC_/,""); gsub(/_/,"-"); print tolower($$0); exit }' \
+    $(shell find board -mindepth 3 -maxdepth 3 -path "*/$(1)/Config.in" 2>/dev/null | head -1) 2>/dev/null)
+endef
+
 FLAVOR ?= minimal
 KERNEL ?=
 
@@ -86,15 +90,38 @@ KERNEL ?=
 harness-smoke:
 	$(MAKE) _build DEVICE=harness-smoke
 
+.PHONY: rg35xx-pro
+rg35xx-pro:
+	$(MAKE) _build DEVICE=rg35xx-pro
+
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
-	@OUT="$(OUTPUT_BASE)/$(DEVICE)-$(FLAVOR)$(if $(KERNEL),-$(KERNEL))"; \
+	@# Relax Buildroot's apply-patches.sh from fuzz=0 to fuzz=2. Handheld-distro
+	@# kernel patches drift against upstream kernel point releases; strict fuzz=0
+	@# rejects them on cosmetic context shifts. Idempotent — sed is a no-op once
+	@# applied.
+	@sed -i 's/patch -F0 /patch -F2 /' "$(BUILDROOT)/support/scripts/apply-patches.sh"
+	@SOC="$(call _device_soc,$(DEVICE))"; \
+	K="$(KERNEL)"; \
+	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	OUT="$(OUTPUT_BASE)/$(DEVICE)-$(FLAVOR)$${K:+-$$K}"; \
 	mkdir -p "$$OUT"; \
+	if [ -n "$$SOC" ]; then \
+		echo ">>> Building initramfs"; \
+		$(PANICOS_ROOT)/scripts/build-initramfs.sh; \
+		EXTRAS_IN="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/panicos-extras.config.fragment.in"; \
+		EXTRAS_OUT="$$OUT/panicos-extras.config.fragment"; \
+		if [ -f "$$EXTRAS_IN" ]; then \
+			sed "s|@PANICOS_INITRAMFS_PATH@|$(PANICOS_ROOT)/output/panicos-initramfs.cpio.gz|" \
+				"$$EXTRAS_IN" > "$$EXTRAS_OUT"; \
+		fi; \
+	fi; \
 	scripts/gen-defconfig.sh \
 		--device "$(DEVICE)" \
 		--flavor "$(FLAVOR)" \
-		$(if $(KERNEL),--kernel "$(KERNEL)") \
+		$${SOC:+--soc "$$SOC"} \
+		$${K:+--kernel "$$K"} \
 		--output "$$OUT/.defconfig"; \
 	$(MAKE) -C "$(BUILDROOT)" \
 		BR2_EXTERNAL=$(PANICOS_ROOT) \

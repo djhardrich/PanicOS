@@ -1,0 +1,34 @@
+choice
+	prompt "SoC family (selected by device)"
+	default PANICOS_SOC_NONE
+
+config PANICOS_SOC_NONE
+	bool "(none — harness-smoke / generic)"
+
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-h700/Config.in"
+
+endchoice
+
+choice
+	prompt "Kernel flavor"
+	default PANICOS_KERNEL_FLAVOR_MAINLINE
+	depends on !PANICOS_SOC_NONE
+
+config PANICOS_KERNEL_FLAVOR_MAINLINE
+	bool "mainline"
+	help
+	  Linux mainline (kernel.org) + ROCKNIX patches.
+
+config PANICOS_KERNEL_FLAVOR_VENDOR
+	bool "vendor"
+	help
+	  Vendor BSP kernel (Knulli-imported). Requires Plan 03 to be
+	  complete; building with this flavor will fail until the
+	  soc/<soc>/vendor/ tree exists.
+
+endchoice
+
+config PANICOS_KERNEL_FLAVOR_NAME
+	string
+	default "mainline" if PANICOS_KERNEL_FLAVOR_MAINLINE
+	default "vendor" if PANICOS_KERNEL_FLAVOR_VENDOR

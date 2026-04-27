@@ -1,0 +1,19 @@
+rocknix_submodule_sha: "ca607bfa782cb24c65a2424c0213340c34d9c5eb"
+rocknix_branch: "next"
+imported_at: "2026-04-27T12:14:43Z"
+sources:
+  - dest: mainline/linux/patches/0100-.../
+    origin: third_party/rocknix/projects/ROCKNIX/packages/linux/patches/mainline/
+  - dest: mainline/linux/patches/0200-.../
+    origin: third_party/rocknix/projects/ROCKNIX/devices/H700/patches/linux/
+    note: "*.disabled patches excluded"
+  - dest: mainline/linux/patches/0900-.../
+    origin: third_party/rocknix/projects/ROCKNIX/packages/linux/patches/7.0/
+  - dest: mainline/linux/linux.config.fragment
+    origin: third_party/rocknix/projects/ROCKNIX/devices/H700/linux/linux.aarch64.conf
+  - dest: mainline/linux/dts/allwinner/
+    origin: third_party/rocknix/projects/ROCKNIX/devices/H700/linux/dts/allwinner/
+  - dest: mainline/uboot/patches/
+    origin: third_party/rocknix/projects/ROCKNIX/devices/H700/packages/u-boot/patches/
+  - dest: mainline/uboot/defconfig-name
+    value: anbernic_rg35xx_h700_defconfig

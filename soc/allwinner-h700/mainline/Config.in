@@ -1,0 +1,2 @@
+# Mainline-flavor Kconfig for Allwinner H700.
+# Empty — kernel/U-Boot wiring is handled via defconfig.fragment.

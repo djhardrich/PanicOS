@@ -1,0 +1,25 @@
+menu "Image partition sizes"
+	depends on !PANICOS_SOC_NONE
+
+config PANICOS_BOOT_PARTITION_SIZE_MB
+	int "Boot partition size (MB)"
+	default 256
+	help
+	  FAT32 boot partition. Holds U-Boot, kernel, DTBs, and
+	  panicos-active.cfg. The initramfs is embedded in the kernel.
+
+config PANICOS_SYSTEM_PARTITION_SIZE_MB
+	int "System partition size (MB)"
+	default 8192
+	help
+	  ext4 partition holding one or more .squashfs images. Selection
+	  via panicos-active.cfg on the boot partition.
+
+config PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB
+	int "Overlay partition initial size (MB)"
+	default 64
+	help
+	  ext4 overlay partition, grown to fill free SD space on first
+	  boot by the panicos-firstboot service.
+
+endmenu

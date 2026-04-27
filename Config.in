@@ -1,1 +1,2 @@
 source "$BR2_EXTERNAL_PANICOS_PATH/kconfig/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/Config.in"

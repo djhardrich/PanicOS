@@ -1,0 +1,5 @@
+menu "PanicOS packages"
+
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-firstboot/Config.in"
+
+endmenu
