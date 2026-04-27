@@ -49,11 +49,22 @@ FLAVOR_FRAGMENT="$ROOT/flavors/$FLAVOR/defconfig.fragment"
 # Collect soc fragments (sorted, recursive) when --soc + --kernel are given.
 SOC_FRAGMENTS=()
 if [ -n "$KERNEL" ] && [ -n "$SOC" ]; then
+	# Flavor-specific fragments (under soc/<soc>/<kernel>/)
 	SOC_DIR="$ROOT/soc/$SOC/$KERNEL"
 	if [ -d "$SOC_DIR" ]; then
 		while IFS= read -r f; do
 			SOC_FRAGMENTS+=("$f")
 		done < <(find "$SOC_DIR" -name 'defconfig.fragment' -type f | LC_ALL=C sort)
+	fi
+	# Flavor-independent fragments (e.g. soc/<soc>/uboot/defconfig.fragment).
+	# Walk soc/<soc>/<thing>/defconfig.fragment but exclude per-flavor subdirs.
+	SOC_SHARED="$ROOT/soc/$SOC"
+	if [ -d "$SOC_SHARED" ]; then
+		while IFS= read -r f; do
+			SOC_FRAGMENTS+=("$f")
+		done < <(find "$SOC_SHARED" -mindepth 2 -maxdepth 3 -name 'defconfig.fragment' -type f \
+		         -not -path "*/mainline/*" -not -path "*/vendor/*" \
+		         | LC_ALL=C sort)
 	fi
 fi
 

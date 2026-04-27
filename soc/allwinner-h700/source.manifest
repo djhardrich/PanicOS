@@ -13,13 +13,13 @@ sources:
     origin: third_party/rocknix/projects/ROCKNIX/devices/H700/linux/linux.aarch64.conf
   - dest: mainline/linux/dts/allwinner/
     origin: third_party/rocknix/projects/ROCKNIX/devices/H700/linux/dts/allwinner/
-  - dest: mainline/uboot/patches/0001-Update-dram_sun50i_h616.c.patch
+  - dest: uboot/patches/0001-Update-dram_sun50i_h616.c.patch
     origin: third_party/rocknix at SHA 8d65b605 (PR-only branch, not yet merged to next)
     note: "cherry-picked from h700/u-boot: lpddr3 config"
-  - dest: mainline/uboot/patches/0002-Add-anbernic_rg35xx_h700_lpddr3_defconfig.patch
+  - dest: uboot/patches/0002-Add-anbernic_rg35xx_h700_lpddr3_defconfig.patch
     origin: synthesized from third_party/rocknix at SHA 8d65b605
     source_file: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr3_defconfig
-  - dest: mainline/uboot/patches/0003-Add-anbernic_rg35xx_h700_lpddr4_defconfig.patch
+  - dest: uboot/patches/0003-Add-anbernic_rg35xx_h700_lpddr4_defconfig.patch
     origin: synthesized from third_party/rocknix at SHA 8d65b605
     source_file: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr4_defconfig
   - dest: mainline/linux/patches/0223-9999-Update-sun50i-h700-anbernic-rg35xx-2024.dts.patch
