@@ -1,5 +1,11 @@
 # Linux kernel — Allwinner H700 mainline flavor.
 
+# Use vanilla 6.12 LTS for linux-headers (toolchain ABI) so our patched
+# 7.0.1 kernel patches don't get applied to linux-headers extraction.
+# Headers are forward-compatible with 7.0.1 kernels.
+# BR2_KERNEL_HEADERS_AS_KERNEL is not set
+BR2_KERNEL_HEADERS_6_12=y
+
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="7.0.1"

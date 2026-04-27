@@ -41,8 +41,8 @@ index c78753274921..e92c29174c36 100644
 --- a/drivers/input/Makefile
 +++ b/drivers/input/Makefile
 @@ -10,6 +10,7 @@ input-core-y := input.o input-compat.o input-mt.o input-poller.o ff-core.o
- input-core-y += touchscreen.o
- 
+ input-core-y += touchscreen.o touch-overlay.o
+
  obj-$(CONFIG_INPUT_FF_MEMLESS)	+= ff-memless.o
 +obj-$(CONFIG_INPUT_POLLDEV)	+= input-polldev.o
  obj-$(CONFIG_INPUT_SPARSEKMAP)	+= sparse-keymap.o
