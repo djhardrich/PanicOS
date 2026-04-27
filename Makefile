@@ -120,10 +120,6 @@ _build:
 			sed "s|@PANICOS_INITRAMFS_PATH@|$(PANICOS_ROOT)/output/panicos-initramfs.cpio.gz|" \
 				"$$EXTRAS_IN" > "$$EXTRAS_OUT"; \
 		fi; \
-		# Vendor flavor uses USE_CUSTOM_CONFIG (single-file). Concat \
-		# Knulli's full config + our extras into $$OUT/vendor-linux.config; \
-		# defconfig.fragment points BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE \
-		# at $(O)/vendor-linux.config. \
 		if [ "$$K" = "vendor" ]; then \
 			BASE="$(PANICOS_ROOT)/soc/$$SOC/vendor/linux/linux.config.fragment"; \
 			cat "$$BASE" "$$EXTRAS_OUT" > "$$OUT/vendor-linux.config"; \
