@@ -16,11 +16,18 @@ BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
 BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="$(O)/vendor-linux.config"
 
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
-# DTBs come from the BSP kernel's own arch/arm64/boot/dts/allwinner/.
-# Implementer fills with Knulli's BR2_LINUX_KERNEL_INTREE_DTS_NAME at
-# execution time (verified against Knulli's defconfig + actual files in
-# the kernel tree once it's checked out).
-BR2_LINUX_KERNEL_INTREE_DTS_NAME="<fill-in>"
+# BSP kernel DTBs live in arch/arm64/boot/dts/sunxi/ (NOT allwinner/ —
+# the BSP fork uses a pre-mainline DT layout). Only one H700 DTS exists
+# in the BSP: sun50iw9p1-soc.dts. Single DTB for all H700 hardware.
+#
+# CAVEAT: Knulli relies on U-Boot's compiled-in DTB (in their pre-built
+# boot_package.fex blob) to drive board-specific config. For our vendor
+# flavor we build mainline U-Boot v2026.01, which expects mainline-format
+# DTBs with mainline-style hardware bindings. The 4.9 BSP kernel was
+# written against pre-mainline bindings. Whether this combination boots
+# is a runtime/hardware question requiring on-device verification.
+# Build-time, this value just makes the kernel build complete.
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="sunxi/sun50iw9p1-soc"
 
 BR2_LINUX_KERNEL_GZIP=y
 
