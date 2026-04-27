@@ -1360,7 +1360,7 @@ When all checked, Plan 02 is complete and Plan 03 (ROCKNIX & Knulli importers �
 - Automated ROCKNIX importer (Plan 03)
 - Automated Knulli importer (Plan 03)
 - U-Boot boot menu for image selection (currently file-based via `panicos-active.cfg`)
-- Mainline-kernel-flavor support for H700 (no complete mainline H700 BSP exists yet — vendor only for now)
+- Mainline kernel flavor for H700 — exists in both upstream Linux and ROCKNIX, but Plan 02 ships vendor first to keep one debugging axis. Mainline lands in a follow-up plan.
 - A second device on the same SoC family — Plan 04 (RG353P/V)
 - A device on a different SoC vendor — Plan 04 / 05
 - Userspace beyond minimal (desktop flavor → Plan 06)
