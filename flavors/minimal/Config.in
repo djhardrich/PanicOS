@@ -1,0 +1,6 @@
+config PANICOS_FLAVOR_MINIMAL
+	bool "minimal — BusyBox only, useful for bring-up"
+	help
+	  Smallest possible userspace. BusyBox + init. No X, no Wayland,
+	  no extra packages. Used for new-device bring-up and the build
+	  harness smoke test.
