@@ -1,0 +1,194 @@
+schema_version: 2
+imports:
+  - name: rocknix-h700-mainline
+    submodule: third_party/rocknix
+    sha: ca607bfa782cb24c65a2424c0213340c34d9c5eb
+    files:
+      - dest: soc/allwinner-h700/mainline/linux/patches/0100-0001-gpiolib-of-revert-api-changes-needed-for-joypad-driv.patch
+        src: projects/ROCKNIX/packages/linux/patches/mainline/0001-gpiolib-of-revert-api-changes-needed-for-joypad-driv.patch
+        src_sha256: 38f9246adfda80c9c50d061b4f935317ec4f62cfbcc3f16ceb4ef844113cb8aa
+        dest_sha256: 38f9246adfda80c9c50d061b4f935317ec4f62cfbcc3f16ceb4ef844113cb8aa
+      - dest: soc/allwinner-h700/mainline/linux/patches/0101-0002-input-add-input-polldev-driver.patch
+        src: projects/ROCKNIX/packages/linux/patches/mainline/0002-input-add-input-polldev-driver.patch
+        src_sha256: aa49ec749c71cd97f02a9236ef0d42780229fcb6ee59d6b07ff8acd3abb72303
+        dest_sha256: aa49ec749c71cd97f02a9236ef0d42780229fcb6ee59d6b07ff8acd3abb72303
+      - dest: soc/allwinner-h700/mainline/linux/patches/0102-0003-pwm-add-pwm_set_period.patch
+        src: projects/ROCKNIX/packages/linux/patches/mainline/0003-pwm-add-pwm_set_period.patch
+        src_sha256: 6f0099b67a0ed9d00e60a3f5d3000545e213ee278716054641dfe7cf28042703
+        dest_sha256: 6f0099b67a0ed9d00e60a3f5d3000545e213ee278716054641dfe7cf28042703
+      - dest: soc/allwinner-h700/mainline/linux/patches/0103-0004-input-adc-keys-redirect-keycode-316-to-rocknix-joypa.patch
+        src: projects/ROCKNIX/packages/linux/patches/mainline/0004-input-adc-keys-redirect-keycode-316-to-rocknix-joypa.patch
+        src_sha256: 05f4739d632eaa375d9cab2f94cf554c1e8ad04f4a0700e9b510e031da70e29b
+        dest_sha256: 05f4739d632eaa375d9cab2f94cf554c1e8ad04f4a0700e9b510e031da70e29b
+      - dest: soc/allwinner-h700/mainline/linux/patches/0104-0005-Bluetooth-btrtl-Add-the-support-for-RTL8733BU.patch
+        src: projects/ROCKNIX/packages/linux/patches/mainline/0005-Bluetooth-btrtl-Add-the-support-for-RTL8733BU.patch
+        src_sha256: b4a9ba4cbc09e99730bbe3c40ba02b0021de61c58b2df54f2244a4c01fdb6316
+        dest_sha256: b4a9ba4cbc09e99730bbe3c40ba02b0021de61c58b2df54f2244a4c01fdb6316
+      - dest: soc/allwinner-h700/mainline/linux/patches/0200-0002-rg35xx-enable-HDMI-LCD.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0002-rg35xx-enable-HDMI-LCD.patch
+        src_sha256: cef8d296f731b4c56bf680f1b298ce85eb246b8fd65c80b0165aa8312d458485
+        dest_sha256: cef8d296f731b4c56bf680f1b298ce85eb246b8fd65c80b0165aa8312d458485
+      - dest: soc/allwinner-h700/mainline/linux/patches/0201-0003-Update-sun8i_tcon_top.c.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0003-Update-sun8i_tcon_top.c.patch
+        src_sha256: 4ae3ed690275570d8f3f67342140d60672f961d626b57dd092d2bbdc8a5273ec
+        dest_sha256: 4ae3ed690275570d8f3f67342140d60672f961d626b57dd092d2bbdc8a5273ec
+      - dest: soc/allwinner-h700/mainline/linux/patches/0202-0007-rg35xx-add-GPU-opp.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0007-rg35xx-add-GPU-opp.patch
+        src_sha256: a1d22a410c1efb12dfedf59b34d2496a721039a4ae70a1861e3f0fbd89b4b59a
+        dest_sha256: a1d22a410c1efb12dfedf59b34d2496a721039a4ae70a1861e3f0fbd89b4b59a
+      - dest: soc/allwinner-h700/mainline/linux/patches/0203-0008-sun20i-add-pwm-driver.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0008-sun20i-add-pwm-driver.patch
+        src_sha256: 9fd7bcb892edfc00977cfd3b8a7e44165afe7a6c66b95cb58110207f17ec01e7
+        dest_sha256: 9fd7bcb892edfc00977cfd3b8a7e44165afe7a6c66b95cb58110207f17ec01e7
+      - dest: soc/allwinner-h700/mainline/linux/patches/0204-0009-h616-add-pwm-node.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0009-h616-add-pwm-node.patch
+        src_sha256: 048e1e886cb0448be7ee4d8f3f70515f4d7251093c803416c45011ed73aff782
+        dest_sha256: 048e1e886cb0448be7ee4d8f3f70515f4d7251093c803416c45011ed73aff782
+      - dest: soc/allwinner-h700/mainline/linux/patches/0205-0010-rg35xx-enable-pwm-backlight.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0010-rg35xx-enable-pwm-backlight.patch
+        src_sha256: 4ad01b899c83dc3eff1d0f72410cc18c24bc610dbb8410417c6579f3d245f4c3
+        dest_sha256: 4ad01b899c83dc3eff1d0f72410cc18c24bc610dbb8410417c6579f3d245f4c3
+      - dest: soc/allwinner-h700/mainline/linux/patches/0206-0040-Revert-usb-musb-Fix-hardware-lockup-on-first-Rx-endp.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0040-Revert-usb-musb-Fix-hardware-lockup-on-first-Rx-endp.patch
+        src_sha256: 177c5ad853763d70e8fc07984493624c7ff97f6a71ec22ab461eb28980e6bedb
+        dest_sha256: 177c5ad853763d70e8fc07984493624c7ff97f6a71ec22ab461eb28980e6bedb
+      - dest: soc/allwinner-h700/mainline/linux/patches/0207-0110-v2_20250226_kikuchan98_drm_panel_add_generic_mipi_panel_driver.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0110-v2_20250226_kikuchan98_drm_panel_add_generic_mipi_panel_driver.patch
+        src_sha256: bdc03a67827add205251db947f047ee2f6f4f36192d55bc5112091653be675f0
+        dest_sha256: bdc03a67827add205251db947f047ee2f6f4f36192d55bc5112091653be675f0
+      - dest: soc/allwinner-h700/mainline/linux/patches/0208-0111-rg35xx-2024-use-panel-mipi-dpi-spi-driver.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0111-rg35xx-2024-use-panel-mipi-dpi-spi-driver.patch
+        src_sha256: c90f475998b0ec0312f65ffbf8c818904686b997c1895247dfe5bcaf9eccac66
+        dest_sha256: c90f475998b0ec0312f65ffbf8c818904686b997c1895247dfe5bcaf9eccac66
+      - dest: soc/allwinner-h700/mainline/linux/patches/0209-0124-battery-name.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0124-battery-name.patch
+        src_sha256: 52baeb041d292e32b8836be69f52fbbd18cff104617fdffc6090428c44dfec3b
+        dest_sha256: 52baeb041d292e32b8836be69f52fbbd18cff104617fdffc6090428c44dfec3b
+      - dest: soc/allwinner-h700/mainline/linux/patches/0210-0126-20241018_macroalpha82_rg35xx_add_additional_hardware_support.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0126-20241018_macroalpha82_rg35xx_add_additional_hardware_support.patch
+        src_sha256: 0e51972c8b948230f648a4241796dee60485c4a7876d189532b604b0e5be743b
+        dest_sha256: 0e51972c8b948230f648a4241796dee60485c4a7876d189532b604b0e5be743b
+      - dest: soc/allwinner-h700/mainline/linux/patches/0211-0127-enable-mmc1-for-RG35XX-2024.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0127-enable-mmc1-for-RG35XX-2024.patch
+        src_sha256: 46fbac702ffcc312502f3009d3a6deb8822f910a6b97d9c3dc90129d3d9bd9ab
+        dest_sha256: 46fbac702ffcc312502f3009d3a6deb8822f910a6b97d9c3dc90129d3d9bd9ab
+      - dest: soc/allwinner-h700/mainline/linux/patches/0212-0140-rg35xx-2024-use-rocknix-joypad-driver.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0140-rg35xx-2024-use-rocknix-joypad-driver.patch
+        src_sha256: 8c65d9aa15b36d64146fe9af35983bfac2b020635fc491619acee92b48a2df33
+        dest_sha256: 8c65d9aa15b36d64146fe9af35983bfac2b020635fc491619acee92b48a2df33
+      - dest: soc/allwinner-h700/mainline/linux/patches/0213-0144-Update-sun50i-h700-anbernic-rg35xx-h.dts.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0144-Update-sun50i-h700-anbernic-rg35xx-h.dts.patch
+        src_sha256: ea4059b93a907fe1afe2c5ff73f7f794baef4d51075db7aa4fefa252df3f5863
+        dest_sha256: ea4059b93a907fe1afe2c5ff73f7f794baef4d51075db7aa4fefa252df3f5863
+      - dest: soc/allwinner-h700/mainline/linux/patches/0214-0150-add-forcefeedback.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0150-add-forcefeedback.patch
+        src_sha256: 06610169231e9b4e683550035b689fce59756a5b0ba73418a580212f01776112
+        dest_sha256: 06610169231e9b4e683550035b689fce59756a5b0ba73418a580212f01776112
+      - dest: soc/allwinner-h700/mainline/linux/patches/0215-0151-phy-fix-OTG-host-mode.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0151-phy-fix-OTG-host-mode.patch
+        src_sha256: 25efd76a799b1ed2075363501381dd6e33a5ab12c61f5771c3bcef8d826fa514
+        dest_sha256: 25efd76a799b1ed2075363501381dd6e33a5ab12c61f5771c3bcef8d826fa514
+      - dest: soc/allwinner-h700/mainline/linux/patches/0216-0152-rg35xx-2024-enable-usb-otg.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0152-rg35xx-2024-enable-usb-otg.patch
+        src_sha256: ecfe8291e86eb5882c5298a3dfcae99cd2497e61e9770ea0b0b4b5f463b2a76b
+        dest_sha256: ecfe8291e86eb5882c5298a3dfcae99cd2497e61e9770ea0b0b4b5f463b2a76b
+      - dest: soc/allwinner-h700/mainline/linux/patches/0217-0153-enable-rgb-leds.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0153-enable-rgb-leds.patch
+        src_sha256: 6e9a676bfa1dac06846655146d135c09b68360cf9a58ef11833169fb7627a82f
+        dest_sha256: 6e9a676bfa1dac06846655146d135c09b68360cf9a58ef11833169fb7627a82f
+      - dest: soc/allwinner-h700/mainline/linux/patches/0218-0154-rocknix-dt-id.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0154-rocknix-dt-id.patch
+        src_sha256: 742c8b43006ea8f572acbf43b47a3135aac52a952607d06a4051375ef0672ab8
+        dest_sha256: 742c8b43006ea8f572acbf43b47a3135aac52a952607d06a4051375ef0672ab8
+      - dest: soc/allwinner-h700/mainline/linux/patches/0219-0155-sun4i-set-rgb-connector-as-DSI.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0155-sun4i-set-rgb-connector-as-DSI.patch
+        src_sha256: d12bc0295b2fe954fe9d91646f68a6eb0483c36500543458610b6336717e98ef
+        dest_sha256: d12bc0295b2fe954fe9d91646f68a6eb0483c36500543458610b6336717e98ef
+      - dest: soc/allwinner-h700/mainline/linux/patches/0220-0200-h700-update-opps.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0200-h700-update-opps.patch
+        src_sha256: 8cb23b7d25f6a110116ee070970c0aeaaa488b348a80e94e7d3a120b76f68e89
+        dest_sha256: 8cb23b7d25f6a110116ee070970c0aeaaa488b348a80e94e7d3a120b76f68e89
+      - dest: soc/allwinner-h700/mainline/linux/patches/0221-0204-dts-Enable-hdmi-sound.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0204-dts-Enable-hdmi-sound.patch
+        src_sha256: e2356e07b63fb289e09c584f4db81d25d47db4a6ec925a4d14e553e21573c2c2
+        dest_sha256: e2356e07b63fb289e09c584f4db81d25d47db4a6ec925a4d14e553e21573c2c2
+      - dest: soc/allwinner-h700/mainline/linux/patches/0222-0901-dts-rg35xx-2024-fix-led-1-color.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/0901-dts-rg35xx-2024-fix-led-1-color.patch
+        src_sha256: ea36a3fe08ee3e65f895cad85e3cd478a63312a85414549289b0cbc19ed8b8f9
+        dest_sha256: ea36a3fe08ee3e65f895cad85e3cd478a63312a85414549289b0cbc19ed8b8f9
+      - dest: soc/allwinner-h700/mainline/linux/patches/0900-9999-fix-rust-build-error.patch
+        src: projects/ROCKNIX/packages/linux/patches/7.0/9999-fix-rust-build-error.patch
+        src_sha256: cda5a402465aac67adf6f8d9afc935cd1adf7bc9e52392b0075a56644a9176c5
+        dest_sha256: cda5a402465aac67adf6f8d9afc935cd1adf7bc9e52392b0075a56644a9176c5
+      - dest: soc/allwinner-h700/mainline/linux/patches/0223-9999-Update-sun50i-h700-anbernic-rg35xx-2024.dts.patch
+        src: projects/ROCKNIX/devices/H700/patches/linux/9999-Update-sun50i-h700-anbernic-rg35xx-2024.dts.patch
+        src_sha256: a91cbd4e318408dac0a8949d7c2f507ee5942960668ffafa58c08d5c6785240a
+        dest_sha256: a91cbd4e318408dac0a8949d7c2f507ee5942960668ffafa58c08d5c6785240a
+      - dest: soc/allwinner-h700/mainline/linux/linux.config.fragment
+        src: projects/ROCKNIX/devices/H700/linux/linux.aarch64.conf
+        src_sha256: f855236703a74a5e8cbf44555013eb9bdb6471ee4109e992f2cfda8fd429eb82
+        dest_sha256: f855236703a74a5e8cbf44555013eb9bdb6471ee4109e992f2cfda8fd429eb82
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg28xx.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg28xx.dts
+        src_sha256: d1494e14ace759fe451f9cfaddf1aaab85ba0aff501267ab76032d45239a8aaf
+        dest_sha256: d1494e14ace759fe451f9cfaddf1aaab85ba0aff501267ab76032d45239a8aaf
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg34xx-sp.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg34xx-sp.dts
+        src_sha256: cb1a7564e30fd808ddd6bb381f61958b86d0c5d43a83ac397fac9f01facb0e6b
+        dest_sha256: cb1a7564e30fd808ddd6bb381f61958b86d0c5d43a83ac397fac9f01facb0e6b
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg34xx.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg34xx.dts
+        src_sha256: c6868b3039fcfefcb77e6629d02a11b0430bb195567d5aeecc73b169004e01cf
+        dest_sha256: c6868b3039fcfefcb77e6629d02a11b0430bb195567d5aeecc73b169004e01cf
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-2024-rev6-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-2024-rev6-panel.dts
+        src_sha256: 4f1bd44063d653c6f042d75079420fe154b742eb6cf8a60e4d2f8430d26310eb
+        dest_sha256: 4f1bd44063d653c6f042d75079420fe154b742eb6cf8a60e4d2f8430d26310eb
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-h-rev6-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-h-rev6-panel.dts
+        src_sha256: 0c35179cf4af2d241dd561f043fc28482312b12170c0c2522ad22e6351235d14
+        dest_sha256: 0c35179cf4af2d241dd561f043fc28482312b12170c0c2522ad22e6351235d14
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-plus-rev6-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-plus-rev6-panel.dts
+        src_sha256: 58a81c0146b8245bd1dc57c845f792b26ca87b091235959f6f056d768c2c9a7a
+        dest_sha256: 58a81c0146b8245bd1dc57c845f792b26ca87b091235959f6f056d768c2c9a7a
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-pro.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-pro.dts
+        src_sha256: 4060457e8f056eeb22a4540b91c229a30d8c6febf8390e4107e52907ba429d49
+        dest_sha256: 4060457e8f056eeb22a4540b91c229a30d8c6febf8390e4107e52907ba429d49
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-sp-v2-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg35xx-sp-v2-panel.dts
+        src_sha256: e68b0359386973714033ebc66be977be805e0fcd2f464129d83f836cb1903438
+        dest_sha256: e68b0359386973714033ebc66be977be805e0fcd2f464129d83f836cb1903438
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-h-v2-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-h-v2-panel.dts
+        src_sha256: 157687609bef63d8a28eb627a5d07bde2e223bc66a4e271092aff6a1e697f673
+        dest_sha256: 157687609bef63d8a28eb627a5d07bde2e223bc66a4e271092aff6a1e697f673
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-h.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-h.dts
+        src_sha256: d36c9ffe1b46e64487bea027da0ad85a38af8ac0c18e936fdeacdf57b96c0128
+        dest_sha256: d36c9ffe1b46e64487bea027da0ad85a38af8ac0c18e936fdeacdf57b96c0128
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-v-v2-panel.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-v-v2-panel.dts
+        src_sha256: e0d157500702f56785093c75833441f5f3dca8901f49df4671f5b5511ad4dd12
+        dest_sha256: e0d157500702f56785093c75833441f5f3dca8901f49df4671f5b5511ad4dd12
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-v.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rg40xx-v.dts
+        src_sha256: 7427838bfa92bd3765fcc1442e319b8387d342eedcc4b5883566874b4319bb3f
+        dest_sha256: 7427838bfa92bd3765fcc1442e319b8387d342eedcc4b5883566874b4319bb3f
+      - dest: soc/allwinner-h700/mainline/linux/dts/allwinner/sun50i-h700-anbernic-rgcubexx.dts
+        src: projects/ROCKNIX/devices/H700/linux/dts/allwinner/sun50i-h700-anbernic-rgcubexx.dts
+        src_sha256: 6b652e2827103fb5929e0c8e5dfe3451581a5d06b7d934cf9ce94e00ec666ce1
+        dest_sha256: 6b652e2827103fb5929e0c8e5dfe3451581a5d06b7d934cf9ce94e00ec666ce1
+      - dest: soc/allwinner-h700/uboot/patches/0001-Update-dram_sun50i_h616.c.patch
+        src: projects/ROCKNIX/devices/H700/packages/u-boot/patches/0001-Update-dram_sun50i_h616.c.patch
+        src_sha256: 596674be315fbb74f670cf04639f10ea2b5629fd9eb72d944084a04cd0e5fab5
+        dest_sha256: 596674be315fbb74f670cf04639f10ea2b5629fd9eb72d944084a04cd0e5fab5
+      - dest: soc/allwinner-h700/uboot/patches/0002-Add-anbernic_rg35xx_h700_lpddr3_defconfig.patch
+        src: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr3_defconfig
+        src_sha256: de73ff56ce3a813f77e2fde5a96aaf865388229d230332acb49e162a46370319
+        dest_sha256: 07fea71c7322fe40a4a9f9afe406591310e8c433346e6170956bc36d2910617d
+      - dest: soc/allwinner-h700/uboot/patches/0003-Add-anbernic_rg35xx_h700_lpddr4_defconfig.patch
+        src: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr4_defconfig
+        src_sha256: 24013855fefbe911cf664301940e8b6b514e4961ed414f324dae491f56d6bfe4
+        dest_sha256: dd01c067d6761c21a68299d1cdc8a0100902d73366261d635f3c6951b986882c
