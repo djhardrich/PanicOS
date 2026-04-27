@@ -1,7 +1,12 @@
 BR2_aarch64=y
 BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
 BR2_TARGET_GENERIC_HOSTNAME="panicos-rg35xx-pro"
-BR2_TARGET_GENERIC_ISSUE="PanicOS — RG35XX Pro"
+BR2_TARGET_GENERIC_ISSUE="PanicOS — RG35XX Pro (LPDDR4)"
+
+# RG35XX Pro retail-default DRAM variant: LPDDR4 (DCDC3 = 1100 mV).
+# For LPDDR3 hardware (less common variant), build the rg35xx-pro-lpddr3
+# device target instead.
+BR2_TARGET_UBOOT_DEFCONFIG="anbernic_rg35xx_h700_lpddr4"
 
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro/post-image.sh"
 BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg35xx-pro/genimage.cfg.in"

@@ -4,6 +4,7 @@ choice
 
 source "$BR2_EXTERNAL_PANICOS_PATH/board/panicos/harness-smoke/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro-lpddr3/Config.in"
 
 endchoice
 
@@ -11,3 +12,4 @@ config PANICOS_DEVICE_NAME
 	string
 	default "harness-smoke" if PANICOS_DEVICE_HARNESS_SMOKE
 	default "rg35xx-pro" if PANICOS_DEVICE_RG35XX_PRO
+	default "rg35xx-pro-lpddr3" if PANICOS_DEVICE_RG35XX_PRO_LPDDR3

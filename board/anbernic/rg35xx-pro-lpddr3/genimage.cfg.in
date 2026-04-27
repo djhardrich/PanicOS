@@ -1,0 +1,54 @@
+# RG35XX Pro disk image. Sizes from PANICOS_*_PARTITION_SIZE_MB Kconfigs,
+# substituted at build time by post-image.sh via envsubst.
+
+image boot.vfat {
+	vfat {
+		files = {
+			"Image",
+			"dtb.img",
+			"dtbs",
+			"boot.scr",
+			"panicos-active.cfg",
+		}
+	}
+	size = ${PANICOS_BOOT_PARTITION_SIZE_MB}M
+}
+
+image system.ext4 {
+	ext4 {
+		# Files added at image-staging time by post-image.sh.
+	}
+	size = ${PANICOS_SYSTEM_PARTITION_SIZE_MB}M
+}
+
+image overlay.ext4 {
+	ext4 { }
+	size = ${PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB}M
+}
+
+image panicos-rg35xx-pro-lpddr3-minimal.img {
+	hdimage {
+	}
+
+	partition u-boot {
+		in-partition-table = "no"
+		image = "u-boot-sunxi-with-spl.bin"
+		offset = 8K
+	}
+
+	partition boot {
+		partition-type = 0xC
+		bootable = "true"
+		image = "boot.vfat"
+	}
+
+	partition system {
+		partition-type = 0x83
+		image = "system.ext4"
+	}
+
+	partition overlay {
+		partition-type = 0x83
+		image = "overlay.ext4"
+	}
+}

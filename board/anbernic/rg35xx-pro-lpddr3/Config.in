@@ -1,0 +1,15 @@
+config PANICOS_DEVICE_RG35XX_PRO_LPDDR3
+	bool "anbernic/rg35xx-pro-lpddr3 (Allwinner H700, LPDDR3 variant)"
+	select PANICOS_SOC_ALLWINNER_H700
+	help
+	  Anbernic RG35XX Pro — LPDDR3 DRAM variant (less common; some
+	  early or budget units). U-Boot uses
+	  anbernic_rg35xx_h700_lpddr3_defconfig with DCDC3 = 1200 mV and
+	  LPDDR3-specific DRAM timings.
+
+	  For the more common LPDDR4 retail variant, build the
+	  "rg35xx-pro" target instead. Flashing the wrong DRAM-variant
+	  image WILL cause boot failure — they share kernel, DTBs, and
+	  rootfs but the U-Boot SPL is built differently.
+
+	  Kernel: Linux 7.0.1 mainline + ROCKNIX patches.

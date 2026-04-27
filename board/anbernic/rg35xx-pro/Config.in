@@ -1,6 +1,14 @@
 config PANICOS_DEVICE_RG35XX_PRO
-	bool "anbernic/rg35xx-pro (Allwinner H700)"
+	bool "anbernic/rg35xx-pro (Allwinner H700, LPDDR4)"
 	select PANICOS_SOC_ALLWINNER_H700
 	help
-	  Anbernic RG35XX Pro. Allwinner H700. Default kernel flavor:
-	  mainline (via ROCKNIX). Vendor flavor is reserved for Plan 03.
+	  Anbernic RG35XX Pro — LPDDR4 DRAM variant (most common retail
+	  hardware). U-Boot uses anbernic_rg35xx_h700_lpddr4_defconfig
+	  with DCDC3 = 1100 mV.
+
+	  If your hardware is the less-common LPDDR3 variant, build the
+	  "rg35xx-pro-lpddr3" target instead — the U-Boot DRAM init
+	  parameters and DCDC3 voltage differ between the two and a
+	  mismatch will cause boot failure or instability.
+
+	  Kernel: Linux 7.0.1 mainline + ROCKNIX patches.

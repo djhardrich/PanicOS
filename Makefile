@@ -94,6 +94,10 @@ harness-smoke:
 rg35xx-pro:
 	$(MAKE) _build DEVICE=rg35xx-pro
 
+.PHONY: rg35xx-pro-lpddr3
+rg35xx-pro-lpddr3:
+	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3
+
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
