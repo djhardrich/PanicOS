@@ -1,0 +1,16 @@
+[Unit]
+Description=PanicOS first-boot: grow overlay partition
+DefaultDependencies=no
+After=systemd-remount-fs.service local-fs.target
+Before=basic.target sysinit.target
+ConditionPathExists=!/storage/.panicos-firstboot-done
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/mount -o rw /dev/mmcblk0p3 /storage
+ExecStart=/usr/sbin/panicos-firstboot
+StandardOutput=journal+console
+
+[Install]
+WantedBy=sysinit.target
