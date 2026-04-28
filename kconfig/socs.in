@@ -6,6 +6,7 @@ config PANICOS_SOC_NONE
 	bool "(none — harness-smoke / generic)"
 
 source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-h700/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3566/Config.in"
 
 endchoice
 

@@ -1,0 +1,10 @@
+config PANICOS_DEVICE_RG353P
+	bool "anbernic/rg353p (Rockchip RK3566)"
+	select PANICOS_SOC_ROCKCHIP_RK3566
+	help
+	  Anbernic RG353P — Rockchip RK3566 (quad-core Cortex-A55), 1 GB LPDDR4.
+	  Uses the anbernic-rgxx3-rk3566 U-Boot defconfig (auto-detects device
+	  via DTSOC at runtime, covers the whole RGxx3 Anbernic family).
+
+	  Kernel: Linux 7.0.1 mainline + ROCKNIX patches.
+	  Default DTB: rk3566-anbernic-rg353p.dtb (in-tree upstream).

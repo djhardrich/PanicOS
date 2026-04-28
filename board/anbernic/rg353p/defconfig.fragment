@@ -1,0 +1,11 @@
+BR2_aarch64=y
+BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+BR2_TARGET_GENERIC_HOSTNAME="panicos-rg353p"
+BR2_TARGET_GENERIC_ISSUE="PanicOS — RG353P"
+
+# BOARDNAME drives `make <BOARDNAME>_defconfig` in U-Boot's source.
+# anbernic-rgxx3-rk3566 covers the RG353P, RG353V, RG353PS, RG353VS, and RG503.
+BR2_TARGET_UBOOT_BOARDNAME="anbernic-rgxx3-rk3566"
+
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg353p/post-image.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rg353p/genimage.cfg.in"

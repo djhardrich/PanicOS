@@ -100,6 +100,10 @@ rg35xx-pro:
 rg35xx-pro-lpddr3:
 	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3 FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
+.PHONY: rg353p
+rg353p:
+	$(MAKE) _build DEVICE=rg353p FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
+
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)

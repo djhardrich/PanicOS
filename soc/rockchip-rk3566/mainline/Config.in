@@ -1,0 +1,2 @@
+# Mainline-flavor Kconfig for Rockchip RK3566.
+# Empty — kernel/U-Boot wiring is handled via defconfig.fragment.

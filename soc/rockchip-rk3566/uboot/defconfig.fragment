@@ -1,0 +1,41 @@
+# Rockchip RK3566 U-Boot configuration.
+#
+# BL31 / rkbin wiring:
+#   RK3566 does NOT use compiled TF-A. Instead, Buildroot's rockchip-rkbin
+#   package clones https://github.com/rockchip-linux/rkbin and installs the
+#   pre-built BL31 ELF and DDR TPL binary into BINARIES_DIR. uboot.mk then
+#   passes them as BL31= and ROCKCHIP_TPL= make variables.
+#
+#   BR2_PACKAGE_ROCKCHIP_RKBIN=y      — enable the rkbin package
+#   BR2_PACKAGE_ROCKCHIP_RKBIN_BL31_FILENAME — path within rkbin repo to BL31
+#   BR2_PACKAGE_ROCKCHIP_RKBIN_TPL_FILENAME  — path within rkbin repo to DDR TPL
+#   BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y  — tells uboot.mk to depend on rkbin
+#                                              and pass BL31/ROCKCHIP_TPL flags
+#
+#   The anbernic-rgxx3-rk3566_defconfig invokes binman to assemble
+#   u-boot-rockchip.bin (idbloader.img + u-boot.itb combined blob, written at
+#   offset 32K on the SD card / eMMC). No separate idbloader.img or u-boot.itb
+#   staging is needed — post-image.sh places u-boot-rockchip.bin at 32K offset.
+#
+#   BL31 binary:  bin/rk35/rk3568_bl31_v1.45.elf   (RK3566+RK3568 share ATF)
+#   DDR TPL:      bin/rk35/rk3568_ddr_1056MHz_v1.23.bin
+#
+# NOTE: rkbin is a large git clone (~1.5 GB). Task 5 should evaluate caching
+# or pinning to a sparse checkout if build time is unacceptable.
+
+BR2_PACKAGE_ROCKCHIP_RKBIN=y
+BR2_PACKAGE_ROCKCHIP_RKBIN_BL31_FILENAME="bin/rk35/rk3568_bl31_v1.45.elf"
+BR2_PACKAGE_ROCKCHIP_RKBIN_TPL_FILENAME="bin/rk35/rk3568_ddr_1056MHz_v1.23.bin"
+
+BR2_TARGET_UBOOT=y
+BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2026.01"
+BR2_TARGET_UBOOT_CUSTOM_TARBALL=y
+BR2_TARGET_UBOOT_CUSTOM_TARBALL_LOCATION="https://github.com/u-boot/u-boot/archive/v2026.01.tar.gz"
+BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/uboot/patches"
+# NB: BR2_TARGET_UBOOT_BOARDNAME is intentionally NOT set here.
+# It is set per-device in board/anbernic/rg353p/defconfig.fragment
+# (and will differ for other RK3566 devices like RG503, Powkiddy RGB30 etc.).
+BR2_TARGET_UBOOT_FORMAT_BIN=y
+BR2_TARGET_UBOOT_USE_BINMAN=y
