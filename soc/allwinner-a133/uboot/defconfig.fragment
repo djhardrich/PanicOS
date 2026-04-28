@@ -1,0 +1,3 @@
+# BR2_TARGET_UBOOT is not set
+# BR2_TARGET_ARM_TRUSTED_FIRMWARE is not set
+# No U-Boot built — bootloader blobs come from soc/allwinner-a133/vendor/prebuilt/<device>/partitions/

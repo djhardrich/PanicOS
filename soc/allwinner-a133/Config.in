@@ -1,0 +1,10 @@
+config PANICOS_SOC_ALLWINNER_A133
+	bool "Allwinner A133 (sun50i-a133)"
+	help
+	  Allwinner A133. Used by the TrimUI Brick and related devices.
+	  All kernel and U-Boot components are pre-built blobs; there is
+	  no mainline or vendor build-from-source path for this SoC.
+
+if PANICOS_SOC_ALLWINNER_A133
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-a133/vendor/Config.in"
+endif

@@ -104,6 +104,10 @@ rg35xx-pro-lpddr3:
 rg353p:
 	$(MAKE) _build DEVICE=rg353p FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
+.PHONY: trimui-brick
+trimui-brick:
+	$(MAKE) _build DEVICE=trimui-brick FLAVOR=$(FLAVOR) KERNEL=vendor
+
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
@@ -128,7 +132,9 @@ _build:
 		fi; \
 		if [ "$$K" = "vendor" ]; then \
 			BASE="$(PANICOS_ROOT)/soc/$$SOC/vendor/linux/linux.config.fragment"; \
-			cat "$$BASE" "$$EXTRAS_OUT" > "$$OUT/vendor-linux.config"; \
+			if [ -f "$$BASE" ]; then \
+				{ cat "$$BASE"; [ -f "$$EXTRAS_OUT" ] && cat "$$EXTRAS_OUT" || true; } > "$$OUT/vendor-linux.config"; \
+			fi; \
 		fi; \
 	fi; \
 	scripts/gen-defconfig.sh \

@@ -1,0 +1,4 @@
+# Allwinner A133 vendor (blob-staging) — no Kconfig options.
+# All kernel and bootloader blobs are pre-staged from Knulli via
+# scripts/sync-knulli.sh --soc allwinner-a133.
+# See soc/allwinner-a133/vendor/prebuilt/ for imported binaries.

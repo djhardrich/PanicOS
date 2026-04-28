@@ -1,0 +1,310 @@
+schema_version: 2
+imports:
+  - name: knulli-a133-vendor
+    submodule: third_party/knulli
+    sha: d0e0324d49f534c4cb14ef36a288293333ef8ab0
+    files:
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/batocera-boot.conf
+        src: board/batocera/allwinner/a133/trimui-brick/batocera-boot.conf
+        src_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+        dest_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/asound.state
+        src: board/batocera/allwinner/a133/trimui-brick/boot/asound.state
+        src_sha256: 64c8be123f30e44aa5e47a21e62976e27ae5b72cb9309214ab45723576ee03ff
+        dest_sha256: 64c8be123f30e44aa5e47a21e62976e27ae5b72cb9309214ab45723576ee03ff
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat0.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat0.bmp
+        src_sha256: 99dffaafc73ecd08a949ffebe6434d3abcbb3b0c51359d9aed51fb860f40d702
+        dest_sha256: 99dffaafc73ecd08a949ffebe6434d3abcbb3b0c51359d9aed51fb860f40d702
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat10.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat10.bmp
+        src_sha256: 8c8f9e9fe99180b366c780b308225d0c68830f67752224b56a7161801885750d
+        dest_sha256: 8c8f9e9fe99180b366c780b308225d0c68830f67752224b56a7161801885750d
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat1.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat1.bmp
+        src_sha256: fcc8c06eeb4253d752a3e6765977df6dce170759bf55476cd8eb66276c7781e4
+        dest_sha256: fcc8c06eeb4253d752a3e6765977df6dce170759bf55476cd8eb66276c7781e4
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat2.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat2.bmp
+        src_sha256: fe3fabda61f0dd2690651a39cc35192b2616f2b53bf3dfc9c476a15b3af74c8d
+        dest_sha256: fe3fabda61f0dd2690651a39cc35192b2616f2b53bf3dfc9c476a15b3af74c8d
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat3.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat3.bmp
+        src_sha256: 7110062ecc2081b3c073ad2d6fee89fe58a863314ac615a6bea00d4ee4899b71
+        dest_sha256: 7110062ecc2081b3c073ad2d6fee89fe58a863314ac615a6bea00d4ee4899b71
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat4.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat4.bmp
+        src_sha256: 3720fbab936675fb6152c674aeb35ecc0edd03100007ee25e8ce7fa62bad2fc2
+        dest_sha256: 3720fbab936675fb6152c674aeb35ecc0edd03100007ee25e8ce7fa62bad2fc2
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat5.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat5.bmp
+        src_sha256: 40484ceaf1576f3c60a904c469e539c4e267c595e2e74a72bf969d8c031d9f5b
+        dest_sha256: 40484ceaf1576f3c60a904c469e539c4e267c595e2e74a72bf969d8c031d9f5b
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat6.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat6.bmp
+        src_sha256: 8392cacfc6ef26957eb92fa4c55e2a1636f8e73311e4103b797e63c53aa46bbd
+        dest_sha256: 8392cacfc6ef26957eb92fa4c55e2a1636f8e73311e4103b797e63c53aa46bbd
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat7.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat7.bmp
+        src_sha256: b38529f20947af21b31b2f432b3c8aac8de60a61a6e070cafb5af80755ed78c9
+        dest_sha256: b38529f20947af21b31b2f432b3c8aac8de60a61a6e070cafb5af80755ed78c9
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat8.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat8.bmp
+        src_sha256: 70def73442ebb0eefb71e2a40865564d87edb5a4397ee91704b50e0c947a76c6
+        dest_sha256: 70def73442ebb0eefb71e2a40865564d87edb5a4397ee91704b50e0c947a76c6
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat9.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat9.bmp
+        src_sha256: 7eedca49b7266d46d5e98bfef1346971a2f8f9eda418c01b7942e8c51b663f64
+        dest_sha256: 7eedca49b7266d46d5e98bfef1346971a2f8f9eda418c01b7942e8c51b663f64
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat_blank.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat_blank.bmp
+        src_sha256: 059b6a41857f61369ad9ca2907b4af4be6212e2789e71ebbac1649fc0d17ef34
+        dest_sha256: 059b6a41857f61369ad9ca2907b4af4be6212e2789e71ebbac1649fc0d17ef34
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat_htmp.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat_htmp.bmp
+        src_sha256: b364bc9a162381337219f445df25f3c677854f772cd3a42b965e45bf34b50d82
+        dest_sha256: b364bc9a162381337219f445df25f3c677854f772cd3a42b965e45bf34b50d82
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bat_ltmp.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bat_ltmp.bmp
+        src_sha256: 01569de1f1e53ce66c1bbc12e7d0493e47cb80ce2aacf022953019dd8a09ad61
+        dest_sha256: 01569de1f1e53ce66c1bbc12e7d0493e47cb80ce2aacf022953019dd8a09ad61
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/battery.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/battery.bmp
+        src_sha256: ad6cf8475773544e1c17607bc112d8e4792fff0e8287d9cbd71b05d6403882aa
+        dest_sha256: ad6cf8475773544e1c17607bc112d8e4792fff0e8287d9cbd71b05d6403882aa
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/battery_charge.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/battery_charge.bmp
+        src_sha256: 7ba64683b1a235a8a629055e829407924e3cc9a83a806a9be44137a1530d6851
+        dest_sha256: 7ba64683b1a235a8a629055e829407924e3cc9a83a806a9be44137a1530d6851
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bempty.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bempty.bmp
+        src_sha256: 2bf7eb266c3c8be40e7ad5e15a47a2d11ed06be1329d6b6bd41c1686411b61e5
+        dest_sha256: 2bf7eb266c3c8be40e7ad5e15a47a2d11ed06be1329d6b6bd41c1686411b61e5
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/bootlogo.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/bootlogo.bmp
+        src_sha256: 79f31683d646b9a75e8a69ec6239aafd1b251f2d9d14a4c31caddd7fbc80fd62
+        dest_sha256: 79f31683d646b9a75e8a69ec6239aafd1b251f2d9d14a4c31caddd7fbc80fd62
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bat/low_pwr.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bat/low_pwr.bmp
+        src_sha256: 11efcbbd554abf8498753c8a0aabd84d3884b5b9dd3b8379fd0bcf067ca781a7
+        dest_sha256: 11efcbbd554abf8498753c8a0aabd84d3884b5b9dd3b8379fd0bcf067ca781a7
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/boot.cmd
+        src: board/batocera/allwinner/a133/trimui-brick/boot/boot.cmd
+        src_sha256: 6b1f2a2b5dc9c2580969abab1e63df669e852f37fd6fc4f0055207efb9def801
+        dest_sha256: 6b1f2a2b5dc9c2580969abab1e63df669e852f37fd6fc4f0055207efb9def801
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/bootlogo.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/boot/bootlogo.bmp
+        src_sha256: 0223e1ccd6af9d57d7ebb7c1c3e563dc0962736f9931ac85b2f005df9dfc0ac0
+        dest_sha256: 0223e1ccd6af9d57d7ebb7c1c3e563dc0962736f9931ac85b2f005df9dfc0ac0
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/boot.scr
+        src: board/batocera/allwinner/a133/trimui-brick/boot/boot.scr
+        src_sha256: d8464b14ff4f3e198346e6b32e1def391aab5a39a0393b9ff8054c5852e15b10
+        dest_sha256: d8464b14ff4f3e198346e6b32e1def391aab5a39a0393b9ff8054c5852e15b10
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/extlinux.conf
+        src: board/batocera/allwinner/a133/trimui-brick/boot/extlinux.conf
+        src_sha256: 782be9c7b881ec31cbb2f3ac87a12d96377cd9f9287d3c97cee3635ba1e55b67
+        dest_sha256: 782be9c7b881ec31cbb2f3ac87a12d96377cd9f9287d3c97cee3635ba1e55b67
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/font24.sft
+        src: board/batocera/allwinner/a133/trimui-brick/boot/font24.sft
+        src_sha256: a42d3392c85b002effa0e1dd80839202f377c9ab1e6a941ec2630ae4128b26c8
+        dest_sha256: a42d3392c85b002effa0e1dd80839202f377c9ab1e6a941ec2630ae4128b26c8
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/font32.sft
+        src: board/batocera/allwinner/a133/trimui-brick/boot/font32.sft
+        src_sha256: 53d4d0cb2be05d6b4b67e53546d247190e479e0c9249d2f06104cb8a0c5d50c4
+        dest_sha256: 53d4d0cb2be05d6b4b67e53546d247190e479e0c9249d2f06104cb8a0c5d50c4
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/bootlogo.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/bootlogo.bmp
+        src_sha256: 73f6c2ae712b473fd2cc5e5fc21143441d66568accd80ed4f62a9457aa99b965
+        dest_sha256: 73f6c2ae712b473fd2cc5e5fc21143441d66568accd80ed4f62a9457aa99b965
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/boot/magic.bin
+        src: board/batocera/allwinner/a133/trimui-brick/boot/magic.bin
+        src_sha256: 14d309c67afd6c7a6ce3c580c401162266998385dcf4b06d48dd2d5169ad0eb1
+        dest_sha256: 14d309c67afd6c7a6ce3c580c401162266998385dcf4b06d48dd2d5169ad0eb1
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/create-boot-script.sh
+        src: board/batocera/allwinner/a133/trimui-brick/create-boot-script.sh
+        src_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+        dest_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/genimage.cfg
+        src: board/batocera/allwinner/a133/trimui-brick/genimage.cfg
+        src_sha256: c491b223da04dcef4628a66c64534b21f8b55932b2d27e4e8b9e8ab37c575618
+        dest_sha256: c491b223da04dcef4628a66c64534b21f8b55932b2d27e4e8b9e8ab37c575618
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/knulli_bootlogo_768p.bmp
+        src: board/batocera/allwinner/a133/trimui-brick/knulli_bootlogo_768p.bmp
+        src_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+        dest_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/linux-sunxi64-legacy.config
+        src: board/batocera/allwinner/a133/trimui-brick/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/logo-768p.png
+        src: board/batocera/allwinner/a133/trimui-brick/logo-768p.png
+        src_sha256: 762b592b97baabc19ce0a23a19660ff9ec4c73e5cf7384ca3a5fbb390eabdd7e
+        dest_sha256: 762b592b97baabc19ce0a23a19660ff9ec4c73e5cf7384ca3a5fbb390eabdd7e
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/partitions/boot0.img
+        src: board/batocera/allwinner/a133/trimui-brick/partitions/boot0.img
+        src_sha256: fb821279f641d4fa19305bf297a4631f859089dcacddaedcb141d2a5b31a585f
+        dest_sha256: fb821279f641d4fa19305bf297a4631f859089dcacddaedcb141d2a5b31a585f
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/partitions/boot.img
+        src: board/batocera/allwinner/a133/trimui-brick/partitions/boot.img
+        src_sha256: cfb1ab259b4a60020ef97cb87602e16a025e8a92ae84c56ac8265314c58c5d74
+        dest_sha256: cfb1ab259b4a60020ef97cb87602e16a025e8a92ae84c56ac8265314c58c5d74
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/partitions/boot_package.fex
+        src: board/batocera/allwinner/a133/trimui-brick/partitions/boot_package.fex
+        src_sha256: e5648b959b2f94996d38db4d24cce68c39b386e387945fb7dbf91f84e4a5bb23
+        dest_sha256: e5648b959b2f94996d38db4d24cce68c39b386e387945fb7dbf91f84e4a5bb23
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/partitions/env.img
+        src: board/batocera/allwinner/a133/trimui-brick/partitions/env.img
+        src_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+        dest_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/partitions/genimage.cfg
+        src: board/batocera/allwinner/a133/trimui-brick/partitions/genimage.cfg
+        src_sha256: c96d621292851aca9db1c33998f8c66b85eb407f62df92b613301cc29665bbe9
+        dest_sha256: c96d621292851aca9db1c33998f8c66b85eb407f62df92b613301cc29665bbe9
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/patches/batocera-emulationstation/001_fix_battery_path.patch
+        src: board/batocera/allwinner/a133/trimui-brick/patches/batocera-emulationstation/001_fix_battery_path.patch
+        src_sha256: 267e0dc02fc2e66ca0cad928d15c902886bb0c5f53477a0964358f441a366848
+        dest_sha256: 267e0dc02fc2e66ca0cad928d15c902886bb0c5f53477a0964358f441a366848
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/patches/batocera-emulationstation/002-add-custom-powerooff-reboot.patch
+        src: board/batocera/allwinner/a133/trimui-brick/patches/batocera-emulationstation/002-add-custom-powerooff-reboot.patch
+        src_sha256: f4e2d8d8e6b27c37481181f1220f54a9e1498f76ab7f1b073927451192d9dc5a
+        dest_sha256: f4e2d8d8e6b27c37481181f1220f54a9e1498f76ab7f1b073927451192d9dc5a
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/patches/libcec/001-disable-linux-api.patch
+        src: board/batocera/allwinner/a133/trimui-brick/patches/libcec/001-disable-linux-api.patch
+        src_sha256: 06018ef2732137f98f7664ea81e8e9dece92e7952c5294321a8343866f3cf84e
+        dest_sha256: 06018ef2732137f98f7664ea81e8e9dece92e7952c5294321a8343866f3cf84e
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/patches/sdl2/001-add-pvr-ge8300-mali-driver.patch
+        src: board/batocera/allwinner/a133/trimui-brick/patches/sdl2/001-add-pvr-ge8300-mali-driver.patch
+        src_sha256: dc1478e1187e77de283569f8ea90409d1393bb9b301d11c3f081c78db7b808c6
+        dest_sha256: dc1478e1187e77de283569f8ea90409d1393bb9b301d11c3f081c78db7b808c6
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/patches/sdl2/001-add-pvr-ge8300-mali-driver.patch.disabled
+        src: board/batocera/allwinner/a133/trimui-brick/patches/sdl2/001-add-pvr-ge8300-mali-driver.patch.disabled
+        src_sha256: 672f06f28035f5cbb13f2bea84d02124ce76fdcfa73835129e536ff4606e1fe1
+        dest_sha256: 672f06f28035f5cbb13f2bea84d02124ce76fdcfa73835129e536ff4606e1fe1
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/uImage
+        src: board/batocera/allwinner/a133/trimui-brick/uImage
+        src_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+        dest_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-brick/uInitrd
+        src: board/batocera/allwinner/a133/trimui-brick/uInitrd
+        src_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+        dest_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/batocera-boot.conf
+        src: board/batocera/allwinner/a133/magicx-zero-28/batocera-boot.conf
+        src_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+        dest_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/bootlogo.bmp
+        src: board/batocera/allwinner/a133/magicx-zero-28/bootlogo.bmp
+        src_sha256: 9b4b9359c37c452d34b602d823fb2b509ada318f9bf6917834990a131aefc086
+        dest_sha256: 9b4b9359c37c452d34b602d823fb2b509ada318f9bf6917834990a131aefc086
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/create-boot-script.sh
+        src: board/batocera/allwinner/a133/magicx-zero-28/create-boot-script.sh
+        src_sha256: cf7c99cf2baa643d101b47b9d145ae037fbe0ccdcbe5a1b18a7aaedede24a477
+        dest_sha256: cf7c99cf2baa643d101b47b9d145ae037fbe0ccdcbe5a1b18a7aaedede24a477
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/genimage.cfg
+        src: board/batocera/allwinner/a133/magicx-zero-28/genimage.cfg
+        src_sha256: 5a8a70e994ef96ab881bb1a642fd9d9f098285a3500b2538db87f84b9fc4baa4
+        dest_sha256: 5a8a70e994ef96ab881bb1a642fd9d9f098285a3500b2538db87f84b9fc4baa4
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/knulli_bootlogo_768p.bmp
+        src: board/batocera/allwinner/a133/magicx-zero-28/knulli_bootlogo_768p.bmp
+        src_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+        dest_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/linux-sunxi64-legacy.config
+        src: board/batocera/allwinner/a133/magicx-zero-28/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/uImage
+        src: board/batocera/allwinner/a133/magicx-zero-28/uImage
+        src_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+        dest_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/magicx-zero-28/uInitrd
+        src: board/batocera/allwinner/a133/magicx-zero-28/uInitrd
+        src_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+        dest_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/batocera-boot.conf
+        src: board/batocera/allwinner/a133/powkiddy-v20/batocera-boot.conf
+        src_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+        dest_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/bootlogo.bmp
+        src: board/batocera/allwinner/a133/powkiddy-v20/bootlogo.bmp
+        src_sha256: 976faf667e5695425b5df65b9b8d30a13deb21f8b46ed4e1b7ac7887cc5c4329
+        dest_sha256: 976faf667e5695425b5df65b9b8d30a13deb21f8b46ed4e1b7ac7887cc5c4329
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/create-boot-script.sh
+        src: board/batocera/allwinner/a133/powkiddy-v20/create-boot-script.sh
+        src_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+        dest_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/genimage.cfg
+        src: board/batocera/allwinner/a133/powkiddy-v20/genimage.cfg
+        src_sha256: 76df8b1eb683fd17ecc43760806c8bce5bdb517984d570257545ec6afa6f77bb
+        dest_sha256: 76df8b1eb683fd17ecc43760806c8bce5bdb517984d570257545ec6afa6f77bb
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/knulli_bootlogo_768p.bmp
+        src: board/batocera/allwinner/a133/powkiddy-v20/knulli_bootlogo_768p.bmp
+        src_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+        dest_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/linux-sunxi64-legacy.config
+        src: board/batocera/allwinner/a133/powkiddy-v20/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/logo-768p.png
+        src: board/batocera/allwinner/a133/powkiddy-v20/logo-768p.png
+        src_sha256: 762b592b97baabc19ce0a23a19660ff9ec4c73e5cf7384ca3a5fbb390eabdd7e
+        dest_sha256: 762b592b97baabc19ce0a23a19660ff9ec4c73e5cf7384ca3a5fbb390eabdd7e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/uImage
+        src: board/batocera/allwinner/a133/powkiddy-v20/uImage
+        src_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+        dest_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v20/uInitrd
+        src: board/batocera/allwinner/a133/powkiddy-v20/uInitrd
+        src_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+        dest_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/batocera-boot.conf
+        src: board/batocera/allwinner/a133/powkiddy-v90s/batocera-boot.conf
+        src_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+        dest_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/bootlogo.bmp
+        src: board/batocera/allwinner/a133/powkiddy-v90s/bootlogo.bmp
+        src_sha256: 976faf667e5695425b5df65b9b8d30a13deb21f8b46ed4e1b7ac7887cc5c4329
+        dest_sha256: 976faf667e5695425b5df65b9b8d30a13deb21f8b46ed4e1b7ac7887cc5c4329
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/create-boot-script.sh
+        src: board/batocera/allwinner/a133/powkiddy-v90s/create-boot-script.sh
+        src_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+        dest_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/genimage.cfg
+        src: board/batocera/allwinner/a133/powkiddy-v90s/genimage.cfg
+        src_sha256: 76df8b1eb683fd17ecc43760806c8bce5bdb517984d570257545ec6afa6f77bb
+        dest_sha256: 76df8b1eb683fd17ecc43760806c8bce5bdb517984d570257545ec6afa6f77bb
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/knulli_bootlogo_768p.bmp
+        src: board/batocera/allwinner/a133/powkiddy-v90s/knulli_bootlogo_768p.bmp
+        src_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+        dest_sha256: 5baeacc59ad92b6a2d6f91a923665ffbad650d3d99f143b84e8139060937480e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/powkiddy-v90s/linux-sunxi64-legacy.config
+        src: board/batocera/allwinner/a133/powkiddy-v90s/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/batocera-boot.conf
+        src: board/batocera/allwinner/a133/trimui-smart-pro/batocera-boot.conf
+        src_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+        dest_sha256: 5933a8da02d93bb5b815c22d9980d058ae0250de3b8a85cca98c1a793db9cc13
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/bootlogo.bmp
+        src: board/batocera/allwinner/a133/trimui-smart-pro/bootlogo.bmp
+        src_sha256: a8e142ca35f5ffbf1adad4b64b7ef628e8a06b719aba2a790decde77485cbf7c
+        dest_sha256: a8e142ca35f5ffbf1adad4b64b7ef628e8a06b719aba2a790decde77485cbf7c
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/create-boot-script.sh
+        src: board/batocera/allwinner/a133/trimui-smart-pro/create-boot-script.sh
+        src_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+        dest_sha256: 4536376f62dd91178913226543177ab9d28ac424f40443a5cc8aa128a287b8ec
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/genimage.cfg
+        src: board/batocera/allwinner/a133/trimui-smart-pro/genimage.cfg
+        src_sha256: c491b223da04dcef4628a66c64534b21f8b55932b2d27e4e8b9e8ab37c575618
+        dest_sha256: c491b223da04dcef4628a66c64534b21f8b55932b2d27e4e8b9e8ab37c575618
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/linux-sunxi64-legacy.config
+        src: board/batocera/allwinner/a133/trimui-smart-pro/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/uImage
+        src: board/batocera/allwinner/a133/trimui-smart-pro/uImage
+        src_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+        dest_sha256: fb923c8f1ca1dc0d958302a0bd25e41577d6380d40384d57cce1b9f59d985c98
+      - dest: soc/allwinner-a133/vendor/prebuilt/_shared/trimui-smart-pro/uInitrd
+        src: board/batocera/allwinner/a133/trimui-smart-pro/uInitrd
+        src_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+        dest_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
