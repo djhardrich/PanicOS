@@ -7,7 +7,7 @@ image boot.vfat {
 			"Image",
 			"dtb.img",
 			"dtbs",
-			"boot.scr",
+			"extlinux",
 			"panicos-active.cfg",
 		}
 	}

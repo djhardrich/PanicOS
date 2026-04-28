@@ -76,5 +76,34 @@ if [ -n "${PANICOS_INITRAMFS_FIRMWARE_DIRS:-}" ]; then
     echo ">>> bundled firmware: $(find "$STAGE/lib/firmware" -type f | wc -l) files"
 fi
 
-( cd "$STAGE" && find . | cpio --quiet -o -H newc ) | gzip -9 > "$OUT"
+# Pre-pend a tiny cpio with /dev/console + /dev/null device nodes. Needed
+# because `cpio -o` from non-root can't mknod, and without /dev/console
+# in the initramfs the kernel's console_on_rootfs() warns "Unable to open
+# initial console" — leaving /init with no stdin/stdout, set -e + echo
+# fails with EBADF, /init exits, kernel panics with "init exited".
+{
+    python3 - "$STAGE" <<'PY'
+import os, struct, sys
+stage = sys.argv[1]
+def cpio_entry(out, path, mode, ino, nlink, mtime, size, rmaj, rmin, data=b''):
+    name = path.encode() + b'\x00'
+    hdr = (b'070701'
+        + b''.join(b'%08X' % v for v in
+            [ino, mode, 0, 0, nlink, mtime, size, 0, 0, rmaj, rmin, len(name), 0]))
+    out.write(hdr + name)
+    pad = (-len(hdr + name)) & 3
+    out.write(b'\x00' * pad)
+    if data:
+        out.write(data)
+        out.write(b'\x00' * ((-len(data)) & 3))
+
+S_IFDIR=0o040000; S_IFCHR=0o020000
+out = sys.stdout.buffer
+# /dev directory (already in cpio from skeleton, but harmless to repeat).
+cpio_entry(out, 'dev', S_IFDIR | 0o755, ino=10, nlink=2, mtime=0, size=0, rmaj=0, rmin=0)
+cpio_entry(out, 'dev/console', S_IFCHR | 0o600, ino=11, nlink=1, mtime=0, size=0, rmaj=5, rmin=1)
+cpio_entry(out, 'dev/null',    S_IFCHR | 0o666, ino=12, nlink=1, mtime=0, size=0, rmaj=1, rmin=3)
+PY
+    ( cd "$STAGE" && find . | cpio --quiet -o -H newc )
+} | gzip -9 > "$OUT"
 echo ">>> Built $OUT ($(stat -c%s "$OUT") bytes)"

@@ -1,0 +1,9 @@
+# PanicOS root is a read-only squashfs loop-mounted by initramfs.
+# Marking it `ro 0 0` prevents systemd-remount-fs.service from trying to
+# remount /dev/root rw (which fails on squashfs and leaves a noisy
+# [FAILED] line on the console).
+/dev/root  /         squashfs  ro                  0 0
+proc       /proc     proc      defaults            0 0
+sysfs      /sys      sysfs     defaults            0 0
+tmpfs      /tmp      tmpfs     mode=1777,nosuid,nodev 0 0
+tmpfs      /run      tmpfs     mode=755,nosuid,nodev,size=20%  0 0

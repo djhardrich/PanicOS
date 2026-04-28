@@ -1,0 +1,5 @@
+# PanicOS base rootfs overlay for the A133/Brick vendor flavor — provides
+# /boot, /system, /storage mountpoints + an fstab matching our RO-squashfs
+# root. Mirror of the H700/RK3566 mainline overlays (same fundamentals;
+# just under a different SoC/flavor path).
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/vendor/rootfs-overlay"

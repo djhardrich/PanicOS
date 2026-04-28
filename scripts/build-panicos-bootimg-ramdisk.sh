@@ -100,7 +100,28 @@ for a in $APPLETS_SBIN; do ln -sf ../bin/busybox "$STAGE/sbin/$a"; done
 
 install -m 0755 "$INIT_SCRIPT" "$STAGE/init"
 
-# Build cpio.gz. fakeroot/cpio handles ownership; -R 0:0 forces uid/gid 0.
-( cd "$STAGE" && find . | cpio --quiet -H newc -R 0:0 -o ) | gzip -9 -n > "$OUT"
+# Pre-pend a tiny cpio with /dev/console + /dev/null device nodes. Without
+# these the kernel's console_on_rootfs() fails to set up /init's stdin/
+# stdout/stderr — set -e + first echo fails with EBADF and the kernel
+# panics with "init exited". `cpio -o` from a non-root user can't mknod,
+# so we craft the newc entries directly.
+{
+    python3 - "$STAGE" <<'PY'
+import sys
+def cpio_entry(out, path, mode, ino, nlink, rmaj, rmin):
+    name = path.encode() + b'\x00'
+    hdr = (b'070701'
+        + b''.join(b'%08X' % v for v in
+            [ino, mode, 0, 0, nlink, 0, 0, 0, 0, rmaj, rmin, len(name), 0]))
+    out.write(hdr + name)
+    out.write(b'\x00' * ((-len(hdr + name)) & 3))
+S_IFDIR=0o040000; S_IFCHR=0o020000
+out = sys.stdout.buffer
+cpio_entry(out, 'dev',         S_IFDIR | 0o755, 10, 2, 0, 0)
+cpio_entry(out, 'dev/console', S_IFCHR | 0o600, 11, 1, 5, 1)
+cpio_entry(out, 'dev/null',    S_IFCHR | 0o666, 12, 1, 1, 3)
+PY
+    ( cd "$STAGE" && find . | cpio --quiet -H newc -R 0:0 -o )
+} | gzip -9 -n > "$OUT"
 
 echo ">>> wrote $OUT ($(stat -c %s "$OUT") bytes)"

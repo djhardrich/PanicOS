@@ -49,14 +49,16 @@ cp "$BINARIES_DIR/dtbs/$SOC/$DEFAULT_DTB" "$BINARIES_DIR/dtb.img"
 cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/panicos-active.cfg" \
    "$BINARIES_DIR/panicos-active.cfg"
 
-cat > "$BINARIES_DIR/boot.cmd" <<'EOF'
-setenv bootargs "console=ttyS0,115200 console=tty1 loglevel=8 boot_delay=500 initcall_debug ignore_loglevel panic=0 oops=panic pause_on_oops=300"
-fatload mmc 0:1 ${kernel_addr_r} Image
-fatload mmc 0:1 ${fdt_addr_r} dtb.img
-booti ${kernel_addr_r} - ${fdt_addr_r}
+# Use extlinux.conf (plain text, editable on the FAT without reflashing)
+# rather than a compiled boot.scr. U-Boot's distro_bootcmd scans for
+# /extlinux/extlinux.conf via CONFIG_CMD_SYSBOOT — same path ROCKNIX uses.
+mkdir -p "$BINARIES_DIR/extlinux"
+cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
+LABEL PanicOS
+  LINUX /Image
+  FDT /dtb.img
+  APPEND console=ttyS0,115200 console=tty1 loglevel=8 boot_delay=50 initcall_debug panic=0 pause_on_oops=300
 EOF
-mkimage -A arm64 -O linux -T script -C none -d "$BINARIES_DIR/boot.cmd" \
-    "$BINARIES_DIR/boot.scr" >/dev/null
 
 # Stage the squashfs into a system staging dir for genimage to package.
 SYSTEM_STAGE="$BINARIES_DIR/system-staging"
