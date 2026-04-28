@@ -17,15 +17,21 @@
 #   offset 32K on the SD card / eMMC). No separate idbloader.img or u-boot.itb
 #   staging is needed — post-image.sh places u-boot-rockchip.bin at 32K offset.
 #
-#   BL31 binary:  bin/rk35/rk3568_bl31_v1.45.elf   (RK3566+RK3568 share ATF)
-#   DDR TPL:      bin/rk35/rk3568_ddr_1056MHz_v1.23.bin
+#   BL31 binary:  bin/rk35/rk3568_bl31_v1.43.elf   (RK3566+RK3568 share ATF)
+#   DDR TPL:      bin/rk35/rk3568_ddr_1056MHz_v1.18.bin
+#
+# NB: rkbin filenames bump regularly. If a build fails with "cannot stat"
+# on these paths, list the actual tree and pin to the latest matching
+# version:
+#   ls output/.../build/rockchip-rkbin-*/bin/rk35/rk3568_bl31_*.elf
+#   ls output/.../build/rockchip-rkbin-*/bin/rk35/rk3568_ddr_1056MHz_*.bin
 #
 # NOTE: rkbin is a large git clone (~1.5 GB). Task 5 should evaluate caching
 # or pinning to a sparse checkout if build time is unacceptable.
 
 BR2_PACKAGE_ROCKCHIP_RKBIN=y
-BR2_PACKAGE_ROCKCHIP_RKBIN_BL31_FILENAME="bin/rk35/rk3568_bl31_v1.45.elf"
-BR2_PACKAGE_ROCKCHIP_RKBIN_TPL_FILENAME="bin/rk35/rk3568_ddr_1056MHz_v1.23.bin"
+BR2_PACKAGE_ROCKCHIP_RKBIN_BL31_FILENAME="bin/rk35/rk3568_bl31_v1.43.elf"
+BR2_PACKAGE_ROCKCHIP_RKBIN_TPL_FILENAME="bin/rk35/rk3568_ddr_1056MHz_v1.18.bin"
 
 BR2_TARGET_UBOOT=y
 BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y
