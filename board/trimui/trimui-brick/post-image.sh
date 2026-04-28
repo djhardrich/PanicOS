@@ -25,6 +25,24 @@ fi
 
 echo ">>> post-image: assembling TrimUI Brick disk image (blob mode)"
 
+# Repack the vendor Android bootimg so it boots into the PanicOS initramfs
+# (which then loop-mounts our squashfs from SD), instead of the vendor's
+# stock TrimUI 1.0.6 ramdisk that mounts /dev/mmcblk0p4 vfat directly.
+# Keeps the vendor kernel + header addresses so the vendor U-Boot in
+# boot_package.fex still loads it the same way.
+RAMDISK="$BINARIES_DIR/panicos-bootimg-ramdisk.cpio.gz"
+"$BR2_EXTERNAL_PANICOS_PATH/scripts/build-panicos-bootimg-ramdisk.sh" \
+    "$TARGET_DIR" \
+    "$BR2_EXTERNAL_PANICOS_PATH/panicos-initramfs/init" \
+    "$RAMDISK"
+
+VENDOR_BOOTIMG="$BR2_EXTERNAL_PANICOS_PATH/soc/$SOC/$KERNEL_FLAVOR/prebuilt/$DEVICE_NAME/partitions/boot.img"
+python3 "$BR2_EXTERNAL_PANICOS_PATH/scripts/build-android-bootimg.py" \
+    --vendor-bootimg "$VENDOR_BOOTIMG" \
+    --ramdisk "$RAMDISK" \
+    --cmdline "console=tty0 console=ttyS0,115200 earlycon loglevel=7" \
+    --out "$BINARIES_DIR/partitions/boot.img"
+
 # panicos-active.cfg goes into the boot VFAT so the initramfs knows which
 # squashfs to mount.
 cp "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/panicos-active.cfg" \
