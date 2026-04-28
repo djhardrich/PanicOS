@@ -57,7 +57,7 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg353p/panicos-active.cfg" \
 # We use a simple boot.scr for compatibility with both Generic and Specific
 # U-Boot tracks. The kernel Image and DTB are loaded from FAT.
 cat > "$BINARIES_DIR/boot.cmd" <<'EOF'
-setenv bootargs "console=ttyS2,1500000 panic=10"
+setenv bootargs "console=tty1 console=ttyS2,1500000 panic=10"
 fatload mmc 0:1 ${kernel_addr_r} Image
 fatload mmc 0:1 ${fdt_addr_r} dtb.img
 booti ${kernel_addr_r} - ${fdt_addr_r}

@@ -50,7 +50,7 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/panicos-active.cfg" \
    "$BINARIES_DIR/panicos-active.cfg"
 
 cat > "$BINARIES_DIR/boot.cmd" <<'EOF'
-setenv bootargs "console=ttyS0,115200 panic=10"
+setenv bootargs "console=tty1 console=ttyS0,115200 panic=10"
 fatload mmc 0:1 ${kernel_addr_r} Image
 fatload mmc 0:1 ${fdt_addr_r} dtb.img
 booti ${kernel_addr_r} - ${fdt_addr_r}
