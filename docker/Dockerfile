@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         bash \
         bc \
         binutils \
+        binwalk \
         build-essential \
         bzip2 \
         ca-certificates \
@@ -17,16 +18,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
         git \
         gzip \
+        kpartx \
         libgnutls28-dev \
         libncurses-dev \
         libssl-dev \
         locales \
         make \
         mtools \
+        parted \
         patch \
         perl \
         python3 \
         python3-dev \
+        python3-yaml \
         rsync \
         sed \
         squashfs-tools \

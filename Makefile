@@ -67,6 +67,21 @@ shell: container-image
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		bash
 
+.PHONY: vbe
+# `--privileged` is required for kpartx/losetup inside the container.
+# Mounting loop devices needs elevated kernel capabilities; vbe runs as the
+# host user for everything else (output/vbe/ is owned by the host user).
+vbe: container-image
+	@docker run --rm -i $(DOCKER_TTY) \
+		--user $(DOCKER_USER) \
+		-v $(PANICOS_ROOT):/work \
+		-w /work \
+		-e IN_CONTAINER=1 \
+		-e HOME=/tmp \
+		--privileged \
+		$(DOCKER_IMAGE):$(DOCKER_TAG) \
+		bash scripts/vbe.sh $(filter-out $@,$(MAKECMDGOALS))
+
 .PHONY: help
 help:
 	@echo "PanicOS build (host wrapper)"
@@ -76,6 +91,7 @@ help:
 	@echo "  make <device>                Build a device image (later plans)"
 	@echo "  make tui                     Interactive build wizard"
 	@echo "  make shell                   Interactive shell in the build container"
+	@echo "  make vbe                     Vendor Blob Extractor (run make shell first for args)"
 	@echo "  make clean-<device>          Clean a device's output dir"
 	@echo
 	@echo "Set IN_CONTAINER=1 to skip the Docker re-exec."
