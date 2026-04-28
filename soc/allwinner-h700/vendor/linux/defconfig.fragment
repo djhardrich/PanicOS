@@ -1,0 +1,36 @@
+# Linux kernel — Allwinner H700 vendor (Knulli BSP) flavor.
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_GIT=y
+BR2_LINUX_KERNEL_CUSTOM_REPO_URL="https://github.com/orangepi-xunlong/linux-orangepi.git"
+BR2_LINUX_KERNEL_CUSTOM_REPO_VERSION="orange-pi-4.9-sun50iw9"
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="4.9.170"
+
+# Patches (initially empty; RT and other tweaks land here later).
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/vendor/linux/patches"
+
+# Vendor BSP has no upstream defconfig that matches our needs — use
+# Knulli's full kernel config (concatenated with panicos-extras at build
+# time by the Makefile; see Task 7).
+BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
+BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="$(O)/vendor-linux.config"
+
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+# BSP kernel DTBs live in arch/arm64/boot/dts/sunxi/ (NOT allwinner/ —
+# the BSP fork uses a pre-mainline DT layout). Only one H700 DTS exists
+# in the BSP: sun50iw9p1-soc.dts. Single DTB for all H700 hardware.
+#
+# CAVEAT: Knulli relies on U-Boot's compiled-in DTB (in their pre-built
+# boot_package.fex blob) to drive board-specific config. For our vendor
+# flavor we build mainline U-Boot v2026.01, which expects mainline-format
+# DTBs with mainline-style hardware bindings. The 4.9 BSP kernel was
+# written against pre-mainline bindings. Whether this combination boots
+# is a runtime/hardware question requiring on-device verification.
+# Build-time, this value just makes the kernel build complete.
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="sunxi/sun50iw9p1-soc"
+
+BR2_LINUX_KERNEL_GZIP=y
+
+# Toolchain headers — the closest pre-defined Buildroot LTS that doesn't
+# patch-conflict with our vendor source. 4.9 → 5.10 should be safe.
+BR2_KERNEL_HEADERS_5_10=y

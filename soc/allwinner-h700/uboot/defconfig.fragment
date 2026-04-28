@@ -13,7 +13,7 @@ BR2_TARGET_UBOOT_CUSTOM_VERSION=y
 BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2026.01"
 BR2_TARGET_UBOOT_CUSTOM_TARBALL=y
 BR2_TARGET_UBOOT_CUSTOM_TARBALL_LOCATION="https://github.com/u-boot/u-boot/archive/v2026.01.tar.gz"
-BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/uboot/patches"
+BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/uboot/patches"
 # NB: BR2_TARGET_UBOOT_BOARDNAME is intentionally NOT set here.
 # Buildroot derives `make <BOARDNAME>_defconfig` from BOARDNAME — and
 # the H700 has two DRAM variants (lpddr3, lpddr4) needing different

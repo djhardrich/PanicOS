@@ -22,9 +22,15 @@ config PANICOS_KERNEL_FLAVOR_MAINLINE
 config PANICOS_KERNEL_FLAVOR_VENDOR
 	bool "vendor"
 	help
-	  Vendor BSP kernel (Knulli-imported). Requires Plan 03 to be
-	  complete; building with this flavor will fail until the
-	  soc/<soc>/vendor/ tree exists.
+	  Vendor BSP kernel — Linux 4.9.170 from Orange Pi Xunlong's
+	  fork (the same source Knulli uses), built from source by us.
+	  Useful for devices where mainline support is incomplete or
+	  where vendor-only features (RT patches, certain peripherals)
+	  are needed.
+
+	  Note: closed-source vendor SoCs (e.g. Allwinner A133 in the
+	  TrimUI Brick) cannot use this flavor — they require blob-only
+	  build mode handled per-device (see Plan 04).
 
 endchoice
 

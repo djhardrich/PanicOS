@@ -33,6 +33,8 @@ container-image:
 Makefile: ;
 
 # Re-exec any other goal inside the container.
+# $(MAKEOVERRIDES) propagates user-supplied command-line var assignments
+# (e.g. KERNEL=vendor, FLAVOR=desktop) into the container's make.
 %: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
 		--user $(DOCKER_USER) \
@@ -41,7 +43,7 @@ Makefile: ;
 		-e IN_CONTAINER=1 \
 		-e HOME=/tmp \
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
-		make $@
+		make $@ $(MAKEOVERRIDES)
 
 .PHONY: shell
 shell: container-image
@@ -88,15 +90,15 @@ KERNEL ?=
 
 .PHONY: harness-smoke
 harness-smoke:
-	$(MAKE) _build DEVICE=harness-smoke
+	$(MAKE) _build DEVICE=harness-smoke FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: rg35xx-pro
 rg35xx-pro:
-	$(MAKE) _build DEVICE=rg35xx-pro
+	$(MAKE) _build DEVICE=rg35xx-pro FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: rg35xx-pro-lpddr3
 rg35xx-pro-lpddr3:
-	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3
+	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3 FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
 .PHONY: _build
 _build:
@@ -119,6 +121,10 @@ _build:
 		if [ -f "$$EXTRAS_IN" ]; then \
 			sed "s|@PANICOS_INITRAMFS_PATH@|$(PANICOS_ROOT)/output/panicos-initramfs.cpio.gz|" \
 				"$$EXTRAS_IN" > "$$EXTRAS_OUT"; \
+		fi; \
+		if [ "$$K" = "vendor" ]; then \
+			BASE="$(PANICOS_ROOT)/soc/$$SOC/vendor/linux/linux.config.fragment"; \
+			cat "$$BASE" "$$EXTRAS_OUT" > "$$OUT/vendor-linux.config"; \
 		fi; \
 	fi; \
 	scripts/gen-defconfig.sh \
