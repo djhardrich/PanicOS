@@ -2,8 +2,11 @@
 #
 # Allwinner A133 eMMC/SD layout (standard Allwinner sunxi):
 #   GPT header at offset 81920 (0x14000) — moved to avoid BROM area
-#   boot0.img   (in-partition-table=no) at offset 131072  (0x20000)
-#     Allwinner eGON.BT0 stage1 BROM blob, 64KB
+#   boot0.img   (in-partition-table=no) at offset 262144  (0x40000)
+#     Allwinner A133 eGON.BT0 stage1 BROM blob, 64KB. The A133 BROM
+#     scans for boot0 specifically at 0x40000 — wrong offset = BROM
+#     never starts boot0 = black screen. Confirmed by Knulli's
+#     genimage.cfg for TrimUI Brick.
 #   boot_package.fex (in-partition-table=no) at offset 16793600 (0x1004000)
 #     Allwinner TOC1 package: U-Boot + ATF + SCP + DTB, ~4.6MB
 #   boot.img    partition at offset 37748736 (0x2400000)
@@ -23,7 +26,9 @@
 
 image boot.vfat {
 	vfat {
-		extraargs = "-F 32 -n PANICOS"
+		# Vendor initrd looks for `label=BATOCERA` partition. Match
+		# Knulli's labeling so the vendor early-init flow doesn't fail.
+		extraargs = "-F 32 -n BATOCERA"
 		files = {
 			"uImage",
 			"boot/boot.scr",
@@ -65,7 +70,8 @@ image panicos-trimui-brick-minimal.img {
 	partition bootloader {
 		in-partition-table = "no"
 		image = "partitions/boot0.img"
-		offset = 131072
+		# A133 BROM scans for boot0 at 0x40000 (262144). 0x20000 was wrong.
+		offset = 262144
 	}
 
 	partition boot-package {
