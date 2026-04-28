@@ -120,7 +120,7 @@ while IFS= read -r base; do
         "$ROCKNIX_DTS_DIR/$base" \
         "$SOC_MAIN/linux/dts/$dts_subdir/$base" "$TSV"
 done < <(git -C "$ROCKNIX" ls-tree --name-only "$ROCKNIX_SHA" \
-    "$ROCKNIX_DTS_DIR/" 2>/dev/null | grep '\.dts$' | xargs -I{} basename {} || true)
+    "$ROCKNIX_DTS_DIR/" 2>/dev/null | grep -E '\.(dts|dtsi)$' | xargs -I{} basename {} || true)
 
 # ----- U-Boot patches (in flavor-independent uboot/) -----
 rm -rf "$SOC_UBOOT/patches"
