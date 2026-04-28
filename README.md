@@ -12,16 +12,25 @@ make harness-smoke   # smoke-test the build harness; ~30 min on first run
 
 The output rootfs lands in `output/harness-smoke-minimal/images/rootfs.tar`.
 
-## Interactive build
+## Interactive build (TUI)
 
 If you don't want to memorize `make` flags, run:
 
 ```sh
-./panicos
+make tui
 ```
 
 The wizard walks through device → flavor → kernel and dispatches the
-right build.
+right build. It also includes a **Vendor Blob Extractor** submenu for
+porting PanicOS to unsupported devices — see below.
+
+## Porting to a new device with VBE
+
+The Vendor Blob Extractor lets you pull the kernel, bootloader blobs, and
+modules from a stock device SD card image and combine them with a PanicOS
+rootfs to produce a flashable image for any ARM handheld.
+
+Full walkthrough: [`docs/vbe-walkthrough.md`](docs/vbe-walkthrough.md)
 
 ## Real device builds
 

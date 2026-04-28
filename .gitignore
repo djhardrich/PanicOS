@@ -3,3 +3,4 @@ output/
 *.swp
 .env.local
 .claude/
+output/vbe/
