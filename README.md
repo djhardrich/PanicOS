@@ -12,6 +12,17 @@ make harness-smoke   # smoke-test the build harness; ~30 min on first run
 
 The output rootfs lands in `output/harness-smoke-minimal/images/rootfs.tar`.
 
+## Interactive build
+
+If you don't want to memorize `make` flags, run:
+
+```sh
+./panicos
+```
+
+The wizard walks through device → flavor → kernel and dispatches the
+right build.
+
 ## Real device builds
 
 Coming in Plan 02 (Anbernic RG35XX Pro bring-up). Until then, `harness-smoke`
