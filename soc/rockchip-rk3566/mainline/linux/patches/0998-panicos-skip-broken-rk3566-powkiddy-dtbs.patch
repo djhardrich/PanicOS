@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000001 Mon Sep 17 00:00:00 2001
+From: PanicOS <noreply@panicos.local>
+Subject: [PATCH] arm64: dts: rockchip: skip rgb10max3 + x55 (need joypad label)
+
+Linux 7.0.1's `rk3566-powkiddy-rgb10max3.dts` and
+`rk3566-powkiddy-x55.dts` reference a `&joypad` label that isn't
+defined anywhere in the kernel tree we ship. Without that patch, dtc
+fails:
+
+  Error: arch/arm64/boot/dts/rockchip/rk3566-powkiddy-rgb10max3.dts:N.M-N
+  Label or path joypad not found
+
+Skip building these two DTBs until the `joypad` definition lands in our
+patch series. RG353P is RK3566's primary target on PanicOS; rare
+Powkiddy devices using these specific DTBs aren't on the v1 list.
+---
+ arch/arm64/boot/dts/rockchip/Makefile | 2 --
+ 1 file changed, 2 deletions(-)
+
+--- a/arch/arm64/boot/dts/rockchip/Makefile
++++ b/arch/arm64/boot/dts/rockchip/Makefile
+@@ -110,11 +110,9 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-pinenote-v1.2.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-pinetab2-v0.1.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-pinetab2-v2.0.dtb
+-dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-powkiddy-rgb10max3.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-powkiddy-rgb20sx.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-powkiddy-rgb30.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-powkiddy-rk2023.dtb
+-dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-powkiddy-x55.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-qnap-ts133.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-quartz64-a.dtb
+ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-quartz64-b.dtb
