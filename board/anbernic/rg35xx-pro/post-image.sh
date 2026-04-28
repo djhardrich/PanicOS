@@ -75,8 +75,16 @@ GENIMAGE_CFG="$BINARIES_DIR/genimage.cfg"
 envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
 
 GENIMAGE_TMP="$BINARIES_DIR/genimage.tmp"
-rm -rf "$GENIMAGE_TMP"
+GENIMAGE_ROOT="$BINARIES_DIR/genimage.root"
+rm -rf "$GENIMAGE_TMP" "$GENIMAGE_ROOT"
+mkdir -p "$GENIMAGE_ROOT"
+# --rootpath must point at an existing dir; genimage cp's it into the tmp
+# tree even when no partition references it. Our two-partition layout
+# stages everything via --inputpath (BINARIES_DIR), so rootpath is just an
+# empty placeholder. Without this genimage falls back to $BUILDROOT/root,
+# which buildroot doesn't create, and post-image fails with cp ENOENT.
 genimage \
+    --rootpath "$GENIMAGE_ROOT" \
     --tmppath "$GENIMAGE_TMP" \
     --inputpath "$BINARIES_DIR" \
     --outputpath "$BINARIES_DIR" \

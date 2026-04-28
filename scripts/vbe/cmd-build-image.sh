@@ -255,9 +255,11 @@ IMAGE=${PANICOS_OUTPUT_NAME}.squashfs
 CFGEOF
 
 # ---------------------------------------------------------------------------
-# Step 7: Stage squashfs into rootpath for genimage system.ext4
+# Step 7: Stage squashfs into BINDIR (--inputpath) so the boot vfat picks
+# it up via its files{} list. No more system.ext4 staging — the squashfs
+# rides on the FAT alongside the kernel in the two-partition layout.
 # ---------------------------------------------------------------------------
-cp "$SQUASHFS" "$ROOTPATH/${PANICOS_OUTPUT_NAME}.squashfs"
+cp "$SQUASHFS" "$BINDIR/${PANICOS_OUTPUT_NAME}.squashfs"
 echo ">>> staged squashfs ($(stat -c%s "$SQUASHFS") bytes)"
 
 # ---------------------------------------------------------------------------
