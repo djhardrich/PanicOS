@@ -12,11 +12,66 @@
 
 ## Architecture
 
-A new build mode (third one — alongside `from-source` and `from-blobs`):
+A new build mode (third — alongside `from-source` and `from-blobs`):
 
-- **`from-extracted-vendor`** — input is a vendor SD card image (or recovery firmware archive). VBE produces a `soc/<extracted-soc>/vendor/prebuilt/<device>/` layout identical to what `sync-knulli.sh` produces in blob mode. From there, the existing blob-staging build path takes over.
+- **`from-extracted-vendor`** — input is a vendor SD-card image (or recovery firmware archive). VBE produces a `soc/<extracted-soc>/vendor/prebuilt/<device>/` layout identical to what `sync-knulli.sh` produces in blob mode. From there the existing blob-staging build path takes over.
 
-The extractor is a CLI tool (`scripts/extract-vendor-image.sh`) plus optional TUI integration (Plan 05's `panicos-tui.sh` gains an "Extract from vendor image" wizard).
+VBE is a CLI tool (`scripts/vbe.sh`) plus a TUI wizard integrated into Plan 05's `panicos-tui.sh`. The CLI exposes **three independent user-facing operations** that can be used standalone or chained:
+
+### Operation A — `vbe extract` (extract + archive)
+
+```sh
+./scripts/vbe.sh extract <vendor-image> [--out vbe-<device>-<sha>.tar.gz]
+```
+
+- Identifies the image format (raw / gz / xz / zip / rar / RKImage / sparse-android)
+- Extracts: kernel `Image`/`uImage`/`zImage`, all DTBs, U-Boot blob(s), `/lib/modules/<kver>/` tree, initrd if present, any boot scripts
+- Bundles into a single tar.gz with a manifest (`vbe-manifest.yaml`) listing what's inside, kernel version, DTB compatibles, U-Boot strings, source-image SHA256
+- Output filename auto-derived: `vbe-<auto-detected-device-or-soc>-<source-sha8>.tar.gz`
+- This artifact is **shareable** between users (everything except licensing — see open questions)
+
+### Operation B — `vbe inject` (modules into a squashfs)
+
+```sh
+./scripts/vbe.sh inject <vbe-archive.tar.gz> <input.squashfs> [--out output.squashfs]
+```
+
+- Unpacks the user-supplied PanicOS squashfs (built from `make rg35xx-pro` etc., or any compatible PanicOS build)
+- Copies `/lib/modules/<kver>/` from the VBE archive into the rootfs
+- Runs `depmod -a -b <rootfs> <kver>`
+- Re-packs squashfs (preserves UID/GID, compression settings)
+- Output: a squashfs that pairs with the vendor kernel's modules — boots on vendor kernel with full peripheral support
+
+This is the killer operation — lets users build a PanicOS squashfs ONCE, then inject different vendor modules to target different devices.
+
+### Operation C — `vbe build-image` (assemble flashable image)
+
+```sh
+./scripts/vbe.sh build-image \
+    <vbe-archive.tar.gz> \
+    <squashfs.squashfs> \
+    --out panicos-<device>-vendor-extracted.img.gz \
+    [--system-size 8G] [--overlay-size 64M]
+```
+
+- Combines: vendor U-Boot blobs + vendor kernel + (our compiled) initramfs + user-supplied squashfs
+- Builds the full disk image with PanicOS's standard partition layout (boot FAT + system ext4 + overlay ext4)
+- Works for devices that fit a "U-Boot + Image + DTB + initramfs + squashfs" boot chain (most ARM handhelds)
+- For Allwinner sunxi-pattern devices: stages boot0.img/boot_package.fex at the right offsets
+- For Rockchip devices: stages idbloader + u-boot.itb at the right offsets
+- For exotic boot patterns (e.g. Android-style boot.img with embedded ramdisk): the extractor preserves the original initrd; this op chains kernel→vendor-initrd→PanicOS-rootfs (vendor-initrd doesn't switch_root; PanicOS initrd takes over)
+
+### Operation D (composite shortcut) — `vbe port`
+
+```sh
+./scripts/vbe.sh port <vendor-image> <panicos-base-squashfs> --out <flashable.img.gz>
+```
+
+Convenience: runs A → B → C in one shot. Most users will use this.
+
+---
+
+The TUI wizard surfaces all four operations as menu items.
 
 ### VBE pipeline
 
