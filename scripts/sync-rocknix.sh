@@ -45,6 +45,7 @@ ROCKNIX_CHERRY_PICKS=()
 ROCKNIX_CP_KERNEL_PATCHES=()
 ROCKNIX_CP_UBOOT_PATCHES=()
 ROCKNIX_SYNTH_DEFCONFIGS=()
+ROCKNIX_FIRMWARE_DIRS=()
 MANIFEST_SECTION_ROCKNIX=""
 
 # Load per-SoC variables from conf.
@@ -171,6 +172,32 @@ if [ "${#ROCKNIX_CHERRY_PICKS[@]}" -gt 0 ] && [ "${#ROCKNIX_SYNTH_DEFCONFIGS[@]}
         src_sha=$(git -C "$ROCKNIX" show "$CHERRY_SHA:$src" | sha256sum | awk '{print $1}')
         dest_sha=$(sha256_of "$out")
         printf '%s\t%s\t%s\t%s\n' "$out" "$src" "$src_sha" "$dest_sha" >> "$TSV"
+    done
+fi
+
+# ----- firmware blobs (rootfs overlay) -----
+# Anything under ROCKNIX_FIRMWARE_DIRS gets copied to
+# soc/<soc>/mainline/rootfs-overlay/lib/firmware/<relpath>. Required for
+# drivers that load via request_firmware() (panel-mipi-dpi-spi panels,
+# Realtek BT, Cirrus DSP). Buildroot picks the dir up via BR2_ROOTFS_OVERLAY
+# wired in mainline/rootfs-overlay/defconfig.fragment.
+FW_TARGET="$SOC_MAIN/rootfs-overlay/usr/lib/firmware"
+if [ "${#ROCKNIX_FIRMWARE_DIRS[@]}" -gt 0 ]; then
+    rm -rf "$FW_TARGET"
+    mkdir -p "$FW_TARGET"
+    for src_dir in "${ROCKNIX_FIRMWARE_DIRS[@]}"; do
+        while IFS= read -r relpath; do
+            [ -n "$relpath" ] || continue
+            import_file "$ROCKNIX" "$ROCKNIX_SHA" \
+                "$src_dir/$relpath" \
+                "$FW_TARGET/$relpath" "$TSV"
+        done < <(git -C "$ROCKNIX" ls-tree -r --name-only "$ROCKNIX_SHA" \
+            -- "$src_dir/" 2>/dev/null \
+            | sed "s|^$src_dir/||" \
+            | grep -v '/package\.mk$' \
+            | grep -v '^package\.mk$' \
+            | grep -v '^patches/' \
+            || true)
     done
 fi
 

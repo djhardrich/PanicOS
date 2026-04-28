@@ -1,0 +1,6 @@
+# Stage ROCKNIX firmware blobs (panel init sequences for kikuchan98's
+# panel-mipi-dpi-spi driver, RTL bluetooth, Cirrus DSP) into /lib/firmware
+# on the target rootfs. Without these the panel driver matches via the
+# fallback compatible but request_firmware("panels/<compat>.panel") fails
+# at probe — black screen with everything else booting fine.
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-h700/mainline/rootfs-overlay"

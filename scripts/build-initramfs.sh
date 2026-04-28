@@ -47,9 +47,34 @@ chmod 755 "$STAGE/init"
 
 cp "$BB" "$STAGE/bin/busybox"
 chmod 755 "$STAGE/bin/busybox"
-for applet in sh mount umount mkdir mknod losetup switch_root reboot echo cat sed; do
+# Applets the /init script (and a recovery shell on panic) actually call.
+# Missing any of these is a fatal bug: with `set -e`, /init crashes on the
+# first 'command not found' and the kernel panics with a black screen.
+APPLETS="ash sh mount umount mkdir mknod losetup switch_root reboot poweroff
+         echo cat sed sleep awk head ls grep cp mv rm chmod"
+for applet in $APPLETS; do
     ln -s busybox "$STAGE/bin/$applet"
 done
+
+# Bundle firmware blobs into the initramfs at /lib/firmware/. Drivers
+# whose .probe runs at device_initcall (panel-mipi-dpi-spi, regulator
+# helpers, etc.) call request_firmware() synchronously; the kernel's
+# firmware loader calls wait_for_initramfs() and searches the initramfs's
+# /lib/firmware/. The squashfs isn't mounted yet, so blobs that aren't
+# in the initramfs result in -ENOENT → probe fails → black screen.
+#
+# Source: caller passes PANICOS_INITRAMFS_FIRMWARE_DIRS as a colon-
+# separated list of directories whose contents are copied verbatim under
+# /lib/firmware/ in the initramfs (preserving subdir layout).
+if [ -n "${PANICOS_INITRAMFS_FIRMWARE_DIRS:-}" ]; then
+    mkdir -p "$STAGE/lib/firmware"
+    IFS=':' read -ra _fw_dirs <<<"$PANICOS_INITRAMFS_FIRMWARE_DIRS"
+    for d in "${_fw_dirs[@]}"; do
+        [ -d "$d" ] || continue
+        cp -a "$d/." "$STAGE/lib/firmware/"
+    done
+    echo ">>> bundled firmware: $(find "$STAGE/lib/firmware" -type f | wc -l) files"
+fi
 
 ( cd "$STAGE" && find . | cpio --quiet -o -H newc ) | gzip -9 > "$OUT"
 echo ">>> Built $OUT ($(stat -c%s "$OUT") bytes)"

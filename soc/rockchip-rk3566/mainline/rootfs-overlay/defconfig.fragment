@@ -1,0 +1,5 @@
+# Stage ROCKNIX firmware blobs into /usr/lib/firmware on the target rootfs
+# (panel init sequences, Realtek BT, Cirrus DSP). Required for drivers
+# that load via request_firmware(). Mirrors the H700 setup; see
+# soc/allwinner-h700/mainline/rootfs-overlay/defconfig.fragment.
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/mainline/rootfs-overlay"

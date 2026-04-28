@@ -70,8 +70,10 @@ image panicos-trimui-brick-minimal.img {
 	partition bootloader {
 		in-partition-table = "no"
 		image = "partitions/boot0.img"
-		# A133 BROM scans for boot0 at 0x40000 (262144). 0x20000 was wrong.
-		offset = 262144
+		# A133 BROM scans for boot0 at 0x20000 (131072) — Knulli ships at this
+		# offset and SD boot works on real Brick hardware. Earlier 0x40000 was
+		# based on a guess (Allwinner sunxi datasheet) and broke SD boot.
+		offset = 131072
 	}
 
 	partition boot-package {
@@ -86,6 +88,13 @@ image panicos-trimui-brick-minimal.img {
 	}
 
 	partition env {
+		image = "partitions/env.img"
+	}
+
+	# Vendor U-Boot looks for a redundant env partition right after the
+	# primary one — Knulli ships both. Without env-redund, U-Boot may stall
+	# during env load on some devices.
+	partition env-redund {
 		image = "partitions/env.img"
 	}
 

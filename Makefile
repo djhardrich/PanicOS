@@ -151,7 +151,9 @@ _build:
 	mkdir -p "$$OUT"; \
 	if [ -n "$$SOC" ]; then \
 		echo ">>> Building initramfs"; \
-		$(PANICOS_ROOT)/scripts/build-initramfs.sh; \
+		FW_DIR="$(PANICOS_ROOT)/soc/$$SOC/$$K/rootfs-overlay/usr/lib/firmware"; \
+		PANICOS_INITRAMFS_FIRMWARE_DIRS="$$([ -d "$$FW_DIR" ] && echo "$$FW_DIR")" \
+			$(PANICOS_ROOT)/scripts/build-initramfs.sh; \
 		EXTRAS_IN="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/panicos-extras.config.fragment.in"; \
 		EXTRAS_OUT="$$OUT/panicos-extras.config.fragment"; \
 		if [ -f "$$EXTRAS_IN" ]; then \
