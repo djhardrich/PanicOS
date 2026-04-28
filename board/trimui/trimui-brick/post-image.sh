@@ -40,7 +40,7 @@ VENDOR_BOOTIMG="$BR2_EXTERNAL_PANICOS_PATH/soc/$SOC/$KERNEL_FLAVOR/prebuilt/$DEV
 python3 "$BR2_EXTERNAL_PANICOS_PATH/scripts/build-android-bootimg.py" \
     --vendor-bootimg "$VENDOR_BOOTIMG" \
     --ramdisk "$RAMDISK" \
-    --cmdline "console=tty0 console=ttyS0,115200 earlycon loglevel=7" \
+    --cmdline "console=ttyS0,115200 console=tty1 earlycon loglevel=8 panic=10" \
     --out "$BINARIES_DIR/partitions/boot.img"
 
 # panicos-active.cfg goes into the boot VFAT so the initramfs knows which
