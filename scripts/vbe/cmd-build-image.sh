@@ -105,7 +105,7 @@ export PANICOS_OUTPUT_NAME="$ARCHIVE_BASE"
 # Partition sizes (exported for envsubst)
 export PANICOS_BOOT_PARTITION_SIZE_MB="$BOOT_SIZE_MB"
 export PANICOS_SYSTEM_PARTITION_SIZE_MB="$SYSTEM_SIZE_MB"
-export PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB="$OVERLAY_SIZE_MB"
+export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$OVERLAY_SIZE_MB"
 
 # ---------------------------------------------------------------------------
 # Step 3: Stage kernel + DTBs

@@ -60,21 +60,16 @@ LABEL PanicOS
   APPEND console=ttyS0,115200 console=tty1 loglevel=8 boot_delay=50 initcall_debug panic=0 pause_on_oops=300
 EOF
 
-# Stage the squashfs into a system staging dir for genimage to package.
-SYSTEM_STAGE="$BINARIES_DIR/system-staging"
-mkdir -p "$SYSTEM_STAGE"
+# Drop the squashfs into BINARIES_DIR with its public name. genimage's
+# vfat will copy this file directly into the boot partition (no separate
+# system.ext4 — the squashfs lives on the boot FAT next to the kernel,
+# which means PC users can drag-and-drop new flavors).
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
 cp "$BINARIES_DIR/rootfs.squashfs" \
-   "$SYSTEM_STAGE/panicos-rg35xx-pro-minimal.squashfs"
+   "$BINARIES_DIR/panicos-rg35xx-pro-minimal.squashfs"
 
-# Pull partition sizes from Buildroot's .config.
-read_kconfig() {
-    local key="$1" def="$2"
-    grep "^${key}=" "$BR2_CONFIG" | head -1 | cut -d= -f2- | tr -d '"' || echo "$def"
-}
-export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 256)"
-export PANICOS_SYSTEM_PARTITION_SIZE_MB="$(read_kconfig PANICOS_SYSTEM_PARTITION_SIZE_MB 8192)"
-export PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB 64)"
+export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 6144)"
+export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB 64)"
 
 GENIMAGE_CFG="$BINARIES_DIR/genimage.cfg"
 envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
@@ -82,7 +77,6 @@ envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
 GENIMAGE_TMP="$BINARIES_DIR/genimage.tmp"
 rm -rf "$GENIMAGE_TMP"
 genimage \
-    --rootpath "$SYSTEM_STAGE" \
     --tmppath "$GENIMAGE_TMP" \
     --inputpath "$BINARIES_DIR" \
     --outputpath "$BINARIES_DIR" \

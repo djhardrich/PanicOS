@@ -48,20 +48,18 @@ python3 "$BR2_EXTERNAL_PANICOS_PATH/scripts/build-android-bootimg.py" \
 cp "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/panicos-active.cfg" \
    "$BINARIES_DIR/panicos-active.cfg"
 
-# Stage squashfs into a system staging dir for genimage to package.
-SYSTEM_STAGE="$BINARIES_DIR/system-staging"
-mkdir -p "$SYSTEM_STAGE"
+# Drop the squashfs straight into BINARIES_DIR — genimage's vfat list
+# pulls it directly into the boot partition (no separate system.ext4).
 cp "$BINARIES_DIR/rootfs.squashfs" \
-   "$SYSTEM_STAGE/panicos-trimui-brick-minimal.squashfs"
+   "$BINARIES_DIR/panicos-trimui-brick-minimal.squashfs"
 
 # Pull partition sizes from Buildroot's .config.
 read_kconfig() {
     local key="$1" def="$2"
     grep "^${key}=" "$BR2_CONFIG" | head -1 | cut -d= -f2- | tr -d '"' || echo "$def"
 }
-export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 256)"
-export PANICOS_SYSTEM_PARTITION_SIZE_MB="$(read_kconfig PANICOS_SYSTEM_PARTITION_SIZE_MB 8192)"
-export PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB 64)"
+export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 6144)"
+export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB 64)"
 
 GENIMAGE_CFG="$BINARIES_DIR/genimage.cfg"
 envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
@@ -69,7 +67,6 @@ envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
 GENIMAGE_TMP="$BINARIES_DIR/genimage.tmp"
 rm -rf "$GENIMAGE_TMP"
 genimage \
-    --rootpath "$SYSTEM_STAGE" \
     --tmppath "$GENIMAGE_TMP" \
     --inputpath "$BINARIES_DIR" \
     --outputpath "$BINARIES_DIR" \

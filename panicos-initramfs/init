@@ -1,23 +1,26 @@
 #!/bin/sh
-# PanicOS initramfs — find boot + system partitions on whichever block
-# device our SD card / eMMC ended up as, loop-mount the selected
-# squashfs, and switch_root into it.
+# PanicOS initramfs — find boot + storage partitions on whichever block
+# device our SD card / eMMC ended up as, loop-mount the selected squashfs
+# (which lives on the boot vfat alongside the kernel — Knulli/ROCKNIX
+# style), set up an overlayfs whose upper+work directories live on the
+# storage ext4 partition, and switch_root into the merged tree.
 #
-# Detection strategy:
-#   - Boot partition = vfat with /panicos-active.cfg at the root.
-#   - System partition = ext4 with at least one .squashfs file at root.
+# Net effect: rootfs presents as fully writable from userspace, but only
+# changes (deltas) get written; the base squashfs stays pristine. PC
+# users see the boot vfat → can drop new squashfs flavors / edit active.cfg.
 #
-# Avoids hardcoding /dev/mmcblkN, /dev/sdN, etc. — works the same on:
-#   - Built-from-source flavors where SD card is mmcblk0
-#   - Vendor-blob flavors (TrimUI Brick) where SD card is mmcblk1
-#   - Any future device with a different enumeration
+# Detection strategy (no hardcoded mmcblkN/sdN):
+#   - Boot partition    = vfat with /panicos-active.cfg at the root.
+#                          Squashfs flavor(s) live on this partition too.
+#   - Storage partition = ext4, the *other* writable partition. Holds user
+#                          data and .panicos-overlay/{upper,work}.
 
 set -e
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
-mkdir -p /proc /sys /dev /run /boot /system /sysroot
+mkdir -p /proc /sys /dev /run /boot /storage /sysroot
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
@@ -30,16 +33,21 @@ panic() {
     reboot -f
 }
 
-# Wait briefly for partition devices to appear (settles after kernel
-# probes mmc/scsi).
+# Wait for the kernel to enumerate ALL partitions on whichever mmc we
+# booted from. Stop as soon as we see a stable count two ticks in a row.
+prev_count=-1
 i=0
-while [ $i -lt 20 ]; do
-    [ -e /dev/mmcblk0p1 ] || [ -e /dev/mmcblk1p1 ] || [ -e /dev/sda1 ] && break
+while [ $i -lt 50 ]; do
+    cur_count=$(ls /dev/mmcblk*p* /dev/sd*[0-9] 2>/dev/null | wc -l)
+    [ "$cur_count" -gt 0 ] && [ "$cur_count" = "$prev_count" ] && break
+    prev_count=$cur_count
     sleep 0.1
     i=$((i+1))
 done
 
-# Find the boot partition: a vfat with /panicos-active.cfg at root.
+echo ">>> PanicOS initramfs: block devices visible:"
+ls -l /dev/mmcblk*p* /dev/sd*[0-9] 2>/dev/null | sed 's/^/    /'
+
 find_boot() {
     for dev in /dev/mmcblk*p* /dev/sd*[0-9]; do
         [ -b "$dev" ] || continue
@@ -54,19 +62,18 @@ find_boot() {
     return 1
 }
 
-# Find the system partition: an ext4 with at least one .squashfs at root.
-# Skip whatever boot device we already mounted.
-find_system() {
+find_storage() {
     boot_dev="$1"
+    echo ">>> PanicOS initramfs: looking for storage (skip boot=$boot_dev)"
     for dev in /dev/mmcblk*p* /dev/sd*[0-9]; do
         [ -b "$dev" ] || continue
         [ "$dev" = "$boot_dev" ] && continue
-        if mount -o ro -t ext4 "$dev" /system 2>/dev/null; then
-            if ls /system/*.squashfs >/dev/null 2>&1; then
-                echo ">>> PanicOS initramfs: system partition = $dev"
-                return 0
-            fi
-            umount /system
+        echo "    trying $dev"
+        if mount -t ext4 "$dev" /storage 2>/dev/null; then
+            echo ">>> PanicOS initramfs: storage partition = $dev"
+            return 0
+        else
+            echo "    $dev not ext4 (or mount failed), skipping"
         fi
     done
     return 1
@@ -75,25 +82,37 @@ find_system() {
 find_boot || panic "no boot partition with /panicos-active.cfg found"
 BOOT_DEV=$(awk '$2 == "/boot" {print $1}' /proc/mounts | head -1)
 
-# Default IMAGE in case panicos-active.cfg is malformed.
 IMAGE=
 . /boot/panicos-active.cfg
 [ -n "$IMAGE" ] || panic "IMAGE not set in /boot/panicos-active.cfg"
-
 echo ">>> PanicOS initramfs: booting $IMAGE"
 
-find_system "$BOOT_DEV" || panic "no system partition with squashfs found"
+[ -f "/boot/$IMAGE" ] || panic "/boot/$IMAGE not found on boot partition"
 
-[ -f "/system/$IMAGE" ] || panic "/system/$IMAGE not found"
-
+# Loop-mount the selected squashfs at /lower (the overlayfs lower layer).
+mkdir -p /lower
 LOOPDEV=$(losetup -f)
-losetup -r "$LOOPDEV" "/system/$IMAGE" \
-    || panic "losetup of /system/$IMAGE failed"
-
-mount -o ro -t squashfs "$LOOPDEV" /sysroot \
+losetup -r "$LOOPDEV" "/boot/$IMAGE" \
+    || panic "losetup of /boot/$IMAGE failed"
+mount -o ro -t squashfs "$LOOPDEV" /lower \
     || panic "mount of squashfs failed"
 
-for m in proc sys dev run boot system; do
+# Find + mount the storage ext4 partition (rw). If absent we fall back to
+# tmpfs upper so the system still boots, just non-persistent.
+if find_storage "$BOOT_DEV"; then
+    mkdir -p /storage/.panicos-overlay/upper /storage/.panicos-overlay/work
+else
+    echo ">>> PanicOS initramfs: no storage partition found; using tmpfs (non-persistent)"
+    mount -t tmpfs tmpfs /storage
+    mkdir -p /storage/.panicos-overlay/upper /storage/.panicos-overlay/work
+fi
+
+mount -t overlay panicos-overlay \
+    -o lowerdir=/lower,upperdir=/storage/.panicos-overlay/upper,workdir=/storage/.panicos-overlay/work \
+    /sysroot \
+    || panic "overlayfs mount failed"
+
+for m in proc sys dev run boot storage lower; do
     mkdir -p "/sysroot/$m"
     mount --move "/$m" "/sysroot/$m"
 done

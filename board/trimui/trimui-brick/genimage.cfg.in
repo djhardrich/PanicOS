@@ -41,23 +41,17 @@ image boot.vfat {
 			"boot/asound.state",
 			"boot/bat",
 			"panicos-active.cfg",
+			"panicos-trimui-brick-minimal.squashfs",
 		}
 	}
 	size = ${PANICOS_BOOT_PARTITION_SIZE_MB}M
 }
 
-image system.ext4 {
+image storage.ext4 {
 	ext4 {
-		label = "system"
+		label = "storage"
 	}
-	size = ${PANICOS_SYSTEM_PARTITION_SIZE_MB}M
-}
-
-image overlay.ext4 {
-	ext4 {
-		label = "overlay"
-	}
-	size = ${PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB}M
+	size = ${PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB}M
 }
 
 image panicos-trimui-brick-minimal.img {
@@ -104,13 +98,8 @@ image panicos-trimui-brick-minimal.img {
 		image = "boot.vfat"
 	}
 
-	partition system {
+	partition storage {
 		partition-type-uuid = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
-		image = "system.ext4"
-	}
-
-	partition overlay {
-		partition-type-uuid = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
-		image = "overlay.ext4"
+		image = "storage.ext4"
 	}
 }

@@ -3,3 +3,12 @@
 # that load via request_firmware(). Mirrors the H700 setup; see
 # soc/allwinner-h700/mainline/rootfs-overlay/defconfig.fragment.
 BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/mainline/rootfs-overlay"
+
+# Buildroot's linux-firmware package — pulls upstream linux-firmware.git and
+# stages the selected groups into /usr/lib/firmware. Covers the BT/wifi
+# blobs handheld devices need (rtl8821cs, rtl8723b/d/f, rtl8852bs, rtw88
+# wifi, mediatek combos) that aren't in ROCKNIX's curated extra-firmware/.
+BR2_PACKAGE_LINUX_FIRMWARE=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX_BT=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_88XX_BT=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_RTW88=y

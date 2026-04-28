@@ -53,29 +53,21 @@ cp "$BINARIES_DIR/dtbs/$SOC/$DEFAULT_DTB" "$BINARIES_DIR/dtb.img"
 cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg353p/panicos-active.cfg" \
    "$BINARIES_DIR/panicos-active.cfg"
 
-# RK3566 U-Boot reads extlinux or a u-boot script from the boot partition.
-# We use a simple boot.scr for compatibility with both Generic and Specific
-# U-Boot tracks. The kernel Image and DTB are loaded from FAT.
-cat > "$BINARIES_DIR/boot.cmd" <<'EOF'
-setenv bootargs "console=ttyS2,1500000 console=tty1 loglevel=8 panic=10"
-fatload mmc 0:1 ${kernel_addr_r} Image
-fatload mmc 0:1 ${fdt_addr_r} dtb.img
-booti ${kernel_addr_r} - ${fdt_addr_r}
+# Switch to extlinux.conf (plain text, editable on FAT) — no boot.scr.
+mkdir -p "$BINARIES_DIR/extlinux"
+cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
+LABEL PanicOS
+  LINUX /Image
+  FDT /dtb.img
+  APPEND console=ttyS2,1500000 console=tty1 loglevel=8 panic=0 pause_on_oops=300
 EOF
-mkimage -A arm64 -O linux -T script -C none -d "$BINARIES_DIR/boot.cmd" \
-    "$BINARIES_DIR/boot.scr" >/dev/null
 
-# Stage the squashfs into a system staging dir for genimage to package.
-SYSTEM_STAGE="$BINARIES_DIR/system-staging"
-mkdir -p "$SYSTEM_STAGE"
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
 cp "$BINARIES_DIR/rootfs.squashfs" \
-   "$SYSTEM_STAGE/panicos-rg353p-minimal.squashfs"
+   "$BINARIES_DIR/panicos-rg353p-minimal.squashfs"
 
-# Pull partition sizes from Buildroot's .config.
-export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 256)"
-export PANICOS_SYSTEM_PARTITION_SIZE_MB="$(read_kconfig PANICOS_SYSTEM_PARTITION_SIZE_MB 8192)"
-export PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_OVERLAY_PARTITION_INITIAL_SIZE_MB 64)"
+export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 6144)"
+export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB 64)"
 
 GENIMAGE_CFG="$BINARIES_DIR/genimage.cfg"
 envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
@@ -83,7 +75,6 @@ envsubst < "$GENIMAGE_TEMPLATE" > "$GENIMAGE_CFG"
 GENIMAGE_TMP="$BINARIES_DIR/genimage.tmp"
 rm -rf "$GENIMAGE_TMP"
 genimage \
-    --rootpath "$SYSTEM_STAGE" \
     --tmppath "$GENIMAGE_TMP" \
     --inputpath "$BINARIES_DIR" \
     --outputpath "$BINARIES_DIR" \

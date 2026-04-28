@@ -1,30 +1,33 @@
 #!/bin/sh
-# PanicOS first-boot: grow the overlay partition + ext4 to fill the SD card.
-# Self-disables after success.
+# PanicOS first-boot: grow the storage partition + ext4 to fill the SD card.
+# /storage is the rw ext4 mounted by initramfs, holding user data PLUS the
+# overlayfs upper+work dirs under .panicos-overlay/. Self-disables after
+# success via marker file.
 
 set -eu
+set -x
 
 MARKER=/storage/.panicos-firstboot-done
 [ -f "$MARKER" ] && exit 0
 
-DISK=/dev/mmcblk0
-OVERLAY_PART_NUM=3
-OVERLAY_DEV="${DISK}p${OVERLAY_PART_NUM}"
+# Find the device backing /storage (mounted by initramfs). Read /proc/mounts
+# directly — findmnt isn't in the busybox / minimal util-linux subset we ship.
+# Works regardless of whether SD enumerates as mmcblk0 (mainline) or mmcblk1
+# (Brick).
+STORAGE_DEV="$(awk '$2 == "/storage" {print $1; exit}' /proc/mounts)"
+[ -n "$STORAGE_DEV" ] || { echo "panicos-firstboot: /storage not mounted" >&2; exit 1; }
 
-echo ">>> panicos-firstboot: growing $OVERLAY_DEV"
+DISK="$(echo "$STORAGE_DEV" | sed 's/p[0-9]*$//')"
+PARTNUM="$(echo "$STORAGE_DEV" | sed 's|.*p||')"
 
-sfdisk -d "$DISK" > /tmp/parts.dump
-awk -v n="$OVERLAY_PART_NUM" -v disk="$DISK" '
-    /^[^#]/ && $0 ~ "^"disk"p"n" :" {
-        sub(/, size=[^,]+/, "");
-    }
-    { print }
-' /tmp/parts.dump > /tmp/parts.new
-sfdisk --no-reread "$DISK" < /tmp/parts.new
-partprobe "$DISK" || true
-resize2fs "$OVERLAY_DEV"
+echo ">>> panicos-firstboot: growing $STORAGE_DEV (disk=$DISK partnum=$PARTNUM)"
 
-mkdir -p /storage
+# Grow the partition to fill remaining free space (`,+` = keep start, max size).
+echo ',+' | sfdisk -N "$PARTNUM" --no-reread --force "$DISK"
+partprobe "$DISK" 2>/dev/null || partx -u "$DISK" 2>/dev/null || true
+
+# Online resize the ext4 — works while mounted r/w.
+resize2fs "$STORAGE_DEV"
+
 touch "$MARKER"
-
 echo ">>> panicos-firstboot: done"
