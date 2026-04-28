@@ -1,19 +1,13 @@
 From 0000000000000000000000000000000000000001 Mon Sep 17 00:00:00 2001
 From: PanicOS <noreply@panicos.local>
-Date: 2026-04-27 12:00:00 -0700
 Subject: [PATCH] Add anbernic_rg35xx_h700_lpddr3_defconfig
 
-Cherry-picked from ROCKNIX commit 8d65b60 (h700/u-boot: lpddr3 config).
-Adds the LPDDR3 variant defconfig to U-Boot's configs/ directory so the
-BR2_TARGET_UBOOT_DEFCONFIG=anbernic_rg35xx_h700_lpddr3 build can find it.
+Synthesized from ROCKNIX 8d65b60525f54258ec4ab381b4c7f80ec94148c5
 ---
- configs/anbernic_rg35xx_h700_lpddr3_defconfig | 34 +++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
- create mode 100644 configs/anbernic_rg35xx_h700_lpddr3_defconfig
+ configs/anbernic_rg35xx_h700_lpddr3_defconfig | 34 +
 
 diff --git a/configs/anbernic_rg35xx_h700_lpddr3_defconfig b/configs/anbernic_rg35xx_h700_lpddr3_defconfig
 new file mode 100644
-index 0000000..1111111
 --- /dev/null
 +++ b/configs/anbernic_rg35xx_h700_lpddr3_defconfig
 @@ -0,0 +1,34 @@
@@ -51,6 +45,3 @@ index 0000000..1111111
 +CONFIG_LED_STATUS0=y
 +CONFIG_LED_STATUS_BIT=267
 +CONFIG_LED_STATUS_STATE=2
--- 
-2.53.0
-

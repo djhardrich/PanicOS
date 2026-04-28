@@ -45,6 +45,17 @@ Makefile: ;
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		make $@ $(MAKEOVERRIDES)
 
+.PHONY: tui
+tui: container-image
+	@docker run --rm -i $(DOCKER_TTY) \
+		--user $(DOCKER_USER) \
+		-v $(PANICOS_ROOT):/work \
+		-w /work \
+		-e IN_CONTAINER=1 \
+		-e HOME=/tmp \
+		$(DOCKER_IMAGE):$(DOCKER_TAG) \
+		bash scripts/panicos-tui.sh
+
 .PHONY: shell
 shell: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
@@ -63,6 +74,7 @@ help:
 	@echo "  make list-devices            List supported devices"
 	@echo "  make harness-smoke           Build the smoke-test rootfs"
 	@echo "  make <device>                Build a device image (later plans)"
+	@echo "  make tui                     Interactive build wizard"
 	@echo "  make shell                   Interactive shell in the build container"
 	@echo "  make clean-<device>          Clean a device's output dir"
 	@echo
@@ -100,6 +112,14 @@ rg35xx-pro:
 rg35xx-pro-lpddr3:
 	$(MAKE) _build DEVICE=rg35xx-pro-lpddr3 FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
+.PHONY: rg353p
+rg353p:
+	$(MAKE) _build DEVICE=rg353p FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
+
+.PHONY: trimui-brick
+trimui-brick:
+	$(MAKE) _build DEVICE=trimui-brick FLAVOR=$(FLAVOR) KERNEL=vendor
+
 .PHONY: _build
 _build:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
@@ -124,7 +144,9 @@ _build:
 		fi; \
 		if [ "$$K" = "vendor" ]; then \
 			BASE="$(PANICOS_ROOT)/soc/$$SOC/vendor/linux/linux.config.fragment"; \
-			cat "$$BASE" "$$EXTRAS_OUT" > "$$OUT/vendor-linux.config"; \
+			if [ -f "$$BASE" ]; then \
+				{ cat "$$BASE"; [ -f "$$EXTRAS_OUT" ] && cat "$$EXTRAS_OUT" || true; } > "$$OUT/vendor-linux.config"; \
+			fi; \
 		fi; \
 	fi; \
 	scripts/gen-defconfig.sh \

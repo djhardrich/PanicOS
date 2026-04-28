@@ -6,13 +6,15 @@ config PANICOS_SOC_NONE
 	bool "(none — harness-smoke / generic)"
 
 source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-h700/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-a133/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3566/Config.in"
 
 endchoice
 
 choice
 	prompt "Kernel flavor"
 	default PANICOS_KERNEL_FLAVOR_MAINLINE
-	depends on !PANICOS_SOC_NONE
+	depends on !PANICOS_SOC_NONE && !PANICOS_SOC_ALLWINNER_A133
 
 config PANICOS_KERNEL_FLAVOR_MAINLINE
 	bool "mainline"
@@ -38,3 +40,4 @@ config PANICOS_KERNEL_FLAVOR_NAME
 	string
 	default "mainline" if PANICOS_KERNEL_FLAVOR_MAINLINE
 	default "vendor" if PANICOS_KERNEL_FLAVOR_VENDOR
+	default "vendor" if PANICOS_SOC_ALLWINNER_A133

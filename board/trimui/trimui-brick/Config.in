@@ -1,0 +1,7 @@
+config PANICOS_DEVICE_TRIMUI_BRICK
+	bool "trimui/brick (Allwinner A133)"
+	select PANICOS_SOC_ALLWINNER_A133
+	help
+	  TrimUI Brick — Allwinner A133 (quad-core Cortex-A53), 1 GB LPDDR4.
+	  All kernel and bootloader components are pre-built blobs from the
+	  TrimUI vendor BSP. Build mode: blob-staging (no kernel/U-Boot compile).

@@ -1,0 +1,31 @@
+# Linux kernel — Rockchip RK3566 mainline flavor.
+
+# Use vanilla 6.12 LTS for linux-headers (toolchain ABI) so our patched
+# 7.0.1 kernel patches don't get applied to linux-headers extraction.
+# Headers are forward-compatible with 7.0.1 kernels.
+# BR2_KERNEL_HEADERS_AS_KERNEL is not set
+BR2_KERNEL_HEADERS_6_12=y
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="7.0.1"
+# Buildroot constructs the kernel.org URL from the version string.
+
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/mainline/linux/patches"
+
+# Use the kernel's arch-default defconfig (arch/arm64/configs/defconfig).
+BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/mainline/linux/linux.config.fragment $(O)/panicos-extras.config.fragment"
+
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+# Custom DTS dir for extra DTS files (rk3568-anbernic-rg-ds.dts etc.).
+# Buildroot copies the whole subdir into arch/arm64/boot/dts/.
+BR2_LINUX_KERNEL_CUSTOM_DTS_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3566/mainline/linux/dts"
+
+# All RK3566 Anbernic + Powkiddy DTBs present in upstream 7.0.1.
+# rk3566-anbernic-rg353p is the primary target.
+# .dtsi files are included automatically by the .dts files; do NOT list them here.
+# rk3568-anbernic-rg-ds is our extra DTS (in dts/rockchip/).
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3566-anbernic-rg353p rockchip/rk3566-anbernic-rg353ps rockchip/rk3566-anbernic-rg353v rockchip/rk3566-anbernic-rg353vs rockchip/rk3566-anbernic-rg503 rockchip/rk3566-anbernic-rg-arc-d rockchip/rk3566-powkiddy-rgb10max3 rockchip/rk3566-powkiddy-rgb20-pro rockchip/rk3566-powkiddy-x35s rockchip/rk3566-powkiddy-x55 rockchip/rk3568-anbernic-rg-ds"
+
+BR2_LINUX_KERNEL_GZIP=y

@@ -1,0 +1,10 @@
+config PANICOS_SOC_ROCKCHIP_RK3566
+	bool "Rockchip RK3566"
+	help
+	  Rockchip RK3566 (quad-core Cortex-A55). Used by the Anbernic
+	  RG353 family (RG353P, RG353V, RG353PS, RG353VS, RG503) and
+	  Powkiddy RGB30, X55, and related devices.
+
+if PANICOS_SOC_ROCKCHIP_RK3566
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3566/mainline/Config.in"
+endif
