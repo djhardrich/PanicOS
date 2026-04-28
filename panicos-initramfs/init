@@ -1,9 +1,16 @@
 #!/bin/sh
-# PanicOS initramfs — loop-mount the selected squashfs and switch_root.
+# PanicOS initramfs — find boot + system partitions on whichever block
+# device our SD card / eMMC ended up as, loop-mount the selected
+# squashfs, and switch_root into it.
 #
-# Reads /boot/panicos-active.cfg of the form:
-#     IMAGE=panicos-stable.squashfs
-# and mounts /system/$IMAGE.
+# Detection strategy:
+#   - Boot partition = vfat with /panicos-active.cfg at the root.
+#   - System partition = ext4 with at least one .squashfs file at root.
+#
+# Avoids hardcoding /dev/mmcblkN, /dev/sdN, etc. — works the same on:
+#   - Built-from-source flavors where SD card is mmcblk0
+#   - Vendor-blob flavors (TrimUI Brick) where SD card is mmcblk1
+#   - Any future device with a different enumeration
 
 set -e
 
@@ -23,23 +30,59 @@ panic() {
     reboot -f
 }
 
-BOOT_DEV=/dev/mmcblk0p1
-SYSTEM_DEV=/dev/mmcblk0p2
+# Wait briefly for partition devices to appear (settles after kernel
+# probes mmc/scsi).
+i=0
+while [ $i -lt 20 ]; do
+    [ -e /dev/mmcblk0p1 ] || [ -e /dev/mmcblk1p1 ] || [ -e /dev/sda1 ] && break
+    sleep 0.1
+    i=$((i+1))
+done
 
-mount -o ro -t vfat "$BOOT_DEV" /boot \
-    || panic "could not mount boot partition $BOOT_DEV"
+# Find the boot partition: a vfat with /panicos-active.cfg at root.
+find_boot() {
+    for dev in /dev/mmcblk*p* /dev/sd*[0-9]; do
+        [ -b "$dev" ] || continue
+        if mount -o ro -t vfat "$dev" /boot 2>/dev/null; then
+            if [ -f /boot/panicos-active.cfg ]; then
+                echo ">>> PanicOS initramfs: boot partition = $dev"
+                return 0
+            fi
+            umount /boot
+        fi
+    done
+    return 1
+}
 
-IMAGE=panicos-rg35xx-pro-minimal.squashfs
-if [ -f /boot/panicos-active.cfg ]; then
-    # shellcheck disable=SC1091
-    . /boot/panicos-active.cfg
-fi
-[ -n "$IMAGE" ] || panic "IMAGE not set in panicos-active.cfg"
+# Find the system partition: an ext4 with at least one .squashfs at root.
+# Skip whatever boot device we already mounted.
+find_system() {
+    boot_dev="$1"
+    for dev in /dev/mmcblk*p* /dev/sd*[0-9]; do
+        [ -b "$dev" ] || continue
+        [ "$dev" = "$boot_dev" ] && continue
+        if mount -o ro -t ext4 "$dev" /system 2>/dev/null; then
+            if ls /system/*.squashfs >/dev/null 2>&1; then
+                echo ">>> PanicOS initramfs: system partition = $dev"
+                return 0
+            fi
+            umount /system
+        fi
+    done
+    return 1
+}
+
+find_boot || panic "no boot partition with /panicos-active.cfg found"
+BOOT_DEV=$(awk '$2 == "/boot" {print $1}' /proc/mounts | head -1)
+
+# Default IMAGE in case panicos-active.cfg is malformed.
+IMAGE=
+. /boot/panicos-active.cfg
+[ -n "$IMAGE" ] || panic "IMAGE not set in /boot/panicos-active.cfg"
 
 echo ">>> PanicOS initramfs: booting $IMAGE"
 
-mount -o ro -t ext4 "$SYSTEM_DEV" /system \
-    || panic "could not mount system partition $SYSTEM_DEV"
+find_system "$BOOT_DEV" || panic "no system partition with squashfs found"
 
 [ -f "/system/$IMAGE" ] || panic "/system/$IMAGE not found"
 
