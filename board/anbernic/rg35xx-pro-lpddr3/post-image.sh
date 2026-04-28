@@ -83,8 +83,11 @@ genimage \
     --outputpath "$BINARIES_DIR" \
     --config "$GENIMAGE_CFG"
 
-gzip -f -9 "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal.img"
-mv "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal.img.gz" \
-   "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img.gz"
+# Rename .img to final name BEFORE gzip so the inner stored filename
+# matches the outer .gz wrapper (otherwise archive managers like
+# Balena Etcher extract into a folder).
+mv "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal.img" \
+   "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img"
+gzip -f -9 "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img"
 
 echo ">>> post-image done: $BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img.gz"

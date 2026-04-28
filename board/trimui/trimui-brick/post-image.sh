@@ -58,8 +58,11 @@ genimage \
     --config "$GENIMAGE_CFG"
 
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
-gzip -f -9 "$BINARIES_DIR/panicos-trimui-brick-minimal.img"
-mv "$BINARIES_DIR/panicos-trimui-brick-minimal.img.gz" \
-   "$BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img.gz"
+# Rename .img to final name BEFORE gzip so the inner stored filename
+# matches the outer .gz wrapper (otherwise archive managers like
+# Balena Etcher extract into a folder).
+mv "$BINARIES_DIR/panicos-trimui-brick-minimal.img" \
+   "$BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img"
+gzip -f -9 "$BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img"
 
 echo ">>> post-image done: $BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img.gz"

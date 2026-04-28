@@ -286,5 +286,7 @@ echo ">>> genimage done: $(stat -c%s "$IMG") bytes"
 # Step 10: Gzip and move to --out
 # ---------------------------------------------------------------------------
 mkdir -p "$(dirname "$OUT")"
-gzip -9 -c "$IMG" > "$OUT"
+# -n suppresses inner filename + mtime storage so archive managers
+# (Balena Etcher etc.) extract using the wrapper name minus .gz.
+gzip -9n -c "$IMG" > "$OUT"
 echo ">>> wrote $OUT ($(stat -c%s "$OUT") bytes)"
