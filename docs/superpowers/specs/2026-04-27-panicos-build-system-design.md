@@ -217,6 +217,7 @@ The primary bring-up driver is the **RG35XX Pro**.
 - **ROCKNIX/Knulli layout changes.** Mitigation: importers fail loudly when expected paths vanish; manifests catch drift.
 - **U-Boot bring-up specifics** for each v1 device — assumed straightforward via ROCKNIX/Knulli config import; confirm during impl.
 - **Desktop env packaging gaps.** XFCE / LXQt are well-supported in Buildroot; small per-env glue (autostart, default theme, session file) likely needed. Discoverable during impl, low architectural risk.
+- **Multi-source U-Boot per SoC.** Some SoCs (notably Rockchip RK3326) need TWO U-Boot variants in one image: legacy U-Boot for older device variants and mainline for newer, with runtime selection at boot install time (ROCKNIX uses a `SUBDEVICE` shell variable). Our current architecture supports **one U-Boot source per SoC** with per-device defconfig override of that single source. Multi-source U-Boot will require either (a) splitting into per-device-variant entries with one U-Boot source each, or (b) custom Buildroot package wrapping that builds multiple U-Boots in one config + multi-bootloader genimage staging + runtime selector. Decision deferred to whichever plan first introduces RK3326 (or a similarly bifurcated SoC).
 
 ## 6. Out of scope (deferred to future work)
 
