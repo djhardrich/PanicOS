@@ -1,5 +1,13 @@
 schema_version: 2
 imports:
+  - name: knulli-h700-vendor
+    submodule: third_party/knulli
+    sha: d0e0324d49f534c4cb14ef36a288293333ef8ab0
+    files:
+      - dest: soc/allwinner-h700/vendor/linux/linux.config.fragment
+        src: board/batocera/allwinner/h700/linux-sunxi64-legacy.config
+        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
   - name: rocknix-h700-mainline
     submodule: third_party/rocknix
     sha: ca607bfa782cb24c65a2424c0213340c34d9c5eb
@@ -192,11 +200,99 @@ imports:
         src: projects/ROCKNIX/devices/H700/packages/u-boot/sources/configs/anbernic_rg35xx_h700_lpddr4_defconfig
         src_sha256: 24013855fefbe911cf664301940e8b6b514e4961ed414f324dae491f56d6bfe4
         dest_sha256: dd01c067d6761c21a68299d1cdc8a0100902d73366261d635f3c6951b986882c
-  - name: knulli-h700-vendor
-    submodule: third_party/knulli
-    sha: d0e0324d49f534c4cb14ef36a288293333ef8ab0
-    files:
-      - dest: soc/allwinner-h700/vendor/linux/linux.config.fragment
-        src: board/batocera/allwinner/h700/linux-sunxi64-legacy.config
-        src_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
-        dest_sha256: b6acedeae16fa989ed3417eaa1fff97346dad77bf4a37a4d391a1a0ae923a88e
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/cirrus/cs35l41-dsp1-spk-cali.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/cirrus/cs35l41-dsp1-spk-cali.bin
+        src_sha256: b68d1c5ca6ba341b646617e152fa41cbebdbc9f94b0dd18314ceaefdd6a210f7
+        dest_sha256: b68d1c5ca6ba341b646617e152fa41cbebdbc9f94b0dd18314ceaefdd6a210f7
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/cirrus/cs35l41-dsp1-spk-cali.wmfw
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/cirrus/cs35l41-dsp1-spk-cali.wmfw
+        src_sha256: d1bea27e41001024eb3878276292b5bcc0cda4484ffced0880e12c03ec9bac2c
+        dest_sha256: d1bea27e41001024eb3878276292b5bcc0cda4484ffced0880e12c03ec9bac2c
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/cirrus/cs35l41-dsp1-spk-prot.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/cirrus/cs35l41-dsp1-spk-prot.bin
+        src_sha256: 74384887bc3acec325c37e46af355703e18b753020585e384bd82913a61443f4
+        dest_sha256: 74384887bc3acec325c37e46af355703e18b753020585e384bd82913a61443f4
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/cirrus/cs35l41-dsp1-spk-prot.wmfw
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/cirrus/cs35l41-dsp1-spk-prot.wmfw
+        src_sha256: d1bea27e41001024eb3878276292b5bcc0cda4484ffced0880e12c03ec9bac2c
+        dest_sha256: d1bea27e41001024eb3878276292b5bcc0cda4484ffced0880e12c03ec9bac2c
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg28xx-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg28xx-panel.panel
+        src_sha256: 178895af5eb14e3cd0ddfbc18d86278d30376f3a535a5bab96e06bf5658f7248
+        dest_sha256: 178895af5eb14e3cd0ddfbc18d86278d30376f3a535a5bab96e06bf5658f7248
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg34xx-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg34xx-panel.panel
+        src_sha256: 1400dd6c9b9d64bc618da7b544a029c5718af4a8d712894b343280796dc2bcea
+        dest_sha256: 1400dd6c9b9d64bc618da7b544a029c5718af4a8d712894b343280796dc2bcea
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg34xx-sp-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg34xx-sp-panel.panel
+        src_sha256: 929432ef1971f7332c8bd3cad6837c1bb6d0a8d5f7176e206e1eea554a8b2c09
+        dest_sha256: 929432ef1971f7332c8bd3cad6837c1bb6d0a8d5f7176e206e1eea554a8b2c09
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg35xx-plus-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg35xx-plus-panel.panel
+        src_sha256: 9aaee6fe776a45cc83596bc8df76184c2f3fba8be1b551b2b8224b5bc347afaa
+        dest_sha256: 9aaee6fe776a45cc83596bc8df76184c2f3fba8be1b551b2b8224b5bc347afaa
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg35xx-plus-rev6-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg35xx-plus-rev6-panel.panel
+        src_sha256: f7d3f0cd98be93c95e2af2361f8f309871ae6aea4f9374c1843ac1ca35a7f699
+        dest_sha256: f7d3f0cd98be93c95e2af2361f8f309871ae6aea4f9374c1843ac1ca35a7f699
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg35xx-sp-v2-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg35xx-sp-v2-panel.panel
+        src_sha256: 2251794f1454376faac2c50438a517c1ef76501509b6f4d505a2c5d64bcf6e4f
+        dest_sha256: 2251794f1454376faac2c50438a517c1ef76501509b6f4d505a2c5d64bcf6e4f
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg40xx-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg40xx-panel.panel
+        src_sha256: 519eae7a9dfe39435581cc53559b10362dc00e7f58a1c87ad0770a61299d39ed
+        dest_sha256: 519eae7a9dfe39435581cc53559b10362dc00e7f58a1c87ad0770a61299d39ed
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rg40xx-v2-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rg40xx-v2-panel.panel
+        src_sha256: 95bc84fdbbabdaa29a4a5934155c519a5855f19f4d26e7a4b957bb8176a1b743
+        dest_sha256: 95bc84fdbbabdaa29a4a5934155c519a5855f19f4d26e7a4b957bb8176a1b743
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/panels/anbernic,rgcubexx-panel.panel
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/panels/anbernic,rgcubexx-panel.panel
+        src_sha256: c8f38b80281e3d90dc68a6bd2c92ccc235e85c3cb4c2ef6db8606b7cf37658d7
+        dest_sha256: c8f38b80281e3d90dc68a6bd2c92ccc235e85c3cb4c2ef6db8606b7cf37658d7
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8723ds_config.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8723ds_config.bin
+        src_sha256: 7d1e18df7654da8f6382520841bb535f2d1246fc8495e3ae652f7b23e820168d
+        dest_sha256: 7d1e18df7654da8f6382520841bb535f2d1246fc8495e3ae652f7b23e820168d
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8723ds_fw.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8723ds_fw.bin
+        src_sha256: 19c1bed7a9359b1a021c20f81b525bdebf5067f9021716991d94be9101f76e63
+        dest_sha256: 19c1bed7a9359b1a021c20f81b525bdebf5067f9021716991d94be9101f76e63
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8723fu_config.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8723fu_config.bin
+        src_sha256: 2f9968b88d3f434fd67ffa00387fb7eaf0f04e2f9d04e6c5e22f39d359a53c4a
+        dest_sha256: 2f9968b88d3f434fd67ffa00387fb7eaf0f04e2f9d04e6c5e22f39d359a53c4a
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8723fu_fw.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8723fu_fw.bin
+        src_sha256: 0cc26fc7f6a24181665b0181f65768a98c00a9aeb7e83fe4398bcff7d9665e22
+        dest_sha256: 0cc26fc7f6a24181665b0181f65768a98c00a9aeb7e83fe4398bcff7d9665e22
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8761b_config.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8761b_config.bin
+        src_sha256: 6ddeb15f23588053e00cb08d25588bd7cf98d60fa93d9478efcef4ae8064a7ac
+        dest_sha256: 6ddeb15f23588053e00cb08d25588bd7cf98d60fa93d9478efcef4ae8064a7ac
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8761b_fw.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8761b_fw.bin
+        src_sha256: 0dbb791141172660fb355db75d8015610efc725e620a2424264184159103c6aa
+        dest_sha256: 0dbb791141172660fb355db75d8015610efc725e620a2424264184159103c6aa
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8852bs_config.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8852bs_config.bin
+        src_sha256: efa8915db59c5bc30aaa23e1f264656bbf425fcaf091db0954c27752a1d8f7a0
+        dest_sha256: efa8915db59c5bc30aaa23e1f264656bbf425fcaf091db0954c27752a1d8f7a0
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8852bs_fw.bin
+        src: projects/ROCKNIX/packages/linux-firmware/kernel-firmware/extra-firmware/rtl_bt/rtl8852bs_fw.bin
+        src_sha256: 401601f2d1787b18f0c4eba2bcba4cd5cd6c35e2c1c19c3435a3e8a307e49659
+        dest_sha256: 401601f2d1787b18f0c4eba2bcba4cd5cd6c35e2c1c19c3435a3e8a307e49659
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8821cs_config.bin
+        src: linux-firmware-20250211:rtl_bt/rtl8821cs_config.bin
+        src_sha256: 6ddeb15f23588053e00cb08d25588bd7cf98d60fa93d9478efcef4ae8064a7ac
+        dest_sha256: 6ddeb15f23588053e00cb08d25588bd7cf98d60fa93d9478efcef4ae8064a7ac
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8821cs_fw.bin
+        src: linux-firmware-20250211:rtl_bt/rtl8821cs_fw.bin
+        src_sha256: 3baa2eeaa43c959054687a67771e7435e73b2ff3e79dfb765121d8b7dc719391
+        dest_sha256: 3baa2eeaa43c959054687a67771e7435e73b2ff3e79dfb765121d8b7dc719391
+      - dest: soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtw88/rtw8821c_fw.bin
+        src: linux-firmware-20250211:rtw88/rtw8821c_fw.bin
+        src_sha256: 2ef409bc418549fcf294061dd0cae1fc22fd9da79b60524950b25de18732f3f0
+        dest_sha256: 2ef409bc418549fcf294061dd0cae1fc22fd9da79b60524950b25de18732f3f0

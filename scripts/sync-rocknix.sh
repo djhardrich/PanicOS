@@ -9,6 +9,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 . "$ROOT/scripts/lib/import-common.sh"
+. "$ROOT/scripts/lib/firmware-helper.sh"
 
 SOC_NAME=""
 FORCE=0
@@ -199,6 +200,33 @@ if [ "${#ROCKNIX_FIRMWARE_DIRS[@]}" -gt 0 ]; then
             | grep -v '^patches/' \
             || true)
     done
+fi
+
+# ----- linux-firmware blobs declared in the imported kernel config -----
+# ROCKNIX bakes blobs listed in CONFIG_EXTRA_FIRMWARE into vmlinux at build
+# time, pulling them from the upstream linux-firmware tarball — they're
+# never in their git tree, so the ROCKNIX_FIRMWARE_DIRS loop above can't
+# see them. Vendor them straight from buildroot's pinned linux-firmware
+# tarball into the same rootfs-overlay (= initramfs at runtime), respecting
+# WHENCE symlinks. Manifest tracking is skipped for these on purpose: the
+# source isn't a git submodule, and the destination is just a deterministic
+# mirror of upstream files at the pinned version.
+KERNEL_CFG="$SOC_MAIN/linux/linux.config.fragment"
+if [ -f "$KERNEL_CFG" ] && [ "${#ROCKNIX_FIRMWARE_DIRS[@]}" -gt 0 ]; then
+    install_extra_firmware_blobs \
+        "$KERNEL_CFG" "$FW_TARGET" "$ROOT/third_party/buildroot" || true
+    # Fold the staged paths into the TSV so manifest drift detection still
+    # warns if someone hand-edits a vendored upstream blob. src is recorded
+    # as "linux-firmware-<ver>:<relpath>" — synthetic but unambiguous.
+    LFW_VER=$(linux_firmware_pinned_version "$ROOT/third_party/buildroot/package/linux-firmware/linux-firmware.mk")
+    while IFS= read -r p; do
+        [ -n "$p" ] || continue
+        f="$FW_TARGET/$p"
+        [ -e "$f" ] || continue
+        sha=$(sha256_of "$f")
+        printf '%s\t%s\t%s\t%s\n' \
+            "$f" "linux-firmware-$LFW_VER:$p" "$sha" "$sha" >> "$TSV"
+    done < <(parse_extra_firmware_paths "$KERNEL_CFG")
 fi
 
 # ----- write/replace section in manifest -----
