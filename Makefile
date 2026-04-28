@@ -45,6 +45,17 @@ Makefile: ;
 		$(DOCKER_IMAGE):$(DOCKER_TAG) \
 		make $@ $(MAKEOVERRIDES)
 
+.PHONY: tui
+tui: container-image
+	@docker run --rm -i $(DOCKER_TTY) \
+		--user $(DOCKER_USER) \
+		-v $(PANICOS_ROOT):/work \
+		-w /work \
+		-e IN_CONTAINER=1 \
+		-e HOME=/tmp \
+		$(DOCKER_IMAGE):$(DOCKER_TAG) \
+		bash scripts/panicos-tui.sh
+
 .PHONY: shell
 shell: container-image
 	@docker run --rm -i $(DOCKER_TTY) \
@@ -63,6 +74,7 @@ help:
 	@echo "  make list-devices            List supported devices"
 	@echo "  make harness-smoke           Build the smoke-test rootfs"
 	@echo "  make <device>                Build a device image (later plans)"
+	@echo "  make tui                     Interactive build wizard"
 	@echo "  make shell                   Interactive shell in the build container"
 	@echo "  make clean-<device>          Clean a device's output dir"
 	@echo
