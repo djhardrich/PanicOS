@@ -66,6 +66,12 @@ GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/n
 cp "$BINARIES_DIR/rootfs.squashfs" \
    "$BINARIES_DIR/panicos-rg353p-minimal.squashfs"
 
+# Ship the wifi-config template on the boot vfat so users can fill in
+# SSID/PSK on a PC after flashing without rebuilding. The template is
+# entirely commented-out by default — boot is wifi-less until edited.
+cp "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-wifi-config/panicos-wifi.cfg.template" \
+   "$BINARIES_DIR/panicos-wifi.cfg"
+
 export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 6144)"
 export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB 64)"
 

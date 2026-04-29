@@ -20,6 +20,7 @@ image boot.vfat {
 			"dtbs",
 			"extlinux",
 			"panicos-active.cfg",
+			"panicos-wifi.cfg",
 			"initramfs.cpio.gz",
 			"${PANICOS_OUTPUT_NAME}.squashfs",
 		}

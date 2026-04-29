@@ -262,6 +262,10 @@ CFGEOF
 cp "$SQUASHFS" "$BINDIR/${PANICOS_OUTPUT_NAME}.squashfs"
 echo ">>> staged squashfs ($(stat -c%s "$SQUASHFS") bytes)"
 
+cp "$ROOT/package/panicos-wifi-config/panicos-wifi.cfg.template" \
+   "$BINDIR/panicos-wifi.cfg"
+echo ">>> staged panicos-wifi.cfg template"
+
 # ---------------------------------------------------------------------------
 # Step 8: Render genimage config via envsubst
 # ---------------------------------------------------------------------------

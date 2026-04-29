@@ -53,6 +53,12 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/panicos-active.cfg" \
 cp "$BINARIES_DIR/rootfs.squashfs" \
    "$BINARIES_DIR/panicos-trimui-brick-minimal.squashfs"
 
+# Ship the wifi-config template on the boot vfat so users can fill in
+# SSID/PSK on a PC after flashing without rebuilding. The template is
+# entirely commented-out by default — boot is wifi-less until edited.
+cp "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-wifi-config/panicos-wifi.cfg.template" \
+   "$BINARIES_DIR/panicos-wifi.cfg"
+
 # Pull partition sizes from Buildroot's .config.
 read_kconfig() {
     local key="$1" def="$2"

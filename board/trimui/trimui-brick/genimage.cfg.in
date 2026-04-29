@@ -41,6 +41,7 @@ image boot.vfat {
 			"boot/asound.state",
 			"boot/bat",
 			"panicos-active.cfg",
+			"panicos-wifi.cfg",
 			"panicos-trimui-brick-minimal.squashfs",
 		}
 	}

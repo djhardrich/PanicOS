@@ -9,6 +9,7 @@ image boot.vfat {
 			"dtbs",
 			"extlinux",
 			"panicos-active.cfg",
+			"panicos-wifi.cfg",
 			"panicos-rg35xx-pro-lpddr3-minimal.squashfs",
 		}
 	}

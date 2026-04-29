@@ -16,6 +16,7 @@ image boot.vfat {
 			"dtbs",
 			"extlinux",
 			"panicos-active.cfg",
+			"panicos-wifi.cfg",
 			"panicos-rg353p-minimal.squashfs",
 		}
 	}
