@@ -107,4 +107,45 @@ run_script "$boot" "$out" >/dev/null
 [ ! -e "$out" ] || fail "test 6: commented-out cfg should produce no output"
 pass "test 6: blank/commented cfg → skip"
 
+# Test 7: short PSK (wpa_passphrase rejects <8 chars) → script exits non-zero,
+# no broken conf written.
+boot="$tmpdir/t7/boot"; out="$tmpdir/t7/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+cat > "$boot/panicos-wifi.cfg" <<EOF
+SSID=ShortPskNet
+PSK=1234567
+COUNTRY=US
+EOF
+if run_script "$boot" "$out" 2>/dev/null; then
+    fail "test 7: short PSK should make script fail"
+fi
+[ ! -e "$out" ] || fail "test 7: should not have written a broken conf"
+pass "test 7: short PSK fails clean (no broken conf)"
+
+# Test 8: SSID with embedded double-quote → script exits non-zero, no conf.
+boot="$tmpdir/t8/boot"; out="$tmpdir/t8/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+cat > "$boot/panicos-wifi.cfg" <<EOF
+SSID=My"BadSSID
+PSK=avalidpassword
+COUNTRY=US
+EOF
+if run_script "$boot" "$out" 2>/dev/null; then
+    fail "test 8: SSID with double-quote should fail"
+fi
+[ ! -e "$out" ] || fail "test 8: should not have written conf"
+pass "test 8: SSID with quote rejected"
+
+# Test 9: rendered conf has mode 0600 (security-relevant: contains hashed PSK).
+boot="$tmpdir/t9/boot"; out="$tmpdir/t9/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+cat > "$boot/panicos-wifi.cfg" <<EOF
+SSID=ModeTestNet
+PSK=avalidpassword
+COUNTRY=US
+EOF
+run_script "$boot" "$out" >/dev/null
+[ "$(stat -c '%a' "$out")" = "600" ] || fail "test 9: output not mode 0600"
+pass "test 9: rendered conf is mode 0600"
+
 echo "all tests passed"
