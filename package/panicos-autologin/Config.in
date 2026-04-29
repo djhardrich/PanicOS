@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PANICOS_AUTOLOGIN
+	bool "panicos-autologin (tty1)"
+	depends on BR2_INIT_SYSTEMD
+	help
+	  Drops in /etc/systemd/system/getty@tty1.service.d/autologin.conf
+	  so tty1 logs in as root automatically — no prompt. Off by default
+	  (the minimal flavor wants the password prompt). Flavors that want
+	  to land the user straight in a launcher (kiosk, retro frontend)
+	  select this in their defconfig.fragment.
