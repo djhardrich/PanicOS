@@ -144,6 +144,7 @@ _build:
 	@# rejects them on cosmetic context shifts. Idempotent — sed is a no-op once
 	@# applied.
 	@sed -i 's/patch -F0 /patch -F2 /' "$(BUILDROOT)/support/scripts/apply-patches.sh"
+	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
 	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
