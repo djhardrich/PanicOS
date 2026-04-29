@@ -44,4 +44,30 @@ pass "test 2: missing required option fails"
     || fail "test 3: missing file should pass (soft skip)"
 pass "test 3: missing file soft-skips"
 
+# Test 4: =m is not =y. Early-boot fbcon needs built-in drivers; if a
+# future fragment downgrades a required option to module, the audit
+# must catch it.
+mkdir -p "$tmpdir/module/linux"
+cat > "$tmpdir/module/linux/linux.config.fragment" <<EOF
+CONFIG_FB=m
+CONFIG_FRAMEBUFFER_CONSOLE=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_USB_HID=y
+CONFIG_HID_GENERIC=y
+EOF
+if "$AUDIT" "$tmpdir/module/linux/linux.config.fragment" 2>/dev/null; then
+    fail "test 4: =m should fail (early-boot fbcon needs =y)"
+fi
+pass "test 4: =m fails (early-boot fbcon needs built-in)"
+
+# Test 5: comment-only fragment (vendor blob marker) → soft-skip exit 0.
+mkdir -p "$tmpdir/vendor/linux"
+cat > "$tmpdir/vendor/linux/linux.config.fragment" <<EOF
+# BR2_LINUX_KERNEL is not set
+# No kernel built — vendor blob.
+EOF
+"$AUDIT" "$tmpdir/vendor/linux/linux.config.fragment" >/dev/null \
+    || fail "test 5: comment-only fragment should soft-skip"
+pass "test 5: comment-only fragment soft-skips (vendor blob marker)"
+
 echo "all tests passed"

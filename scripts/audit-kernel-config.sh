@@ -17,6 +17,16 @@ if [ ! -f "$CFG" ]; then
     exit 0
 fi
 
+# Some SoCs ship a prebuilt kernel blob and keep the fragment as a
+# comment-only marker (see soc/allwinner-a133/vendor/). Treat
+# fragments with zero CONFIG_X=y lines as "no buildable kernel here"
+# and soft-skip — the audit only meaningfully applies to fragments
+# that actually configure a kernel build.
+if ! grep -qE '^CONFIG_[A-Z0-9_]+=y$' "$CFG"; then
+    echo ">>> audit-kernel-config: $CFG has no CONFIG_*=y lines, skipping (vendor blob fragment)"
+    exit 0
+fi
+
 REQUIRED=(
     CONFIG_FB
     CONFIG_FRAMEBUFFER_CONSOLE
