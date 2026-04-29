@@ -60,8 +60,25 @@ if [ -s "$KV" ]; then
         [ "$HIDDEN" = "1" ] && echo "    scan_ssid=1"
         if [ -n "$PSK" ]; then
             # wpa_passphrase emits a full network={} block; we only want the
-            # hashed `psk=` line out of it. Passing PSK as a positional arg
-            # is required — wpa_supplicant 2.11+ refuses non-tty stdin.
+            # hashed `psk=` line out of it.
+            #
+            # SECURITY NOTE — positional args vs. stdin pipe:
+            # The cleaner form would be `printf '%s\n' "$PSK" | wpa_passphrase
+            # "$SSID"` so the PSK never lands in argv (visible to /proc and
+            # `ps`). wpa_supplicant 2.11 calls tcgetattr() on stdin and
+            # rejects non-TTY input — every pipe / heredoc / fd / process-
+            # substitution form errors with "tcgetattr: Inappropriate ioctl
+            # for device". The on-device wpa_supplicant is the same 2.11,
+            # so the stdin form is not viable at runtime either.
+            #
+            # We accept the positional-arg trade-off: the PSK is visible in
+            # /proc/<pid>/cmdline only for the milliseconds wpa_passphrase
+            # is alive, during single-user early boot before any non-root
+            # process can read it. The PSK already lives in cleartext on
+            # the unencrypted boot vfat that the user edited (the source-of-
+            # truth file), so the practical exposure delta is negligible.
+            # If wpa_supplicant ever drops the tcgetattr check, switch back
+            # to the stdin form here.
             HASHED=$(wpa_passphrase "$SSID" "$PSK" \
                 | awk '/^[[:space:]]*psk=/{print $0; exit}')
             echo "    $HASHED"
