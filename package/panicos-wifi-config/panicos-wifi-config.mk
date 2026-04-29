@@ -20,6 +20,8 @@ endef
 define PANICOS_WIFI_CONFIG_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 0644 $(PANICOS_WIFI_CONFIG_PKGDIR)/panicos-wifi-config.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/panicos-wifi-config.service
+	$(INSTALL) -D -m 0644 $(PANICOS_WIFI_CONFIG_PKGDIR)/wpa_supplicant-runtime-conf.conf \
+		$(TARGET_DIR)/etc/systemd/system/wpa_supplicant@.service.d/runtime-conf.conf
 	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/sysinit.target.wants
 	ln -sf ../panicos-wifi-config.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/sysinit.target.wants/panicos-wifi-config.service
