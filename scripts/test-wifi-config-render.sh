@@ -136,6 +136,18 @@ fi
 [ ! -e "$out" ] || fail "test 8: should not have written conf"
 pass "test 8: SSID with quote rejected"
 
+# Test 8b: SSID with backslash → script exits non-zero, no conf.
+# (Mirror of test 8 but for the second blocked character. The script's
+# case guard rejects both " and \ together; this locks in the second branch.)
+boot="$tmpdir/t8b/boot"; out="$tmpdir/t8b/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+printf 'SSID=My\\\\BadSSID\nPSK=avalidpassword\nCOUNTRY=US\n' > "$boot/panicos-wifi.cfg"
+if run_script "$boot" "$out" 2>/dev/null; then
+    fail "test 8b: SSID with backslash should fail"
+fi
+[ ! -e "$out" ] || fail "test 8b: should not have written conf"
+pass "test 8b: SSID with backslash rejected"
+
 # Test 9: rendered conf has mode 0600 (security-relevant: contains hashed PSK).
 boot="$tmpdir/t9/boot"; out="$tmpdir/t9/run/wpa.conf"
 mkdir -p "$boot" "$(dirname "$out")"

@@ -13,6 +13,10 @@
 # Env-var overrides for testing: PANICOS_WIFI_BOOT_DIR, PANICOS_WIFI_OUT.
 
 set -eu
+# Requires bash, or busybox ash with ASH_BASH_COMPAT=y (the buildroot
+# default — confirmed in our build configs). Without pipefail support
+# the wpa_passphrase failure case would silently mask via the empty
+# HASHED guard alone.
 set -o pipefail
 
 BOOT_DIR="${PANICOS_WIFI_BOOT_DIR:-/boot}"
