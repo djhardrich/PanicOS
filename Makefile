@@ -147,6 +147,13 @@ _build:
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
 	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	if [ -n "$$SOC" ]; then \
+		FRAGMENT="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/linux.config.fragment"; \
+		$(PANICOS_ROOT)/scripts/audit-kernel-config.sh "$$FRAGMENT"; \
+	fi
+	@SOC="$(call _device_soc,$(DEVICE))"; \
+	K="$(KERNEL)"; \
+	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
 	OUT="$(OUTPUT_BASE)/$(DEVICE)-$(FLAVOR)$${K:+-$$K}"; \
 	mkdir -p "$$OUT"; \
 	if [ -n "$$SOC" ]; then \
