@@ -1,0 +1,15 @@
+[Unit]
+Description=PanicOS: render wpa_supplicant config from boot vfat
+DefaultDependencies=no
+After=local-fs.target
+Before=basic.target wpa_supplicant@wlan0.service
+RequiresMountsFor=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/panicos-wifi-config
+StandardOutput=journal+console
+
+[Install]
+WantedBy=sysinit.target

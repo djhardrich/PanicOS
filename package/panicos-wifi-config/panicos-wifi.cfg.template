@@ -1,0 +1,16 @@
+# PanicOS wifi auto-connect config. Edit on a PC after flashing.
+#
+# Uncomment SSID + PSK below and fill in your network. Save the file —
+# changes take effect on next boot of the device.
+#
+# Power users: drop a full wpa_supplicant.conf next to this file. It
+# takes priority and is used verbatim (use it for EAP / enterprise wifi
+# / anything past plain WPA2-PSK).
+#
+# Leave this file commented out if you don't want wifi auto-connect;
+# the device boots fine without it.
+
+# SSID=
+# PSK=
+# COUNTRY=US      # ISO 3166. REQUIRED on some hardware before wifi will start.
+# HIDDEN=0        # Set to 1 for hidden SSIDs.

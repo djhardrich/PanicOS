@@ -1,0 +1,13 @@
+# DHCP on whichever interface the wifi driver brings up. Match by
+# device type, not name — sunxi/rockchip kernels typically expose the
+# adapter as `wlan0`, but a future SoC using systemd's predictable names
+# would call it `wlp1s0` (or similar) and a name-based match would
+# silently miss. `Type=wlan` matches both.
+#
+# Lives in /etc/systemd/network/ so the user can override (static IP
+# etc) by dropping a higher-priority file via overlay.
+[Match]
+Type=wlan
+
+[Network]
+DHCP=yes

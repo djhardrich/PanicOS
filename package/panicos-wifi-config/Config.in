@@ -1,0 +1,12 @@
+config BR2_PACKAGE_PANICOS_WIFI_CONFIG
+	bool "panicos-wifi-config"
+	depends on BR2_INIT_SYSTEMD
+	select BR2_PACKAGE_WPA_SUPPLICANT
+	help
+	  Boot service that reads wifi credentials from a user-editable
+	  file on the boot vfat (/boot/wpa_supplicant.conf raw drop-in,
+	  or /boot/panicos-wifi.cfg key=value) and renders them into
+	  /run/wpa_supplicant.conf. Pairs with systemd-networkd for
+	  DHCP on wlan0. The credentials never touch the overlay — every
+	  boot re-reads from FAT, so a Notepad edit on a PC takes effect
+	  on next reboot.
