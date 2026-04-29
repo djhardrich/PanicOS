@@ -1,0 +1,10 @@
+config BR2_PACKAGE_PANICOS_SSHKEYS
+	bool "panicos-sshkeys"
+	depends on BR2_INIT_SYSTEMD
+	depends on BR2_PACKAGE_DROPBEAR
+	help
+	  PanicOS first-boot SSH host key generator. Runs once before
+	  dropbear, generates per-device host keys into /etc/dropbear/
+	  (which sits on the overlay and persists across reboots), then
+	  self-disables via marker file in /storage. Ensures every
+	  flashed image ends up with unique SSH host identity.
