@@ -43,7 +43,7 @@ cp "$BINARIES_DIR"/*.dtb "$BINARIES_DIR/dtbs/$SOC/" 2>/dev/null || true
 
 cp "$BINARIES_DIR/dtbs/$SOC/$DEFAULT_DTB" "$BINARIES_DIR/dtb.img"
 
-cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/panicos-active.cfg" \
+cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro-lpddr3/panicos-active.cfg" \
    "$BINARIES_DIR/panicos-active.cfg"
 
 # Switch to extlinux.conf (plain text editable on the FAT) like rg35xx-pro.
