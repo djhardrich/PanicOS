@@ -7,6 +7,11 @@
 set -u
 
 OUT=/boot/diag
+
+# Initramfs mounts /boot read-only by design (prevents FAT corruption on
+# unclean shutdown). Remount rw for the dump, then back to ro.
+mount -o remount,rw /boot
+
 mkdir -p "$OUT"
 
 # Wipe stale outputs from a previous boot so the user isn't reading a mix
@@ -96,3 +101,6 @@ sync
 sync
 
 echo ">>> panicos-bootdiag: wrote $(ls "$OUT" | wc -l) files to $OUT"
+
+# Back to ro so an unclean power-off doesn't corrupt the FAT.
+mount -o remount,ro /boot
