@@ -1,0 +1,15 @@
+[Unit]
+Description=PanicOS late-boot diagnostic dump → /boot/diag/
+After=multi-user.target
+RequiresMountsFor=/boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Let wifi/networkd actually try (and fail or succeed) before snapshotting.
+ExecStartPre=/bin/sleep 30
+ExecStart=/usr/sbin/panicos-bootdiag
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

@@ -13,3 +13,10 @@ BR2_PACKAGE_PANICOS_SSHKEYS=y
 BR2_PACKAGE_PANICOS_WIFI_CONFIG=y
 # Autologin off by default; flip the line below in a kiosk flavor:
 # BR2_PACKAGE_PANICOS_AUTOLOGIN=y
+
+# Bring-up diagnostic dump → /boot/diag/. Disable for production images:
+# (`# BR2_PACKAGE_PANICOS_BOOTDIAG is not set`).
+BR2_PACKAGE_PANICOS_BOOTDIAG=y
+# iproute2 for `ip` (used by bootdiag); util-linux for `lsblk`.
+BR2_PACKAGE_IPROUTE2=y
+BR2_PACKAGE_UTIL_LINUX_LSBLK=y

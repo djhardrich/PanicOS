@@ -1,0 +1,14 @@
+config BR2_PACKAGE_PANICOS_BOOTDIAG
+	bool "panicos-bootdiag"
+	depends on BR2_INIT_SYSTEMD
+	help
+	  Late-boot diagnostic dump. Runs once after multi-user.target
+	  reaches active, then writes dmesg, journalctl, ip state, systemd
+	  unit status, and DRM/wireless sysfs info to plain text files
+	  under /boot/diag/ on the boot vfat. Pop the SD into a PC and
+	  read the files to debug a board with no UART and no SSH.
+
+	  Enable for bring-up; disable for production images. Off by default.
+
+	  Marker file /boot/diag/done.txt is written last so you can tell
+	  when it's safe to pull the SD.
