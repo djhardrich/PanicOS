@@ -160,4 +160,38 @@ run_script "$boot" "$out" >/dev/null
 [ "$(stat -c '%a' "$out")" = "600" ] || fail "test 9: output not mode 0600"
 pass "test 9: rendered conf is mode 0600"
 
+# Test 10: inline comments after a value are stripped. The shipped template
+# has "COUNTRY=US      # ISO 3166..." — without stripping, the rendered
+# country line is "country=US      # ISO 3166..." which wpa_supplicant
+# rejects as an invalid country code (and aborts conf parsing).
+boot="$tmpdir/t10/boot"; out="$tmpdir/t10/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+cat > "$boot/panicos-wifi.cfg" <<EOF
+SSID=CommentNet     # whitespace then inline comment on every line
+PSK=avalidpassword  # PSK with comment too
+COUNTRY=US          # ISO 3166. REQUIRED on some hardware.
+HIDDEN=0            # not hidden
+EOF
+run_script "$boot" "$out" >/dev/null
+grep -q '^country=US$' "$out" || fail "test 10: country line should be exactly 'country=US' with no trailing junk"
+grep -q '^    ssid="CommentNet"$' "$out" || fail "test 10: ssid line should be exactly 'ssid=\"CommentNet\"' with no trailing junk"
+# scan_ssid=1 should NOT appear (HIDDEN=0)
+grep -q 'scan_ssid' "$out" && fail "test 10: HIDDEN=0 with comment should NOT emit scan_ssid"
+pass "test 10: inline comments stripped from values"
+
+# Test 11: rendered conf must NOT contain ctrl_interface= or update_config=.
+# Buildroot's wpa_supplicant has CONFIG_CTRL_IFACE=n by default, which
+# makes both options unrecognized and aborts conf parsing on the first one.
+boot="$tmpdir/t11/boot"; out="$tmpdir/t11/run/wpa.conf"
+mkdir -p "$boot" "$(dirname "$out")"
+cat > "$boot/panicos-wifi.cfg" <<EOF
+SSID=NoControlIface
+PSK=avalidpassword
+COUNTRY=US
+EOF
+run_script "$boot" "$out" >/dev/null
+grep -q '^ctrl_interface=' "$out" && fail "test 11: ctrl_interface= leaked into rendered conf"
+grep -q '^update_config=' "$out" && fail "test 11: update_config= leaked into rendered conf"
+pass "test 11: ctrl_interface= and update_config= omitted"
+
 echo "all tests passed"
