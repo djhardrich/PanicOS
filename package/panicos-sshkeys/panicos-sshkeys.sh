@@ -9,6 +9,15 @@ set -eu
 MARKER=/storage/.panicos-sshkeys-done
 [ -f "$MARKER" ] && exit 0
 
+# Buildroot's dropbear package installs /etc/dropbear as a symlink to
+# /var/run/dropbear (tmpfs) — keys would be regenerated every boot. The
+# upstream dropbear.service has an ExecStartPre that swaps the symlink for
+# a real directory, but we run BEFORE dropbear.service so we have to do
+# the swap ourselves. Without it, mkdir -p /etc/dropbear follows the
+# symlink to a non-existent /var/run/dropbear and fails with ENOENT.
+if [ -L /etc/dropbear ] && [ "$(readlink /etc/dropbear)" = "/var/run/dropbear" ]; then
+    rm -f /etc/dropbear
+fi
 mkdir -p /etc/dropbear
 
 # Dropbear ships dropbearkey for host-key generation. RSA + Ed25519 are
