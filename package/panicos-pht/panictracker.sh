@@ -19,9 +19,14 @@ export PORTMASTER_PLUGINS=/storage/pht/plugins
 mkdir -p "$PORTMASTER_CONFIG" "$PORTMASTER_DATA" "$PORTMASTER_PLUGINS"
 
 # SDL2 controller mappings — bundled gamecontrollerdb covers the common
-# handheld layouts (RG35XX, RG353, TrimUI etc.).
+# handheld layouts (RG35XX, RG353, TrimUI etc.). Use the FILE form
+# (SDL_GAMECONTROLLERCONFIG_FILE, available since SDL 2.0.10) rather than
+# inlining the file content into SDL_GAMECONTROLLERCONFIG — the bundled
+# db is ~600KB which overflows the kernel's per-process env+arg limit
+# (~128KB on aarch64) and causes every subprocess (date/uname/tee/even
+# pht itself) to fail with E2BIG / "Argument list too long".
 if [ -f "$GAMEDIR/assets/gamecontrollerdb.txt" ]; then
-    export SDL_GAMECONTROLLERCONFIG="$(cat "$GAMEDIR/assets/gamecontrollerdb.txt")"
+    export SDL_GAMECONTROLLERCONFIG_FILE="$GAMEDIR/assets/gamecontrollerdb.txt"
 fi
 
 # Force ALSA on PanicOS minimal — there's no PulseAudio/PipeWire here, and
