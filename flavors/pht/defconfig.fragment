@@ -15,6 +15,12 @@ BR2_PACKAGE_PANICOS_BOOTDIAG=y
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_UTIL_LINUX_LSBLK=y
 
+# pht-aarch64 + 3 plugins (chiptune, hera, dexed) need libstdc++.so.6 +
+# libgcc_s.so.1 at runtime. Build the buildroot internal toolchain with
+# C++ support so glibc + libstdc++ end up in /usr/lib of the target
+# sysroot (and thus the squashfs).
+BR2_TOOLCHAIN_BUILDROOT_CXX=y
+
 # The whole point: PHT bundle + autostart on tty1 with chrt -f 50.
 BR2_PACKAGE_PANICOS_PHT=y
 BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y
