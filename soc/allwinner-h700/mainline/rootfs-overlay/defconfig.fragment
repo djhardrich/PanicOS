@@ -13,3 +13,10 @@ BR2_PACKAGE_LINUX_FIRMWARE=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX_BT=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_88XX_BT=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_RTW88=y
+
+# ROCKNIX out-of-tree gamepad driver. The H700 handheld DTBs declare a
+# `rocknix-singleadc-joypad` node (via 0212-0140-...-use-rocknix-joypad-
+# driver.patch) — without the matching driver, no /dev/input/event* shows
+# up for the buttons + sticks, and SDL2 (PHT, retro launchers, etc.)
+# sees an inputless device. Always-on for h700 mainline; near-zero size.
+BR2_PACKAGE_ROCKNIX_JOYPAD=y

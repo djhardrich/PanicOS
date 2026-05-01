@@ -1,0 +1,17 @@
+config BR2_PACKAGE_ROCKNIX_JOYPAD
+	bool "rocknix-joypad (out-of-tree gamepad driver)"
+	depends on BR2_LINUX_KERNEL
+	help
+	  ROCKNIX's out-of-tree handheld-gamepad kernel driver. Two
+	  variants share the source tree:
+	    * rocknix-singleadc-joypad — H700 / RK3399 (one ADC, mux'd)
+	    * rocknix-joypad           — S922X / RK3588 / others
+	  Both .ko files are built and installed; udev autoloads whichever
+	  matches the DT compatible. Bound by the DT node
+	  `rocknix-singleadc-joypad` (or `rocknix-joypad`) — already in the
+	  imported H700 DTBs (see soc/allwinner-h700/mainline/linux/patches/
+	  0212-...-use-rocknix-joypad-driver.patch).
+
+	  The H700-flavor /dev/input/eventN won't appear without this — SDL2
+	  + every other input-aware app will see no gamepad until the driver
+	  is loaded.

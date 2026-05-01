@@ -6,5 +6,6 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-autologin/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-wifi-config/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-bootdiag/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-pht/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/rocknix-joypad/Config.in"
 
 endmenu
