@@ -246,6 +246,26 @@ separate from the minimal flavor's overlay.
 Arch is scaffolded but not implemented for cross-bootstrap from x86_64
 yet — see the script's `bootstrap_arch()` for status.
 
+## Build iteration tips
+
+Full clean rebuilds (`make clean-<device> && make <device>`) take 30-45 min
+because the toolchain + kernel + mesa3d all rebuild from scratch. Most
+edits don't need that. Use the surgical helpers instead:
+
+| Edit type | Command | Time |
+|---|---|---|
+| Source change in `package/<pkg>/` | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | 1-3 min |
+| Kernel config fragment / DTS edit | `make pkg-rebuild PKG=linux DEVICE=<dev> [FLAVOR=<fl>]` | 10-20 min |
+| Mesa3d/SDL2/python3 etc. (third-party) | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | varies |
+| Add a new package to a flavor | `make <device> [FLAVOR=<fl>]` (no clean) | depends on package |
+| Change extlinux APPEND or genimage layout | `make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]` | 1-2 min |
+| Toolchain config knob (`BR2_TOOLCHAIN_BUILDROOT_CXX` etc.) | `make clean-<device> && make <device> [FLAVOR=<fl>]` | 30-45 min |
+
+`pkg-rebuild` clears the package's stamp files (which buildroot's local
+package infrastructure doesn't auto-invalidate when source mtimes change)
+plus the squashfs/image stamps so the change actually lands in a new
+flashable artifact.
+
 ## Requirements
 
 - Linux host with Docker installed and runnable by your user

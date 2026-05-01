@@ -94,6 +94,13 @@ help:
 	@echo "  make vbe                     Vendor Blob Extractor (run make shell first for args)"
 	@echo "  make clean-<device>          Clean a device's output dir"
 	@echo
+	@echo "Iteration helpers (avoid full clean rebuilds):"
+	@echo "  make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]"
+	@echo "                               Rebuild ONE buildroot package + image"
+	@echo "                               (e.g. PKG=panicos-pht, PKG=linux, PKG=mesa3d)"
+	@echo "  make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]"
+	@echo "                               Rebuild squashfs + flashable image only"
+	@echo
 	@echo "Set IN_CONTAINER=1 to skip the Docker re-exec."
 
 else
@@ -192,5 +199,43 @@ _build:
 .PHONY: clean-%
 clean-%:
 	rm -rf $(OUTPUT_BASE)/$*-*
+
+# ---- Iteration helpers ----------------------------------------------------
+# Buildroot's local-package infrastructure (SITE_METHOD=local) doesn't track
+# source-file mtimes — editing a file under package/<pkg>/ won't trigger a
+# rebuild. These targets clear stamps surgically so changes propagate without
+# a full clean. Use:
+#
+#   make pkg-rebuild PKG=panicos-pht DEVICE=rg35xx-pro FLAVOR=pht
+#   make pkg-rebuild PKG=linux DEVICE=rg35xx-pro     # rebuild kernel only
+#   make image-rebuild DEVICE=rg35xx-pro FLAVOR=pht  # squashfs + image only
+#
+# DEVICE is required; FLAVOR defaults to minimal; KERNEL defaults to mainline.
+
+# Resolve OUT dir from DEVICE/FLAVOR/KERNEL.
+define _outdir
+$(OUTPUT_BASE)/$(DEVICE)-$(FLAVOR)$(if $(KERNEL),-$(KERNEL),-mainline)
+endef
+
+.PHONY: pkg-rebuild
+pkg-rebuild:
+	@test -n "$(PKG)"    || (echo "PKG not set"    >&2; exit 1)
+	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@OUT="$(_outdir)"; \
+	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
+	echo ">>> pkg-rebuild: clearing $(PKG) stamps in $$OUT"; \
+	rm -rf "$$OUT/build/$(PKG)"-* \
+	       "$$OUT/build/buildroot-fs/full/.stamp_"* \
+	       "$$OUT/build/buildroot-fs/squashfs/.stamp_"*; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
+
+.PHONY: image-rebuild
+image-rebuild:
+	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@OUT="$(_outdir)"; \
+	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
+	echo ">>> image-rebuild: clearing rootfs + image stamps in $$OUT"; \
+	rm -rf "$$OUT/build/buildroot-fs"; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
 
 endif
