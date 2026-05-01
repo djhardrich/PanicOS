@@ -249,22 +249,35 @@ yet — see the script's `bootstrap_arch()` for status.
 ## Build iteration tips
 
 Full clean rebuilds (`make clean-<device> && make <device>`) take 30-45 min
-because the toolchain + kernel + mesa3d all rebuild from scratch. Most
-edits don't need that. Use the surgical helpers instead:
+because the toolchain + kernel + mesa3d all rebuild from scratch. **Almost
+nothing genuinely needs a full clean.** Buildroot tracks dependencies
+correctly — if you add a new package, only that package builds; if you
+edit kernel patches, only the kernel rebuilds. The one case that's broken
+is buildroot's `local`-method packages (our `package/panicos-*/` ones)
+don't track source mtimes, so editing a script in there doesn't trigger a
+rebuild without clearing stamps. The `pkg-rebuild` helper handles that
+exact case.
 
 | Edit type | Command | Time |
 |---|---|---|
-| Source change in `package/<pkg>/` | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | 1-3 min |
-| Kernel config fragment / DTS edit | `make pkg-rebuild PKG=linux DEVICE=<dev> [FLAVOR=<fl>]` | 10-20 min |
-| Mesa3d/SDL2/python3 etc. (third-party) | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | varies |
-| Add a new package to a flavor | `make <device> [FLAVOR=<fl>]` (no clean) | depends on package |
-| Change extlinux APPEND or genimage layout | `make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]` | 1-2 min |
-| Toolchain config knob (`BR2_TOOLCHAIN_BUILDROOT_CXX` etc.) | `make clean-<device> && make <device> [FLAVOR=<fl>]` | 30-45 min |
+| Source change in `package/<pkg>/` (our local packages) | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | 1-3 min |
+| Kernel config fragment / DTS / kernel patches | `make pkg-rebuild PKG=linux DEVICE=<dev> [FLAVOR=<fl>]` | 10-20 min |
+| Third-party package edit (mesa3d, sdl2, etc.) | `make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]` | varies (matches that package's build size) |
+| Add a new package to a flavor (any size) | `make <device> [FLAVOR=<fl>]` (no clean) | only the new package + downstream rebuilds — toolchain/kernel cached |
+| Change extlinux APPEND, genimage layout, post-image | `make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]` | 1-2 min |
+| Toolchain Kconfig knob (`BR2_TOOLCHAIN_BUILDROOT_CXX`, `_FORTRAN`, etc.) | `make pkg-rebuild PKG=host-gcc-final DEVICE=<dev> [FLAVOR=<fl>]` then `make <device>` | ~10 min for toolchain + downstream rebuilds |
+| Switch libc (glibc ↔ musl), arch (aarch64 ↔ armhf), or upgrade glibc | `make clean-<device> && make <device>` | genuinely ABI-incompatible; sysroot is unrecoverable |
+
+A heavier flavor that adds 50 packages doesn't need a clean — just
+`make <device> FLAVOR=<heavy>`. Buildroot will cache-hit on every package
+that's already been built for any other flavor on the same device, and
+build only the new ones.
 
 `pkg-rebuild` clears the package's stamp files (which buildroot's local
 package infrastructure doesn't auto-invalidate when source mtimes change)
 plus the squashfs/image stamps so the change actually lands in a new
-flashable artifact.
+flashable artifact. Same mechanism works for any buildroot package, not
+just ours — `PKG=linux`, `PKG=mesa3d`, `PKG=host-gcc-final`, etc.
 
 ## Requirements
 
