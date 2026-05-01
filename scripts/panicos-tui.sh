@@ -168,13 +168,124 @@ vbe_submenu() {
 # ---- Main menu ----
 
 main_choice=$(whiptail --title "PanicOS" \
-    --menu "What do you want to do?" 14 70 3 \
-    build "Build a configured device image" \
-    vbe   "Vendor Blob Extractor (port to a new device)" \
+    --menu "What do you want to do?" 16 70 5 \
+    build   "Build a configured device image (clean)" \
+    rebuild "Incremental rebuild of an existing build (fast)" \
+    vbe     "Vendor Blob Extractor (port to a new device)" \
     3>&1 1>&2 2>&3) || exit 0
 
 if [ "$main_choice" = "vbe" ]; then
     vbe_submenu
+    exit 0
+fi
+
+# ---- Rebuild flow (incremental) ----
+
+if [ "$main_choice" = "rebuild" ]; then
+    # List existing per-device-flavor build dirs.
+    BUILD_DIRS=()
+    while IFS= read -r d; do
+        [ -d "$d/build" ] || continue
+        name="$(basename "$d")"
+        BUILD_DIRS+=("$name" "")
+    done < <(find "$ROOT/output" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+
+    if [ "${#BUILD_DIRS[@]}" -eq 0 ]; then
+        whiptail --title "Nothing to rebuild" --msgbox \
+            "No existing builds in output/. Run a clean build first via the main menu." 10 60
+        exit 0
+    fi
+
+    target=$(whiptail --title "Rebuild — pick a build" \
+        --menu "Which existing build?" 20 70 12 \
+        "${BUILD_DIRS[@]}" 3>&1 1>&2 2>&3) || exit 0
+
+    # Decompose name = <device>-<flavor>[-<kernel>]. The kernel suffix is
+    # optional (only present when --kernel was passed). We grep the source
+    # tree to enumerate device + flavor candidates and pick the longest
+    # match for each so flavor names with dashes still parse cleanly.
+    REBUILD_DEVICE=""
+    REBUILD_FLAVOR=""
+    REBUILD_KERNEL=""
+    for dev_candidate in $(make -s list-devices | xargs -n1 basename | sort -r); do
+        case "$target" in
+            "$dev_candidate"-*) REBUILD_DEVICE="$dev_candidate"; break ;;
+        esac
+    done
+    if [ -n "$REBUILD_DEVICE" ]; then
+        rest="${target#${REBUILD_DEVICE}-}"
+        # rest is now <flavor>[-<kernel>]; flavor is in flavors/ dir
+        for f in "$ROOT"/flavors/*/; do
+            fn="$(basename "$f")"
+            case "$rest" in
+                "$fn") REBUILD_FLAVOR="$fn"; break ;;
+                "$fn"-*) REBUILD_FLAVOR="$fn"; REBUILD_KERNEL="${rest#${fn}-}"; break ;;
+            esac
+        done
+    fi
+
+    if [ -z "$REBUILD_DEVICE" ] || [ -z "$REBUILD_FLAVOR" ]; then
+        whiptail --title "Rebuild — parse error" --msgbox \
+            "Couldn't parse '$target' into device/flavor[/kernel]. Run a fresh build instead." 10 70
+        exit 1
+    fi
+
+    rebuild_what=$(whiptail --title "Rebuild — what to redo" \
+        --menu "What needs to rebuild?" 18 70 6 \
+        sync     "Re-run make (picks up package additions/removals)" \
+        pkg      "Force-rebuild ONE package + image (PKG=...)" \
+        image    "Rebuild squashfs + image only (post-image edits)" \
+        3>&1 1>&2 2>&3) || exit 0
+
+    case "$rebuild_what" in
+        sync)
+            CMD="make $REBUILD_DEVICE FLAVOR=$REBUILD_FLAVOR"
+            [ -n "$REBUILD_KERNEL" ] && CMD="$CMD KERNEL=$REBUILD_KERNEL"
+            ;;
+        pkg)
+            # Suggest packages from the existing build dir so the user picks
+            # something that actually exists.
+            PKG_SUGGESTIONS=()
+            while IFS= read -r p; do
+                base="$(basename "$p")"
+                # Strip trailing -VERSION
+                name="${base%-[0-9]*}"
+                PKG_SUGGESTIONS+=("$name" "")
+            done < <(find "$ROOT/output/$target/build" -mindepth 1 -maxdepth 1 -type d \
+                     -not -name 'buildroot-fs' -not -name 'staging' 2>/dev/null \
+                     | sort -u | head -40)
+
+            if [ "${#PKG_SUGGESTIONS[@]}" -eq 0 ]; then
+                pkg_name=$(vbe_inputbox "Rebuild — package" \
+                    "Package name (no version):" "panicos-pht") || exit 0
+            else
+                pkg_name=$(whiptail --title "Rebuild — pick a package" \
+                    --menu "Which package?" 22 70 14 \
+                    "${PKG_SUGGESTIONS[@]}" 3>&1 1>&2 2>&3) || exit 0
+            fi
+            [ -z "$pkg_name" ] && exit 0
+
+            CMD="make pkg-rebuild PKG=$pkg_name DEVICE=$REBUILD_DEVICE FLAVOR=$REBUILD_FLAVOR"
+            [ -n "$REBUILD_KERNEL" ] && CMD="$CMD KERNEL=$REBUILD_KERNEL"
+            ;;
+        image)
+            CMD="make image-rebuild DEVICE=$REBUILD_DEVICE FLAVOR=$REBUILD_FLAVOR"
+            [ -n "$REBUILD_KERNEL" ] && CMD="$CMD KERNEL=$REBUILD_KERNEL"
+            ;;
+        *)
+            exit 0
+            ;;
+    esac
+
+    if whiptail --title "Rebuild — Confirm" --yesno \
+        "Rebuild command:\n\n  $CMD\n\nProceed?" 12 70; then
+        clear
+        echo ">>> Running: $CMD"
+        eval "$CMD"
+    else
+        echo "Cancelled. To rebuild manually:"
+        echo "  $CMD"
+    fi
     exit 0
 fi
 
@@ -194,17 +305,20 @@ device=$(whiptail --title "PanicOS — Device" \
 device_name="${device##*/}"
 
 # ---- Flavor selection ----
-flavor=$(whiptail --title "PanicOS — Flavor" \
-    --menu "Userspace flavor" 15 60 5 \
-    minimal "Minimal CLI (BusyBox + systemd)" \
-    desktop "Desktop with Wayland (Plan 06; not yet built)" \
-    3>&1 1>&2 2>&3) || exit 0
+# Enumerate flavors/ dynamically so newly-added ones show up without
+# editing this script. Each flavor gets its one-line description from the
+# `bool "..."` line in its Config.in.
+FLAVOR_ENTRIES=()
+for f in "$ROOT"/flavors/*/Config.in; do
+    [ -f "$f" ] || continue
+    name="$(basename "$(dirname "$f")")"
+    desc=$(awk -F'"' '/bool[[:space:]]*"/{print $2; exit}' "$f")
+    FLAVOR_ENTRIES+=("$name" "${desc:-flavor: $name}")
+done
 
-if [ "$flavor" = "desktop" ]; then
-    whiptail --title "Coming soon" --msgbox \
-        "Desktop flavor isn't built yet (Plan 06). Falling back to minimal." 10 60
-    flavor="minimal"
-fi
+flavor=$(whiptail --title "PanicOS — Flavor" \
+    --menu "Userspace flavor" 18 78 10 \
+    "${FLAVOR_ENTRIES[@]}" 3>&1 1>&2 2>&3) || exit 0
 
 # ---- Kernel-flavor selection (only if device's SoC supports more than one) ----
 # The harness-smoke pseudo-device has no SoC; skip the kernel question for it.
