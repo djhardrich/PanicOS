@@ -37,6 +37,11 @@ BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
 
+# PHT ships a few cdig_*.py helper scripts (yt-dlp / copyparty / Crate Dig
+# proxy/fetcher/daemon). Pull in python3 so those work; they're small
+# helpers, no need for a full python distribution.
+BR2_PACKAGE_PYTHON3=y
+
 # The whole point: PHT bundle + autostart on tty1 with chrt -f 50.
 BR2_PACKAGE_PANICOS_PHT=y
 BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y

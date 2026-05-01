@@ -27,7 +27,13 @@ cat /proc/cmdline > "$OUT/cmdline.txt" 2>&1
 
 # Kernel ring buffer + systemd journal — most of the answer lives here.
 dmesg --no-pager > "$OUT/dmesg.log" 2>&1
-journalctl -b --no-pager > "$OUT/journal.log" 2>&1
+# --merge picks up rotated journals too (NTP often jumps the clock backwards
+# right after wifi associates, which causes journald to seal the current
+# file and start a new one — `journalctl -b` alone can miss the tail).
+journalctl -b 0 --merge --no-pager > "$OUT/journal.log" 2>&1
+# Also save the previous boot's journal (if any) so the user can compare
+# back-to-back boots when something stops working unexpectedly.
+journalctl -b -1 --merge --no-pager > "$OUT/journal.prev.log" 2>&1 || true
 
 # Failed services + status of every subsystem-A piece individually so you
 # don't have to grep through the journal.
@@ -35,6 +41,10 @@ systemctl --failed --no-pager > "$OUT/failed.log" 2>&1
 systemctl status \
     panicos-wifi-config.service \
     panicos-sshkeys.service \
+    panicos-firstboot.service \
+    panicos-bootdiag.service \
+    panicos-splash.service \
+    panicos-pht.service \
     'wpa_supplicant@*.service' \
     systemd-networkd.service \
     'getty@tty1.service' \

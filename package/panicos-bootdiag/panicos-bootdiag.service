@@ -9,7 +9,7 @@ RemainAfterExit=yes
 # Let wifi/networkd actually try (and fail or succeed) before snapshotting.
 ExecStartPre=/bin/sleep 30
 ExecStart=/usr/sbin/panicos-bootdiag
-StandardOutput=journal+console
+StandardOutput=journal
 
 [Install]
 WantedBy=multi-user.target

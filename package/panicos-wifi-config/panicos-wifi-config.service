@@ -9,7 +9,7 @@ RequiresMountsFor=/boot
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/sbin/panicos-wifi-config
-StandardOutput=journal+console
+StandardOutput=journal
 
 [Install]
 WantedBy=sysinit.target

@@ -10,7 +10,7 @@ RequiresMountsFor=/storage
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/sbin/panicos-firstboot
-StandardOutput=journal+console
+StandardOutput=journal
 
 [Install]
 WantedBy=sysinit.target
