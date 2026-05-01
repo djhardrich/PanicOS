@@ -24,3 +24,12 @@ CONFIG_INITRAMFS_COMPRESSION_GZIP=y
 # of the rootfs instead (later plans).
 CONFIG_EXTRA_FIRMWARE=""
 CONFIG_EXTRA_FIRMWARE_DIR=""
+
+# PREEMPT_RT: full real-time preemption. Mainlined in 6.12; we're on
+# 7.0.1 so it's a Kconfig-only switch (no patch series to apply).
+# Mutually exclusive with CONFIG_PREEMPT (regular voluntary preemption),
+# so unset that. See soc/allwinner-h700/mainline/linux/panicos-extras.config.fragment.in
+# for full rationale.
+# CONFIG_PREEMPT is not set
+# CONFIG_PREEMPT_DYNAMIC is not set
+CONFIG_PREEMPT_RT=y
