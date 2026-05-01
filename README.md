@@ -195,26 +195,40 @@ to poke around or read logs while PHT is running on the panel.
 
 ### Building a real-distro squashfs (Debian / Ubuntu)
 
-PanicOS isn't tied to buildroot userland. `scripts/distro-bootstrap.sh`
+PanicOS isn't tied to buildroot userland. The distro-bootstrap pipeline
 produces a fully-formed Debian Trixie or Ubuntu Noble aarch64 squashfs
 that drops onto a flashed PanicOS device's boot vfat and boots under
-the same kernel + initramfs:
+the same kernel + initramfs.
+
+**Recommended (containerised)** — no host setup required beyond docker
++ qemu-user-static (for the binfmt registration):
 
 ```sh
-sudo ./scripts/distro-bootstrap.sh --distro debian
+./scripts/docker-distro-bootstrap.sh --distro debian
 # → output/distro/panicos-debian-trixie-aarch64.squashfs
 
-sudo ./scripts/distro-bootstrap.sh --distro ubuntu --packages "neovim htop tmux"
+./scripts/docker-distro-bootstrap.sh --distro ubuntu --packages "neovim htop tmux"
 # → output/distro/panicos-ubuntu-noble-aarch64.squashfs
 ```
 
-Requirements (one-time, on the build host):
+The wrapper builds `docker/Dockerfile.distro-bootstrap` on demand
+(debian:trixie-slim base with debootstrap + qemu-user-static +
+squashfs-tools + arch-install-scripts pre-installed) and runs the
+bootstrap inside `--privileged` so `chroot`/bind-mounts work. CLI args
+pass through verbatim. Cache lives at
+`$HOME/.cache/panicos-distro-bootstrap/` and is reused across runs.
 
-- Run as root or via `sudo` (chroot, mknod, debootstrap need it)
-- `qemu-user-static` package installed and binfmt_misc registered for
-  aarch64 (most distros set this up automatically when you install the
-  package; check with `cat /proc/sys/fs/binfmt_misc/qemu-aarch64`)
-- `debootstrap` (debian/ubuntu), `mksquashfs` (squashfs-tools)
+**Bare-metal** (skip the docker wrapper if you'd rather install the
+toolchain directly):
+
+```sh
+sudo ./scripts/distro-bootstrap.sh --distro debian
+```
+
+Bare-metal requires `debootstrap`, `qemu-user-static`, `squashfs-tools`,
+`mksquashfs`, and root. The docker path needs only docker +
+qemu-user-static (the latter for the host kernel's binfmt registration —
+verify with `cat /proc/sys/fs/binfmt_misc/qemu-aarch64`).
 
 The script bakes in a PanicOS overlay: hostname (`panicos-debian` or
 `panicos-ubuntu` by default), root password (default `panicos`,

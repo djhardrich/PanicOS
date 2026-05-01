@@ -1,0 +1,31 @@
+# Build environment for scripts/distro-bootstrap.sh — debootstrap +
+# qemu-user-static + squashfs-tools + arch-install-scripts pre-installed
+# so users don't have to set up the bootstrap toolchain on their host.
+#
+# Run via scripts/docker-distro-bootstrap.sh (which handles the
+# --privileged + bind mounts + binfmt registration).
+
+FROM debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        debootstrap \
+        debian-archive-keyring \
+        ubuntu-keyring \
+        gnupg \
+        qemu-user-static \
+        binfmt-support \
+        squashfs-tools \
+        arch-install-scripts \
+        wget \
+        curl \
+        xz-utils \
+        coreutils \
+        util-linux \
+        mount \
+        sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
