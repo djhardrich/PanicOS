@@ -21,6 +21,19 @@ BR2_PACKAGE_UTIL_LINUX_LSBLK=y
 # sysroot (and thus the squashfs).
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
 
+# SDL2 video stack — KMSDRM is the only viable backend on a fbdev-only
+# system (no X, no Wayland). KMSDRM uses GBM + EGL + GLES2 internally,
+# which means we need mesa3d with GBM + EGL + the right GPU driver. The
+# H700 has a Mali G31 (Bifrost) — panfrost is the open driver, no
+# firmware blob required. The kernel already has CONFIG_DRM_PANFROST=y.
+BR2_PACKAGE_SDL2_KMSDRM=y
+BR2_PACKAGE_SDL2_OPENGLES=y
+BR2_PACKAGE_MESA3D=y
+BR2_PACKAGE_MESA3D_GBM=y
+BR2_PACKAGE_MESA3D_OPENGL_EGL=y
+BR2_PACKAGE_MESA3D_OPENGL_ES=y
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
+
 # The whole point: PHT bundle + autostart on tty1 with chrt -f 50.
 BR2_PACKAGE_PANICOS_PHT=y
 BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y
