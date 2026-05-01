@@ -83,9 +83,22 @@ find_boot || panic "no boot partition with /panicos-active.cfg found"
 BOOT_DEV=$(awk '$2 == "/boot" {print $1}' /proc/mounts | head -1)
 
 IMAGE=
+FLAVOR=
 . /boot/panicos-active.cfg
 [ -n "$IMAGE" ] || panic "IMAGE not set in /boot/panicos-active.cfg"
-echo ">>> PanicOS initramfs: booting $IMAGE"
+
+# Per-flavor overlay namespace: each squashfs gets its own
+# /storage/.panicos-overlay/<flavor>/{upper,work}. Switching flavors keeps
+# each one's deltas separate (Debian-vs-Arch /etc would be chaos otherwise).
+# User data on /storage outside .panicos-overlay/ is shared across flavors.
+#
+# Default FLAVOR derives from the IMAGE filename minus .squashfs — simple,
+# unambiguous, no parsing of device-prefix needed. Override by setting
+# FLAVOR= in panicos-active.cfg if you want two squashfses to share state.
+if [ -z "$FLAVOR" ]; then
+    FLAVOR="${IMAGE%.squashfs}"
+fi
+echo ">>> PanicOS initramfs: booting $IMAGE (flavor=$FLAVOR)"
 
 [ -f "/boot/$IMAGE" ] || panic "/boot/$IMAGE not found on boot partition"
 
@@ -100,15 +113,17 @@ mount -o ro -t squashfs "$LOOPDEV" /lower \
 # Find + mount the storage ext4 partition (rw). If absent we fall back to
 # tmpfs upper so the system still boots, just non-persistent.
 if find_storage "$BOOT_DEV"; then
-    mkdir -p /storage/.panicos-overlay/upper /storage/.panicos-overlay/work
+    :
 else
     echo ">>> PanicOS initramfs: no storage partition found; using tmpfs (non-persistent)"
     mount -t tmpfs tmpfs /storage
-    mkdir -p /storage/.panicos-overlay/upper /storage/.panicos-overlay/work
 fi
 
+OVERLAY_BASE=/storage/.panicos-overlay/$FLAVOR
+mkdir -p "$OVERLAY_BASE/upper" "$OVERLAY_BASE/work"
+
 mount -t overlay panicos-overlay \
-    -o lowerdir=/lower,upperdir=/storage/.panicos-overlay/upper,workdir=/storage/.panicos-overlay/work \
+    -o lowerdir=/lower,upperdir="$OVERLAY_BASE/upper",workdir="$OVERLAY_BASE/work" \
     /sysroot \
     || panic "overlayfs mount failed"
 
