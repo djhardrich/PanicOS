@@ -11,3 +11,12 @@ Type=wlan
 
 [Network]
 DHCP=yes
+
+[DHCPv4]
+# Use the MAC as the DHCP client-ID (option 61) instead of systemd's
+# default per-machine DUID. Stops routers from handing out a new lease
+# every boot just because PanicOS sends a different DUID than ROCKNIX or
+# whatever else this device used to run — same MAC + same client-ID =
+# stable lease. Most consumer routers index DHCP leases by client-ID
+# rather than by MAC alone, so this is the safe portable choice.
+ClientIdentifier=mac
