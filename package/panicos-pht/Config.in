@@ -1,0 +1,19 @@
+config BR2_PACKAGE_PANICOS_PHT
+	bool "panicos-pht (ProHandheldTracker)"
+	depends on BR2_aarch64
+	depends on BR2_TOOLCHAIN_USES_GLIBC
+	select BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_ALSA_LIB
+	help
+	  ProHandheldTracker — PortMaster-flavor SDL2 audio tracker.
+	  Bundles the prebuilt aarch64 binary, ~50MB of plugin DSPs, and
+	  a launcher tuned for handheld use (forces SDL_AUDIODRIVER=alsa,
+	  exports SDL_GAMECONTROLLERCONFIG from the bundled gamecontrollerdb).
+
+	  Payload comes from vendor/pht/ in the repo. Run scripts/vendor-pht.sh
+	  to populate that directory from your local
+	  ~/prohandheldtracker-build/dist/stage/pht. Build will fail with a
+	  clear error if vendor/pht/bin/pht-aarch64 is absent.
+
+	  Pairs with the "pht" flavor (pht autostarts at boot under chrt) or
+	  can be installed in any flavor for a launch-on-demand setup.
