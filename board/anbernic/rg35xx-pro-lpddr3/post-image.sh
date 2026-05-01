@@ -56,8 +56,16 @@ LABEL PanicOS
 EOF
 
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
+FLAVOR="$(read_kconfig PANICOS_FLAVOR_NAME minimal)"
+export PANICOS_OUTPUT_NAME="panicos-rg35xx-pro-lpddr3-${FLAVOR}"
 cp "$BINARIES_DIR/rootfs.squashfs" \
-   "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal.squashfs"
+   "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}.squashfs"
+
+# panicos-active.cfg ships with IMAGE= pointing at the minimal squashfs by
+# default. Rewrite to point at this build's flavor so a fresh flash boots
+# straight into it without manual editing.
+sed -i "s|^IMAGE=.*|IMAGE=${PANICOS_OUTPUT_NAME}.squashfs|" \
+    "$BINARIES_DIR/panicos-active.cfg"
 
 # Ship the wifi-config template on the boot vfat so users can fill in
 # SSID/PSK on a PC after flashing without rebuilding. The template is
@@ -90,8 +98,8 @@ genimage \
 # Rename .img to final name BEFORE gzip so the inner stored filename
 # matches the outer .gz wrapper (otherwise archive managers like
 # Balena Etcher extract into a folder).
-mv "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal.img" \
-   "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img"
-gzip -f -9 "$BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img"
+mv "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}.img" \
+   "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img"
+gzip -f -9 "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img"
 
-echo ">>> post-image done: $BINARIES_DIR/panicos-rg35xx-pro-lpddr3-minimal-$GITREV.img.gz"
+echo ">>> post-image done: $BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img.gz"

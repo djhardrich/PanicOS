@@ -43,6 +43,12 @@ python3 "$BR2_EXTERNAL_PANICOS_PATH/scripts/build-android-bootimg.py" \
     --cmdline "console=ttyS0,115200 console=tty1 earlycon loglevel=8 panic=10" \
     --out "$BINARIES_DIR/partitions/boot.img"
 
+# Pull partition sizes and flavor from Buildroot's .config.
+read_kconfig() {
+    local key="$1" def="$2"
+    grep "^${key}=" "$BR2_CONFIG" | head -1 | cut -d= -f2- | tr -d '"' || echo "$def"
+}
+
 # panicos-active.cfg goes into the boot VFAT so the initramfs knows which
 # squashfs to mount.
 cp "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/panicos-active.cfg" \
@@ -50,8 +56,17 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/panicos-active.cfg" \
 
 # Drop the squashfs straight into BINARIES_DIR — genimage's vfat list
 # pulls it directly into the boot partition (no separate system.ext4).
+GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
+FLAVOR="$(read_kconfig PANICOS_FLAVOR_NAME minimal)"
+export PANICOS_OUTPUT_NAME="panicos-trimui-brick-${FLAVOR}"
 cp "$BINARIES_DIR/rootfs.squashfs" \
-   "$BINARIES_DIR/panicos-trimui-brick-minimal.squashfs"
+   "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}.squashfs"
+
+# panicos-active.cfg ships with IMAGE= pointing at the minimal squashfs by
+# default. Rewrite to point at this build's flavor so a fresh flash boots
+# straight into it without manual editing.
+sed -i "s|^IMAGE=.*|IMAGE=${PANICOS_OUTPUT_NAME}.squashfs|" \
+    "$BINARIES_DIR/panicos-active.cfg"
 
 # Ship the wifi-config template on the boot vfat so users can fill in
 # SSID/PSK on a PC after flashing without rebuilding. The template is
@@ -59,11 +74,6 @@ cp "$BINARIES_DIR/rootfs.squashfs" \
 cp "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-wifi-config/panicos-wifi.cfg.template" \
    "$BINARIES_DIR/panicos-wifi.cfg"
 
-# Pull partition sizes from Buildroot's .config.
-read_kconfig() {
-    local key="$1" def="$2"
-    grep "^${key}=" "$BR2_CONFIG" | head -1 | cut -d= -f2- | tr -d '"' || echo "$def"
-}
 export PANICOS_BOOT_PARTITION_SIZE_MB="$(read_kconfig PANICOS_BOOT_PARTITION_SIZE_MB 6144)"
 export PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB="$(read_kconfig PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB 64)"
 
@@ -86,12 +96,11 @@ genimage \
     --outputpath "$BINARIES_DIR" \
     --config "$GENIMAGE_CFG"
 
-GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
 # Rename .img to final name BEFORE gzip so the inner stored filename
 # matches the outer .gz wrapper (otherwise archive managers like
 # Balena Etcher extract into a folder).
-mv "$BINARIES_DIR/panicos-trimui-brick-minimal.img" \
-   "$BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img"
-gzip -f -9 "$BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img"
+mv "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}.img" \
+   "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img"
+gzip -f -9 "$BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img"
 
-echo ">>> post-image done: $BINARIES_DIR/panicos-trimui-brick-minimal-$GITREV.img.gz"
+echo ">>> post-image done: $BINARIES_DIR/${PANICOS_OUTPUT_NAME}-$GITREV.img.gz"
