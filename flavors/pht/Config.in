@@ -1,0 +1,14 @@
+config PANICOS_FLAVOR_PHT
+	bool "pht — ProHandheldTracker (audio-tracker, RT scheduling)"
+	depends on PANICOS_SOC_ALLWINNER_H700 || PANICOS_SOC_ROCKCHIP_RK3566
+	help
+	  Boots straight into ProHandheldTracker with RT scheduling
+	  (chrt -f 50). Replaces the tty1 getty so PHT owns the panel
+	  via KMSDRM. Requires the panicos-pht payload to be vendored at
+	  vendor/pht/ (run scripts/vendor-pht.sh once before building).
+
+	  No login prompt by default — drop into a shell via SSH if you
+	  need to poke around. Wifi auto-connect from /boot/panicos-wifi.cfg
+	  works exactly like in the minimal flavor.
+
+	  aarch64-only (the pht binary).

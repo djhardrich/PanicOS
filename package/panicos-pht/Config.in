@@ -17,3 +17,19 @@ config BR2_PACKAGE_PANICOS_PHT
 
 	  Pairs with the "pht" flavor (pht autostarts at boot under chrt) or
 	  can be installed in any flavor for a launch-on-demand setup.
+
+if BR2_PACKAGE_PANICOS_PHT
+
+config BR2_PACKAGE_PANICOS_PHT_AUTOSTART
+	bool "autostart on boot (replaces tty1 getty)"
+	depends on BR2_INIT_SYSTEMD
+	help
+	  Install panicos-pht.service into multi-user.target.wants and have
+	  it Conflicts=getty@tty1.service. PHT takes the panel via KMSDRM
+	  master, so when the unit starts systemd shuts down the tty1 getty
+	  to avoid fbcon fighting PHT for the framebuffer.
+
+	  On by default for the "pht" flavor. Disable if you want to launch
+	  PHT manually (e.g. from SSH for debugging).
+
+endif # BR2_PACKAGE_PANICOS_PHT

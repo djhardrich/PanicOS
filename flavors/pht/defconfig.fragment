@@ -1,0 +1,23 @@
+# pht flavor — ProHandheldTracker, autostart on tty1 with RT scheduling.
+BR2_INIT_SYSTEMD=y
+BR2_TARGET_ROOTFS_SQUASHFS=y
+BR2_TARGET_ROOTFS_SQUASHFS4_GZIP=y
+# BR2_TARGET_ROOTFS_TAR is not set
+
+# Inherit subsystem-A bring-up basics from minimal: firstboot, root
+# password, dropbear, wifi-config, sshkeys, bootdiag.
+BR2_PACKAGE_PANICOS_FIRSTBOOT=y
+BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
+BR2_PACKAGE_DROPBEAR=y
+BR2_PACKAGE_PANICOS_SSHKEYS=y
+BR2_PACKAGE_PANICOS_WIFI_CONFIG=y
+BR2_PACKAGE_PANICOS_BOOTDIAG=y
+BR2_PACKAGE_IPROUTE2=y
+BR2_PACKAGE_UTIL_LINUX_LSBLK=y
+
+# The whole point: PHT bundle + autostart on tty1 with chrt -f 50.
+BR2_PACKAGE_PANICOS_PHT=y
+BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y
+
+# chrt lives in util-linux schedutils. PHT needs it for RT scheduling.
+BR2_PACKAGE_UTIL_LINUX_SCHEDUTILS=y

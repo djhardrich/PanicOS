@@ -1,0 +1,26 @@
+[Unit]
+Description=ProHandheldTracker
+After=multi-user.target sound.target
+# Take ownership of tty1 from the default getty so PHT (KMSDRM master)
+# isn't fighting fbcon for the panel.
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+ExecStart=/opt/pht/panictracker.sh
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=no
+# Restart if PHT crashes — handheld user expects it to come back, not
+# leave them at a blank screen.
+Restart=on-failure
+RestartSec=3
+# Run as root so chrt -f and DRM master work without extra capabilities.
+User=root
+
+[Install]
+WantedBy=multi-user.target

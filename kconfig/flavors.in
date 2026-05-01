@@ -3,9 +3,11 @@ choice
 	default PANICOS_FLAVOR_MINIMAL
 
 source "$BR2_EXTERNAL_PANICOS_PATH/flavors/minimal/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/flavors/pht/Config.in"
 
 endchoice
 
 config PANICOS_FLAVOR_NAME
 	string
 	default "minimal" if PANICOS_FLAVOR_MINIMAL
+	default "pht"     if PANICOS_FLAVOR_PHT

@@ -36,4 +36,14 @@ define PANICOS_PHT_INSTALL_TARGET_CMDS
 	ln -sf /opt/pht/panictracker.sh $(TARGET_DIR)/usr/bin/panictracker
 endef
 
+ifeq ($(BR2_PACKAGE_PANICOS_PHT_AUTOSTART),y)
+define PANICOS_PHT_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 0644 $(PANICOS_PHT_PKGDIR)/panicos-pht.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/panicos-pht.service
+	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants
+	ln -sf ../panicos-pht.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/panicos-pht.service
+endef
+endif
+
 $(eval $(generic-package))
