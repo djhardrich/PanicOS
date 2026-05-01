@@ -1,0 +1,17 @@
+config BR2_PACKAGE_PANICOS_SPLASH
+	bool "panicos-splash"
+	depends on BR2_INIT_SYSTEMD
+	select BR2_PACKAGE_FBV
+	help
+	  Early-boot splash screen. Paints a PanicOS image to /dev/fb0 via
+	  fbv before getty (minimal flavor) or PHT (pht flavor) takes over
+	  the panel.
+
+	  Boots much cleaner with `quiet` on the kernel cmdline so kernel
+	  messages don't scroll over the splash. Pre-scaled to 640x480
+	  (H700 + RG353P) and 1024x768 (TrimUI Brick); the launcher reads
+	  /sys/class/drm/card0-*/modes at boot to pick the closest match.
+
+	  Splash service is set up as Conflicts=getty@tty1.service and
+	  Conflicts=panicos-pht.service so it auto-stops when the next
+	  consumer of the panel starts — no race, no leftover process.

@@ -52,7 +52,7 @@ cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
 LABEL PanicOS
   LINUX /Image
   FDT /dtb.img
-  APPEND console=ttyS0,115200 console=tty1 loglevel=8 panic=0 pause_on_oops=300
+  APPEND console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300
 EOF
 
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"

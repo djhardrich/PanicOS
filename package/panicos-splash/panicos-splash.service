@@ -1,0 +1,27 @@
+[Unit]
+Description=PanicOS boot splash
+DefaultDependencies=no
+After=local-fs.target
+Before=basic.target getty@tty1.service panicos-pht.service
+# Stop the splash the moment the real UI starts. systemd handles the
+# transition cleanly: SIGTERM us → start the conflicting unit.
+Conflicts=getty@tty1.service panicos-pht.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/panicos-splash
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=no
+TTYVHangup=no
+TTYVTDisallocate=no
+KillMode=process
+TimeoutStopSec=2
+# fbv never exits voluntarily (no --delay); systemd needs to know that's
+# OK and not flag it as a failure when we're killed during transition.
+SuccessExitStatus=SIGTERM SIGKILL
+Restart=no
+
+[Install]
+WantedBy=sysinit.target

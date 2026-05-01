@@ -40,7 +40,7 @@ VENDOR_BOOTIMG="$BR2_EXTERNAL_PANICOS_PATH/soc/$SOC/$KERNEL_FLAVOR/prebuilt/$DEV
 python3 "$BR2_EXTERNAL_PANICOS_PATH/scripts/build-android-bootimg.py" \
     --vendor-bootimg "$VENDOR_BOOTIMG" \
     --ramdisk "$RAMDISK" \
-    --cmdline "console=ttyS0,115200 console=tty1 earlycon loglevel=8 panic=10" \
+    --cmdline "console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=10" \
     --out "$BINARIES_DIR/partitions/boot.img"
 
 # Pull partition sizes and flavor from Buildroot's .config.
