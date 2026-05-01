@@ -34,8 +34,23 @@ Full walkthrough: [`docs/vbe-walkthrough.md`](docs/vbe-walkthrough.md)
 
 ## Real device builds
 
-Coming in Plan 02 (Anbernic RG35XX Pro bring-up). Until then, `harness-smoke`
-is the only target.
+Working today (kernel + bootloader + minimal flavor squashfs all built from
+source, plus per-device wifi/BT firmware vendored from upstream linux-firmware
+or the device vendor BSP):
+
+| Target            | SoC family            | Build command                |
+|-------------------|-----------------------|------------------------------|
+| `rg35xx-pro`      | Allwinner H700 (LPDDR4) | `make rg35xx-pro`          |
+| `rg35xx-pro-lpddr3` | Allwinner H700 (LPDDR3) | `make rg35xx-pro-lpddr3` |
+| `rg353p`          | Rockchip RK3566       | `make rg353p`                |
+| `trimui-brick`    | Allwinner A133 (vendor BSP) | `make trimui-brick`    |
+
+Each writes its image to `output/<device>-<flavor>-<kernel>/images/panicos-<device>-<flavor>-<rev>.img.gz`.
+
+Mainline-kernel builds run with `CONFIG_PREEMPT_RT=y` (mainlined in 6.12;
+we're on 7.0.1 so it's a Kconfig-only switch). Adds priority inheritance +
+threaded IRQ handlers; safe for non-RT workloads, dramatically improves
+audio/controller-poll latency for the `pht` flavor.
 
 ## Logging in
 
@@ -102,6 +117,120 @@ EAP / enterprise wifi or anything past plain WPA2-PSK.
 Wifi can be disabled per-flavor by removing `BR2_PACKAGE_PANICOS_WIFI_CONFIG=y`
 from the flavor's `defconfig.fragment`. Same for SSH (`BR2_PACKAGE_DROPBEAR=y`,
 `BR2_PACKAGE_PANICOS_SSHKEYS=y`).
+
+## Flavors and image authoring
+
+A "flavor" is a userspace squashfs that the initramfs loop-mounts as the
+root filesystem. The kernel + bootloader + initramfs are device-specific
+and stay the same; the flavor is what makes the device feel like a
+different OS (busybox console vs. Debian desktop vs. PHT autostart kiosk).
+
+The boot vfat partition can hold **multiple `.squashfs` files at once**.
+A small text file `panicos-active.cfg` on the same partition picks which
+one to boot:
+
+```
+IMAGE=panicos-rg35xx-pro-minimal.squashfs
+# FLAVOR=  (optional; defaults to IMAGE without .squashfs)
+```
+
+Drop a new `.squashfs` onto the boot vfat from a PC, edit `IMAGE=` to
+point at it, reboot — that's the whole switch flow. No reflash.
+
+### Per-flavor overlays
+
+Each unique `FLAVOR` (defaults to the squashfs filename) gets its own
+`/storage/.panicos-overlay/<FLAVOR>/{upper,work}` directory on the storage
+partition. So Debian's `/etc` doesn't pollute Arch's `/etc`, the dropbear
+host keys generated under one flavor stay isolated, etc. To wipe a single
+flavor's state without touching the others, SSH in and:
+
+```sh
+rm -rf /storage/.panicos-overlay/<flavor-name>
+reboot
+```
+
+User data (ROMs, saves, anything outside `.panicos-overlay/`) on `/storage`
+is intentionally shared across flavors — it's *user* state, not *system*
+state.
+
+### Building a different flavor
+
+Pass `FLAVOR=<name>` on the make command line:
+
+```sh
+make rg35xx-pro FLAVOR=pht       # ProHandheldTracker autostart kiosk
+make rg353p FLAVOR=minimal       # default, can omit FLAVOR=
+```
+
+Each flavor lives at `flavors/<name>/{Config.in,defconfig.fragment}`.
+Adding a new one is a 2-file pattern — see `flavors/minimal/` and
+`flavors/pht/` as references.
+
+### `pht` flavor (ProHandheldTracker)
+
+Boots straight into [ProHandheldTracker](https://prohandheldtracker.com/)
+under `chrt -f 50` so the audio thread gets RT scheduling on the
+PREEMPT_RT kernel. The systemd service `Conflicts=getty@tty1.service`,
+so PHT owns the panel via KMSDRM cleanly.
+
+Prerequisite: the PHT payload (binary + 50MB plugins + assets) is too big
+to commit to git. Vendor a snapshot from your local
+`~/prohandheldtracker-build/dist/stage/pht/` once before building:
+
+```sh
+./scripts/vendor-pht.sh                    # uses default ~ path
+./scripts/vendor-pht.sh --src /other/path  # override
+```
+
+Then:
+
+```sh
+make rg35xx-pro FLAVOR=pht
+```
+
+SSH still works in the pht flavor (we kept all the subsystem-A
+networking/SSH bring-up). Drop into a shell from your laptop if you need
+to poke around or read logs while PHT is running on the panel.
+
+### Building a real-distro squashfs (Debian / Ubuntu)
+
+PanicOS isn't tied to buildroot userland. `scripts/distro-bootstrap.sh`
+produces a fully-formed Debian Trixie or Ubuntu Noble aarch64 squashfs
+that drops onto a flashed PanicOS device's boot vfat and boots under
+the same kernel + initramfs:
+
+```sh
+sudo ./scripts/distro-bootstrap.sh --distro debian
+# → output/distro/panicos-debian-trixie-aarch64.squashfs
+
+sudo ./scripts/distro-bootstrap.sh --distro ubuntu --packages "neovim htop tmux"
+# → output/distro/panicos-ubuntu-noble-aarch64.squashfs
+```
+
+Requirements (one-time, on the build host):
+
+- Run as root or via `sudo` (chroot, mknod, debootstrap need it)
+- `qemu-user-static` package installed and binfmt_misc registered for
+  aarch64 (most distros set this up automatically when you install the
+  package; check with `cat /proc/sys/fs/binfmt_misc/qemu-aarch64`)
+- `debootstrap` (debian/ubuntu), `mksquashfs` (squashfs-tools)
+
+The script bakes in a PanicOS overlay: hostname (`panicos-debian` or
+`panicos-ubuntu` by default), root password (default `panicos`,
+override with `--root-password`), `sshd` enabled with PermitRootLogin,
+systemd-networkd configured for both wlan0 and eth0, machine-id zeroed
+so first boot generates a unique one per device.
+
+After the script finishes, copy the `.squashfs` onto a flashed PanicOS
+device's boot vfat (next to the existing minimal one), edit
+`panicos-active.cfg`'s `IMAGE=` to point at it, reboot. The per-flavor
+overlay system kicks in automatically — Debian's state lives in
+`/storage/.panicos-overlay/panicos-debian-trixie-aarch64/`, completely
+separate from the minimal flavor's overlay.
+
+Arch is scaffolded but not implemented for cross-bootstrap from x86_64
+yet — see the script's `bootstrap_arch()` for status.
 
 ## Requirements
 
