@@ -5,7 +5,9 @@
 # function + UI_SERVICE land in PortMaster's environment (PortMaster.sh
 # itself doesn't source /etc/profile, and ES launches us as a non-login
 # shell, so we have to do it). Mirrors ROCKNIX's start_portmaster.sh.
-set -eu
+# set -e but NOT -u — /etc/profile references $PS1 unguarded which trips
+# nounset in a non-interactive shell. ES launches us non-interactively.
+set -e
 
 PM=/storage/roms/ports/PortMaster/PortMaster.sh
 if [ ! -x "$PM" ]; then
