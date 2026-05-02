@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# sanity-fix-target.sh — buildroot post-build hook that catches and repairs
+# common target/ corruptions before squashfs gen.
+#
+# Wired via BR2_ROOTFS_POST_BUILD_SCRIPT in gen-defconfig.sh; runs after
+# buildroot's target-finalize, before rootfs image creation.
+#
+# Buildroot calls post-build scripts as: $0 $TARGET_DIR. We don't take
+# any other args.
+
+set -euo pipefail
+
+TARGET="${1:-${TARGET_DIR:?TARGET_DIR not set}}"
+
+echo ">>> sanity-fix-target: checking $TARGET"
+
+# Repair: /lib must be a symlink to usr/lib (merged-usr layout). When it's
+# a real directory instead, /sbin/init -> ../lib/systemd/systemd resolves
+# to /lib/systemd/systemd which doesn't exist (only /usr/lib/systemd/systemd
+# does), and the kernel fails to switch_root with "no such file" right after
+# the initramfs hands off. Hit on 2026-05-02 after a target/ + per-pkg
+# .stamp_target_installed wipe — install order became non-deterministic and
+# something (likely linux-modules/firmware) wrote to /lib/ before the
+# skeleton-init-systemd package recreated /lib as a symlink, leaving /lib
+# as a real dir with the original symlink displaced inside it as
+# /lib/lib -> usr/lib.
+if [ -d "$TARGET/lib" ] && [ ! -L "$TARGET/lib" ]; then
+    echo "    /lib is a directory, expected a symlink to usr/lib — repairing"
+    # Move any content to /usr/lib (where it belongs under the merged-usr
+    # layout). rsync --remove-source-files leaves only empty dirs behind.
+    rsync -a --remove-source-files "$TARGET/lib/" "$TARGET/usr/lib/"
+    find "$TARGET/lib" -depth -type d -empty -delete
+    rm -rf "$TARGET/lib"
+    ln -sf usr/lib "$TARGET/lib"
+    echo "    repaired: $(ls -la "$TARGET/lib" | awk '{print $9, $10, $11}')"
+fi
+
+# Sanity: /sbin/init must resolve to a real file. If broken, the kernel's
+# switch_root fails at boot. Make a noisy abort here rather than shipping
+# a brick.
+if ! [ -e "$TARGET/sbin/init" ]; then
+    echo "    ERROR: $TARGET/sbin/init doesn't resolve — aborting before squashfs gen" >&2
+    ls -la "$TARGET/sbin/init" >&2 || true
+    exit 1
+fi
+
+echo ">>> sanity-fix-target: ok"

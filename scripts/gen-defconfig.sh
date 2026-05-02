@@ -118,4 +118,34 @@ mkdir -p "$(dirname "$OUTPUT")"
 	echo "# Shared ccache for fast cross-output-dir rebuilds"
 	echo "BR2_CCACHE=y"
 	echo "BR2_CCACHE_DIR=\"$ROOT/.ccache\""
+	# Post-build sanity script. Catches the rare /lib-as-dir corruption
+	# that has bitten this project once already (target/ wipe + per-pkg
+	# stamp wipe → install order became non-deterministic → linux-modules
+	# wrote to /lib/ before skeleton-init-systemd made /lib a symlink to
+	# usr/lib → kernel boot fails switch_root with "no such file" on
+	# /sbin/init). The script auto-repairs and is a no-op when target/
+	# is healthy.
+	echo
+	echo "# Sanity / auto-repair of target/ before squashfs gen"
+	echo "BR2_ROOTFS_POST_BUILD_SCRIPT=\"$ROOT/scripts/sanity-fix-target.sh\""
 } > "$OUTPUT"
+
+# Merge BR2_ROOTFS_OVERLAY values across fragments. Kconfig has only
+# one binding for the var so duplicate "BR2_ROOTFS_OVERLAY=..." lines
+# made by concatenating fragments cause the last one to silently
+# override prior ones. Buildroot supports a space-separated list of
+# paths in this var, so collect every distinct value and write them
+# as one final line at the bottom of the defconfig.
+OVERLAY_PATHS=$(grep '^BR2_ROOTFS_OVERLAY=' "$OUTPUT" \
+    | sed -E 's/^BR2_ROOTFS_OVERLAY="(.*)"$/\1/' \
+    | tr ' ' '\n' \
+    | awk '!seen[$0]++' \
+    | tr '\n' ' ' \
+    | sed 's/[[:space:]]*$//')
+if [ -n "$OVERLAY_PATHS" ]; then
+    # Strip the per-fragment lines and append a single merged one.
+    sed -i '/^BR2_ROOTFS_OVERLAY=/d' "$OUTPUT"
+    echo "" >> "$OUTPUT"
+    echo "# Merged BR2_ROOTFS_OVERLAY (across device/flavor/SoC fragments)" >> "$OUTPUT"
+    echo "BR2_ROOTFS_OVERLAY=\"$OVERLAY_PATHS\"" >> "$OUTPUT"
+fi
