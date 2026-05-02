@@ -1,0 +1,18 @@
+NAME=PanicOS
+VERSION=1.0
+ID=panicos
+ID_LIKE=rocknix
+VERSION_ID=1.0
+PRETTY_NAME="PanicOS 1.0"
+HOME_URL="https://github.com/djhardrich/PanicOS"
+
+# OS_NAME is what PortMaster's device_info.txt CFW detection ladder
+# falls back to (line 126: `CFW_NAME=$(grep -a '^OS_NAME=".*"' /etc/os-release | cut -d'"' -f 2)`).
+# Setting it to ROCKNIX makes PortMaster source mod_ROCKNIX.txt — which
+# expects /usr/bin/portmaster_sway_fullscreen.sh + UI_SERVICE + the
+# sway_fullscreen bash function, all of which panicos-sway provides.
+# Functionally we ARE ROCKNIX-on-buildroot for the PortMaster runtime
+# contract; the friendly NAME above keeps PanicOS branding everywhere
+# else (login banner, hostname, kernel logs).
+OS_NAME="ROCKNIX"
+OS_VERSION="1.0"

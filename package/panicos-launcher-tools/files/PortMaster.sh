@@ -1,7 +1,10 @@
 #!/bin/bash
 # PanicOS launcher shim — symlinked into /storage/roms/ports/ at first
-# boot so ES's Ports menu always has a "PortMaster" entry. If PortMaster
-# itself hasn't been installed yet, point the user at Install.PortMaster.sh.
+# boot so ES's Ports menu always has a "PortMaster" entry. Sources
+# /etc/profile before exec'ing PortMaster.sh so the sway_fullscreen
+# function + UI_SERVICE land in PortMaster's environment (PortMaster.sh
+# itself doesn't source /etc/profile, and ES launches us as a non-login
+# shell, so we have to do it). Mirrors ROCKNIX's start_portmaster.sh.
 set -eu
 
 PM=/storage/roms/ports/PortMaster/PortMaster.sh
@@ -18,6 +21,10 @@ EOF
     read -r -n 1 _ || true
     exit 1
 fi
+
+# /etc/profile pulls in /etc/profile.d/sway-fullscreen.sh which defines
+# UI_SERVICE + sway_fullscreen for PortMaster's mod_ROCKNIX.txt path.
+[ -f /etc/profile ] && . /etc/profile
 
 cd /storage/roms/ports/PortMaster
 exec ./PortMaster.sh "$@"

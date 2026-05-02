@@ -61,5 +61,16 @@ fi
     [ ! -e /storage/roms/ports/PortMaster.sh ] && \
     ln -sf /usr/share/panicos-launcher/tools/PortMaster.sh /storage/roms/ports/PortMaster.sh
 
+# /roms compatibility symlink. PortMaster's inner PortMaster.sh + every
+# port launcher in the catalog hardcodes /roms/ports/<port>/ paths,
+# relying on the host CFW to symlink /roms to wherever the writable
+# storage actually lives (ROCKNIX maps /roms -> /storage/roms; ArkOS
+# uses /roms directly; etc.). Without this symlink PortMaster errors at
+# launch with "/roms/ports/PortMaster/control.txt: No such file or
+# directory" before it even finishes parsing its CFW detection. The
+# symlink lands in the overlayfs upper, so it persists across reboots
+# without rebaking the squashfs.
+[ -e /roms ] || ln -sf /storage/roms /roms
+
 touch "$MARKER"
 echo ">>> panicos-firstboot: done"

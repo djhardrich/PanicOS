@@ -24,6 +24,15 @@ define PANICOS_SWAY_INSTALL_TARGET_CMDS
 	# creates it on every boot.
 	$(INSTALL) -D -m 0644 $(@D)/panicos-sway.tmpfiles \
 		$(TARGET_DIR)/usr/lib/tmpfiles.d/panicos-sway.conf
+	# PortMaster + ROCKNIX-vendored ports call /usr/bin/portmaster_sway_fullscreen.sh
+	# from mod_ROCKNIX.txt's pm_platform_helper to fullscreen their
+	# windows after sway maps them. The helper expects sway_fullscreen
+	# (bash function) and UI_SERVICE in env — we source both via
+	# /etc/profile.d/sway-fullscreen.sh in any login shell.
+	$(INSTALL) -D -m 0755 $(@D)/portmaster_sway_fullscreen.sh \
+		$(TARGET_DIR)/usr/bin/portmaster_sway_fullscreen.sh
+	$(INSTALL) -D -m 0644 $(@D)/profile.d-sway-fullscreen.sh \
+		$(TARGET_DIR)/etc/profile.d/sway-fullscreen.sh
 endef
 
 define PANICOS_SWAY_INSTALL_INIT_SYSTEMD
