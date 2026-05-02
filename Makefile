@@ -238,4 +238,79 @@ image-rebuild:
 	rm -rf "$$OUT/build/buildroot-fs"; \
 	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
 
+# image-variant: produce a same-SoC u-boot variant image without redoing
+# the heavy work (toolchain, kernel, rootfs). Use case: rg35xx-pro vs
+# rg35xx-pro-lpddr3 — same kernel + same userspace, only the U-Boot SPL
+# differs (LPDDR3 vs LPDDR4 RAM training). Bypasses buildroot for the
+# variant — directly rebuilds u-boot with the variant's defconfig using
+# BASE's already-built cross-toolchain, then symlinks BASE's kernel +
+# DTBs + rootfs.squashfs into the variant's images dir and runs the
+# variant's post-image.sh.
+#
+# Usage:
+#   make rg35xx-pro FLAVOR=launcher                                  # 1) base build
+#   make image-variant DEVICE=rg35xx-pro-lpddr3 BASE=rg35xx-pro \    # 2) variant
+#                      FLAVOR=launcher
+#
+# Caveat: rootfs is shared with BASE, so /etc/hostname and /etc/issue
+# come from BASE's defconfig (cosmetic; "panicos-rg35xx-pro" not
+# "-lpddr3"). For a fully variant-correct rootfs, fall back to a normal
+# `make rg35xx-pro-lpddr3 FLAVOR=launcher` — slower but ccache should
+# still keep it well under the cold-build time.
+.PHONY: image-variant
+image-variant:
+	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@test -n "$(BASE)"   || (echo "BASE not set"   >&2; exit 1)
+	@FL="$${FLAVOR:-minimal}"; K="$(KERNEL)"; \
+	SOC_B="$(call _device_soc,$(BASE))"; \
+	SOC_V="$(call _device_soc,$(DEVICE))"; \
+	test "$$SOC_B" = "$$SOC_V" || \
+	  (echo "SoC mismatch: $(BASE)=$$SOC_B vs $(DEVICE)=$$SOC_V — image-variant only handles same-SoC U-Boot variants. For different SoCs run a normal full build." >&2; exit 1); \
+	if [ -n "$$SOC_V" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	BASE_OUT="$(OUTPUT_BASE)/$(BASE)-$$FL$${K:+-$$K}"; \
+	VAR_OUT="$(OUTPUT_BASE)/$(DEVICE)-$$FL$${K:+-$$K}"; \
+	test -d "$$BASE_OUT/images" || \
+	  (echo "no base build at $$BASE_OUT — run 'make $(BASE) FLAVOR=$$FL' first" >&2; exit 1); \
+	BOARD_DIR=$$(find $(PANICOS_ROOT)/board -mindepth 3 -maxdepth 3 -path "*/$(DEVICE)/Config.in" -printf '%h\n' 2>/dev/null | head -1); \
+	test -n "$$BOARD_DIR" || (echo "no board dir for $(DEVICE)" >&2; exit 1); \
+	UBOOT_BOARD=$$(awk -F'"' '/BR2_TARGET_UBOOT_BOARDNAME/ {print $$2}' "$$BOARD_DIR/defconfig.fragment"); \
+	test -n "$$UBOOT_BOARD" || (echo "no BR2_TARGET_UBOOT_BOARDNAME in $$BOARD_DIR/defconfig.fragment — image-variant requires the variant defconfig.fragment to override the U-Boot boardname" >&2; exit 1); \
+	UBOOT_BASE_BUILD="$$BASE_OUT/build/uboot-custom"; \
+	test -d "$$UBOOT_BASE_BUILD" || (echo "no u-boot source at $$UBOOT_BASE_BUILD — base build incomplete?" >&2; exit 1); \
+	echo ">>> image-variant: $(DEVICE) (uboot=$$UBOOT_BOARD) on $(BASE)'s kernel/rootfs"; \
+	mkdir -p "$$VAR_OUT/build" "$$VAR_OUT/images"; \
+	UBOOT_VAR_BUILD="$$VAR_OUT/build/uboot-custom"; \
+	echo ">>> rsyncing u-boot source to $$UBOOT_VAR_BUILD"; \
+	rsync -a --delete "$$UBOOT_BASE_BUILD/" "$$UBOOT_VAR_BUILD/"; \
+	echo ">>> rebuilding u-boot for $$UBOOT_BOARD"; \
+	export PATH="$$BASE_OUT/host/bin:$$BASE_OUT/host/sbin:$$PATH"; \
+	export CROSS_COMPILE="aarch64-buildroot-linux-gnu-"; \
+	$(MAKE) -C "$$UBOOT_VAR_BUILD" distclean >/dev/null 2>&1 || true; \
+	$(MAKE) -C "$$UBOOT_VAR_BUILD" "$${UBOOT_BOARD}_defconfig"; \
+	$(MAKE) -C "$$UBOOT_VAR_BUILD" -j$$(nproc); \
+	test -f "$$UBOOT_VAR_BUILD/u-boot-sunxi-with-spl.bin" || \
+	  (echo "u-boot build did not produce u-boot-sunxi-with-spl.bin — variant unsupported by this u-boot tree?" >&2; exit 1); \
+	echo ">>> staging variant images dir from $(BASE)"; \
+	rm -rf "$$VAR_OUT/images"; mkdir -p "$$VAR_OUT/images"; \
+	ln -sf "$$BASE_OUT/images/Image" "$$VAR_OUT/images/Image"; \
+	for f in "$$BASE_OUT/images"/*.dtb; do \
+	  [ -e "$$f" ] && ln -sf "$$f" "$$VAR_OUT/images/$$(basename $$f)"; \
+	done; \
+	for d in "$$BASE_OUT/images/rtl_bt" "$$BASE_OUT/images/rtw88"; do \
+	  [ -d "$$d" ] && ln -sfn "$$d" "$$VAR_OUT/images/$$(basename $$d)"; \
+	done; \
+	ln -sf "$$BASE_OUT/images/rootfs.squashfs" "$$VAR_OUT/images/rootfs.squashfs"; \
+	cp -L "$$UBOOT_VAR_BUILD/u-boot-sunxi-with-spl.bin" \
+	      "$$VAR_OUT/images/u-boot-sunxi-with-spl.bin"; \
+	cp "$$BASE_OUT/.config" "$$VAR_OUT/.config"; \
+	echo ">>> running variant post-image"; \
+	cd $(PANICOS_ROOT) && \
+	  BR2_EXTERNAL_PANICOS_PATH=$(PANICOS_ROOT) \
+	  BR2_CONFIG="$$VAR_OUT/.config" \
+	  BINARIES_DIR="$$VAR_OUT/images" \
+	  BUILD_DIR="$$VAR_OUT/build" \
+	  TARGET_DIR="$$BASE_OUT/target" \
+	  HOST_DIR="$$BASE_OUT/host" \
+	  "$$BOARD_DIR/post-image.sh" "$$VAR_OUT/images" "$$BOARD_DIR/genimage.cfg.in"
+
 endif
