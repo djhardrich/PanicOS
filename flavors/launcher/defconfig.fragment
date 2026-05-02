@@ -127,6 +127,12 @@ BR2_PACKAGE_LIBVORBIS=y                     # libvorbisfile, libogg
 BR2_PACKAGE_LIBTHEORA=y                     # libtheoradec
 BR2_PACKAGE_LIBMODPLUG=y
 BR2_PACKAGE_MPG123=y
+# procps-ng — pugwash invokes pgrep via subprocess at startup to check
+# whether love.${arch} is already running; busybox ships ps but not
+# pgrep / pidof / pkill, so it crashes with FileNotFoundError. procps-ng
+# also gives ports the real ps/top in case any of them rely on flags
+# busybox doesn't support.
+BR2_PACKAGE_PROCPS_NG=y
 
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
