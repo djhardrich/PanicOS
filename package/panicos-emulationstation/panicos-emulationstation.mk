@@ -50,8 +50,27 @@ PANICOS_EMULATIONSTATION_CONF_OPTS = \
 
 define PANICOS_EMULATIONSTATION_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/emulationstation $(TARGET_DIR)/usr/bin/emulationstation
-	# Resources (themes, fonts) ship alongside the binary.
-	cp -a $(@D)/resources $(TARGET_DIR)/usr/share/emulationstation/
+	# Bundled pugixml lives in external/pugixml/ as a git submodule; the
+	# CMake build links ES against the resulting libpugixml.so.1 (vs. a
+	# system pugixml). The .so lands at the top of the build dir; ship it
+	# alongside the binary so the runtime loader actually finds it (ES
+	# crashes at startup with "libpugixml.so.1: cannot open shared object
+	# file" otherwise — the failure that broke the launcher flavor on
+	# 2026-05-02). cp -a preserves the so.X / so.X.Y symlink chain.
+	mkdir -p $(TARGET_DIR)/usr/lib
+	cp -a $(@D)/libpugixml.so* $(TARGET_DIR)/usr/lib/
+	# Resources (themes, fonts, on/off/checkbox SVGs, scroll_gradient,
+	# button.png, etc.) ship at /usr/bin/resources/ — next to the
+	# binary. Important: when ES is built with -DROCKNIX=1 (which we
+	# do, for the storage-paths split it gives us), Paths.cpp:78 sets
+	# mEmulationStationPath = getExePath() → /usr/bin. The
+	# ResourceManager's `:/foo.svg` resolver then ONLY checks
+	# $mEmulationStationPath/resources/foo.svg (and a few user paths
+	# under /storage). If we install to /usr/share/emulationstation/
+	# instead, every embedded `:/` reference fails to resolve — switches
+	# render invisible, menu fade scrim never paints, etc.
+	# Mirror ROCKNIX's install layout: drop them next to the binary.
+	cp -a $(@D)/resources $(TARGET_DIR)/usr/bin/resources
 	# Our minimal es_systems.cfg overrides whatever default ES picks; lives
 	# under /etc so users can override via the overlay.
 	$(INSTALL) -D -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/es_systems.cfg \
