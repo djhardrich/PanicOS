@@ -21,6 +21,13 @@ BR2_PACKAGE_PANICOS_SPLASH=y
 # C++ toolchain — ES is heavy C++.
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
 
+# SDL2 video stack — KMSDRM is the only viable backend on this fbdev-only
+# system (no X, no Wayland). ES is a hard SDL2 dep and silently fails with
+# "No available video device" if SDL2 was built without these. KMSDRM
+# uses GBM + EGL + GLES2 internally, hence the mesa3d block below.
+BR2_PACKAGE_SDL2_KMSDRM=y
+BR2_PACKAGE_SDL2_OPENGLES=y
+
 # Mesa3D + KMSDRM stack — same as pht. ES uses GLES2 via KMSDRM.
 BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
@@ -32,6 +39,10 @@ BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
 BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
 BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
+
+# Default ES theme — same one ROCKNIX/Knulli ship as default. Without
+# at least one theme installed, ES renders with no UI on first boot.
+BR2_PACKAGE_PANICOS_ES_THEME_ART_BOOK_NEXT=y
 
 # VPNs.
 BR2_PACKAGE_TAILSCALE=y
