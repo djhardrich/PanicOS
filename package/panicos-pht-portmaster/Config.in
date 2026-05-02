@@ -1,0 +1,18 @@
+config BR2_PACKAGE_PANICOS_PHT_PORTMASTER
+	bool "panicos-pht-portmaster"
+	depends on BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS
+	help
+	  Stages the protection-enabled PanicTracker (PHT) PortMaster port
+	  zip from vendor/pht.zip under
+	  /usr/share/panicos-launcher/portmaster-preload/. panicos-firstboot
+	  unzips it into /storage/roms/ports/ on first boot, producing a
+	  PanicTracker entry in ES's Ports menu alongside Rockbox / Doom Engines.
+
+	  Vendor the zip first by running scripts/vendor-pht.sh — that
+	  invokes license-setup.sh port in PHT_REPO and stashes both
+	  vendor/pht/ (for the panicos-pht /opt-style install) and
+	  vendor/pht.zip (for this PortMaster-style install).
+
+	  This is the same protection-enabled aarch64 build the panicos-pht
+	  package ships at /opt/pht/ — re-using the artifact rather than
+	  re-running license-setup.sh per-flavor.

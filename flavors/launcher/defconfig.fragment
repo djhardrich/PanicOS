@@ -120,6 +120,10 @@ BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
 # these in /storage/roms/ports/autoinstall/ and PortMaster picks them
 # up on first launch.
 BR2_PACKAGE_PANICOS_PORTMASTER_PRELOAD=y
+# PanicTracker (PHT) preinstalled as a PortMaster port. Pulls the
+# protection-enabled zip from vendor/pht.zip — populated by
+# scripts/vendor-pht.sh from $PHT_REPO/dist/pht-portmaster.zip.
+BR2_PACKAGE_PANICOS_PHT_PORTMASTER=y
 BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
 # CA bundle. Without /etc/ssl/certs/ca-certificates.crt openssl-libcurl
 # (which Install.PortMaster.sh uses to fetch the GUI release) errors with

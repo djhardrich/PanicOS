@@ -94,6 +94,13 @@ if [ "$SKIP_LICENSE_SETUP" -eq 0 ]; then
     echo ">>> vendor-pht: extracting $PORT_ZIP → $EXTRACT_DIR"
     unzip -q "$PORT_ZIP" -d "$EXTRACT_DIR"
     SRC="$EXTRACT_DIR/pht"
+
+    # Also stash the zip itself for panicos-pht-portmaster (the launcher
+    # flavor's PortMaster preinstall path). Keeping it as a single zip
+    # rather than re-zipping vendor/pht/ preserves the exact protection
+    # signatures and the upstream PanicTracker.sh launcher script.
+    cp "$PORT_ZIP" "$ROOT/vendor/pht.zip"
+    echo ">>> vendor-pht: cached $PORT_ZIP → $ROOT/vendor/pht.zip"
 fi
 
 [ -d "$SRC" ] || { echo "source not found: $SRC" >&2; exit 1; }
