@@ -1,21 +1,27 @@
 [Unit]
 Description=EmulationStation launcher
-After=multi-user.target sound.target
-# Take ownership of tty1 from getty (same pattern as panicos-pht).
-Conflicts=getty@tty1.service
+# After basic.target/sound.target/network.target — same shape as
+# panicos-pht.service. NOT After=multi-user.target: combined with
+# WantedBy=multi-user.target that creates an ordering loop where
+# systemd silently drops the unit from the activation set.
+After=basic.target sound.target network.target
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/emulationstation
-StandardInput=tty
-StandardOutput=tty
+# No TTYPath / StandardInput=tty / StandardOutput=tty here on purpose
+# (same lesson as panicos-pht.service): ES renders via KMSDRM (grabs
+# DRM master directly on /dev/dri/card0), it doesn't need TTY
+# semantics. Keeping a TTY claim caused two visible regressions on
+# rg35xx-pro: ES's stdout ("creating config directory...") was painted
+# by fbcon over the boot splash, and SDL's KMSDRM backend then failed
+# with "No available video device" because fbcon/getty were fighting
+# us for vtcon1 / DRM master ownership.
+StandardInput=null
+StandardOutput=journal
 StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-TTYVTDisallocate=no
 # ES sometimes exits cleanly when the user picks Quit; restart so the
-# device returns to the launcher rather than dropping to a bare TTY.
+# device returns to the launcher rather than a black screen.
 Restart=always
 RestartSec=2
 User=root
