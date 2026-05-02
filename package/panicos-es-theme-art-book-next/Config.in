@@ -1,0 +1,16 @@
+config BR2_PACKAGE_PANICOS_ES_THEME_ART_BOOK_NEXT
+	bool "panicos-es-theme-art-book-next"
+	depends on BR2_PACKAGE_PANICOS_EMULATIONSTATION
+	help
+	  Anthony Caccese's "Art Book Next" theme for EmulationStation.
+	  This is the same theme ROCKNIX and Knulli ship as their default,
+	  pinned to the same SHA ROCKNIX uses so the look matches what
+	  users coming from those distros expect.
+
+	  Out of the box ES has no theme installed; once this package is
+	  in the squashfs ES auto-picks it on first run. Switch themes
+	  later in ES → UI Settings → Theme Set if you ship more than one.
+
+	  ROCKNIX trims out a handful of subthemes (artwork-circuit,
+	  -classic, -nintendont, -noir, -outline) to save space on these
+	  handhelds; we mirror that trim.

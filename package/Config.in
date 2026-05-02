@@ -9,6 +9,7 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-pht/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/rocknix-joypad/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-splash/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-emulationstation/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-es-theme-art-book-next/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-launcher-tools/Config.in"
 
 endmenu
