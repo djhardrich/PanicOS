@@ -83,6 +83,18 @@ BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
 # python-dbussy package, vendored at the same SHA ROCKNIX uses).
 BR2_PACKAGE_PYTHON3=y
 BR2_PACKAGE_PYTHON3_PYEXPAT=y                # dbussy imports xml.etree
+# PortMaster's harbourmaster fails at startup with
+#   RuntimeError: Compression requires the (missing) zlib module
+# without zlib (it imports zipfile/gzip). Enabling pulls libz in too.
+BR2_PACKAGE_PYTHON3_ZLIB=y
+# PortMaster also pulls fonts.googleapis.com / api.github.com over
+# HTTPS via urllib — without ssl, Python errors `no module named _ssl`.
+BR2_PACKAGE_PYTHON3_SSL=y
+# Some ports use sqlite for save state / metadata; cheap to include.
+BR2_PACKAGE_PYTHON3_SQLITE=y
+# .xz/.lzma archives appear in a handful of port releases; ports
+# that need them otherwise fail with "no module named lzma".
+BR2_PACKAGE_PYTHON3_XZ=y
 BR2_PACKAGE_DBUS=y
 BR2_PACKAGE_PYTHON_DBUSSY=y
 BR2_PACKAGE_PANICOS_NET_TOOLS=y
@@ -102,6 +114,12 @@ BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
 BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
+# PortMaster autoinstall preload — Rockbox (PodOne theme baked in,
+# selected as default) + Doom Engines (with shareware DOOM1.WAD +
+# Freedoom 1/2 already bundled). On first boot panicos-firstboot drops
+# these in /storage/roms/ports/autoinstall/ and PortMaster picks them
+# up on first launch.
+BR2_PACKAGE_PANICOS_PORTMASTER_PRELOAD=y
 BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
 # CA bundle. Without /etc/ssl/certs/ca-certificates.crt openssl-libcurl
 # (which Install.PortMaster.sh uses to fetch the GUI release) errors with

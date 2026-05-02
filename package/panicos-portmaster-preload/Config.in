@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PANICOS_PORTMASTER_PRELOAD
+	bool "panicos-portmaster-preload"
+	depends on BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS
+	help
+	  Stages PortMaster port .zip files (Rockbox with PodOne theme
+	  pre-applied, Doom Engines + bundled shareware DOOM1.WAD +
+	  Freedoom 1/2) under /usr/share/panicos-launcher/portmaster-preload/.
+	  panicos-firstboot copies them into the autoinstall folder so
+	  PortMaster picks them up on first launch.
