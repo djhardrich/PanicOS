@@ -2,28 +2,19 @@
 Description=PanicOS boot splash
 DefaultDependencies=no
 After=local-fs.target
-Before=basic.target getty@tty1.service panicos-pht.service
-# Stop the splash the moment the real UI starts. systemd handles the
-# transition cleanly: SIGTERM us → start the conflicting unit.
-Conflicts=getty@tty1.service panicos-pht.service
+Before=basic.target
 
 [Service]
-Type=simple
+# Type=oneshot — fbv (or whatever the launcher uses) draws the image
+# and exits; the image stays painted on the framebuffer until something
+# else (PHT via KMSDRM, getty via fbcon) overwrites it. No TTY claim, no
+# Conflicts= — those were causing systemd to refuse to start panicos-pht.
+Type=oneshot
 ExecStart=/usr/sbin/panicos-splash
-# Don't claim tty1 via TTYPath — fbv writes directly to /dev/fb0 (which
-# any root process can do) and doesn't need TTY semantics. Holding tty1
-# here means systemd refuses to schedule panicos-pht.service (which DOES
-# need tty1) until we release it, which we never do voluntarily — so pht
-# stayed in "inactive (dead)" state forever waiting on us.
 StandardInput=null
 StandardOutput=journal
 StandardError=journal
-KillMode=process
-TimeoutStopSec=2
-# fbv never exits voluntarily (no --delay); systemd needs to know that's
-# OK and not flag it as a failure when we're killed during transition.
-SuccessExitStatus=SIGTERM SIGKILL
-Restart=no
+RemainAfterExit=no
 
 [Install]
 WantedBy=sysinit.target

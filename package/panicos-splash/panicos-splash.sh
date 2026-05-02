@@ -30,11 +30,20 @@ else
     SPLASH="$DEFAULT_SPLASH"
 fi
 
-# fbv flags:
-#   --noinfo     — no per-image label overlay
-#   --hide-cursor — keep the cursor off (we're a splash, not a viewer)
-#   --enlarge    — scale up if image < framebuffer
-#   --colour 24  — explicit colour depth
-# fbv with no --delay waits for keyboard input (which never comes inside
-# a systemd unit), which is exactly what we want — hold until SIGTERM.
-exec fbv --noinfo --hide-cursor --enlarge --colour 24 "$SPLASH"
+# fbv flags (per its actual usage line — short single-letter only):
+#   -i  no per-image label / info bar
+#   -e  enlarge to fit
+#   -f  fullscreen
+#   -d 1  exit after 1 second by default; with --once-style behaviour
+#         we want the image to stay painted on the framebuffer after
+#         we exit, which it does — fbv just draws once and quits.
+#   --hide-cursor / --colour are NOT real flags (last build's diag
+#   showed `unrecognized option`); use setterm beforehand to disable
+#   the blinking console cursor.
+
+# Disable blinking text cursor on tty1 BEFORE drawing, so it doesn't
+# show on top of the splash image. Writes the ANSI sequence directly to
+# /dev/tty1 because setterm wants a real TTY.
+printf '\033[?25l\033[?17;0;0c' > /dev/tty1 2>/dev/null || true
+
+exec fbv -i -e -f "$SPLASH"

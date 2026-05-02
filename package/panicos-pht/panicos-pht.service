@@ -1,25 +1,25 @@
 [Unit]
 Description=ProHandheldTracker
-After=multi-user.target sound.target
-# Take ownership of tty1 from the default getty so PHT (KMSDRM master)
-# isn't fighting fbcon for the panel.
-Conflicts=getty@tty1.service
+# Order after the basics + audio + network so PHT has everything it needs
+# at startup, but DON'T put After=multi-user.target — that creates a
+# subtle ordering issue with WantedBy=multi-user.target where systemd
+# silently drops the activation. After basic.target is the standard
+# pattern for multi-user services.
+After=basic.target sound.target network.target
 
 [Service]
 Type=simple
 ExecStart=/opt/pht/panictracker.sh
-StandardInput=tty
-StandardOutput=tty
+# No TTYPath / StandardInput=tty here on purpose. PHT renders via KMSDRM
+# (grabs DRM master directly on /dev/dri/card0); it doesn't need TTY
+# semantics. Keeping a TTY claim was getting systemd into TTY-ownership
+# loops with the splash service.
+StandardInput=null
+StandardOutput=journal
 StandardError=journal
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-TTYVTDisallocate=no
-# Restart if PHT crashes — handheld user expects it to come back, not
-# leave them at a blank screen.
+# Restart on crash so the device returns to PHT, not a black screen.
 Restart=on-failure
 RestartSec=3
-# Run as root so chrt -f and DRM master work without extra capabilities.
 User=root
 
 [Install]
