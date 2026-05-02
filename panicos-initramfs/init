@@ -87,6 +87,38 @@ FLAVOR=
 . /boot/panicos-active.cfg
 [ -n "$IMAGE" ] || panic "IMAGE not set in /boot/panicos-active.cfg"
 
+# ---- Multiboot menu ------------------------------------------------------
+# If multiple .squashfs flavors exist on the boot vfat AND we have the
+# mbselect helper, give the user a 3-second window to interrupt and pick a
+# different one. Without an interrupt or with only one flavor present, fall
+# through to the default IMAGE that active.cfg pointed at.
+#
+# Gamepad input requires the rocknix-joypad driver which is out-of-tree —
+# it ships in the initramfs at /rocknix-joypad.ko (build-initramfs.sh
+# bundles it). Insmod is best-effort; mbselect falls back to whatever
+# evdev devices already exist (gpio-keys volume buttons, USB keyboard,
+# etc.) if the joypad module is missing or fails to load.
+flavors=""
+for sq in /boot/*.squashfs; do
+    [ -e "$sq" ] && flavors="$flavors ${sq##*/}"
+done
+flavor_count=$(echo $flavors | wc -w)
+
+if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
+    [ -f /rocknix-joypad.ko ] && insmod /rocknix-joypad.ko 2>/dev/null || true
+    sleep 1   # let evdev nodes settle after insmod
+    echo ">>> PanicOS initramfs: booting $IMAGE in 3s — press any button for menu"
+    if /sbin/panicos-mbselect wait 3; then
+        chosen=$(/sbin/panicos-mbselect menu "$IMAGE" $flavors)
+        if [ -n "$chosen" ] && [ -f "/boot/$chosen" ]; then
+            IMAGE="$chosen"
+            FLAVOR=
+            echo ">>> PanicOS initramfs: user selected $IMAGE"
+        fi
+    fi
+fi
+# -------------------------------------------------------------------------
+
 # Per-flavor overlay namespace: each squashfs gets its own
 # /storage/.panicos-overlay/<flavor>/{upper,work}. Switching flavors keeps
 # each one's deltas separate (Debian-vs-Arch /etc would be chaos otherwise).

@@ -51,10 +51,43 @@ chmod 755 "$STAGE/bin/busybox"
 # Missing any of these is a fatal bug: with `set -e`, /init crashes on the
 # first 'command not found' and the kernel panics with a black screen.
 APPLETS="ash sh mount umount mkdir mknod losetup switch_root reboot poweroff
-         echo cat sed sleep awk head ls grep cp mv rm chmod"
+         echo cat sed sleep awk head ls grep cp mv rm chmod
+         insmod printf seq tr"
 for applet in $APPLETS; do
     ln -s busybox "$STAGE/bin/$applet"
 done
+
+# Multiboot menu helper. PANICOS_INITRAMFS_HOST_DIR is the device's
+# buildroot host/ dir (set by the caller) — has the cross-cc that
+# matches the kernel's ABI. Static-link so the binary doesn't need
+# any libc on the initramfs (busybox is the only userspace).
+if [ -n "${PANICOS_INITRAMFS_HOST_DIR:-}" ]; then
+    CC="$PANICOS_INITRAMFS_HOST_DIR/bin/aarch64-buildroot-linux-gnu-gcc"
+    if [ -x "$CC" ]; then
+        echo ">>> Compiling panicos-mbselect (multiboot menu helper)"
+        "$CC" -static -O2 -Wall -o "$STAGE/sbin/panicos-mbselect" \
+            "$ROOT/panicos-initramfs/mbselect.c"
+        chmod 755 "$STAGE/sbin/panicos-mbselect"
+    else
+        echo ">>> WARN: no cross-cc at $CC — skipping panicos-mbselect"
+    fi
+fi
+
+# Multiboot menu needs gamepad input before /init reads
+# /boot/panicos-active.cfg, so the rocknix-joypad.ko (the out-of-tree
+# H700/RK3399 handheld input driver) has to ship in the initramfs.
+# Insmod path is straight at /rocknix-joypad.ko — no depmod runs in
+# the initramfs, so a flat path keeps /init's `insmod` invocation
+# obvious. Caller passes PANICOS_INITRAMFS_KMOD_PATHS as a
+# colon-separated list of .ko absolute paths.
+if [ -n "${PANICOS_INITRAMFS_KMOD_PATHS:-}" ]; then
+    IFS=':' read -ra _kmod_paths <<<"$PANICOS_INITRAMFS_KMOD_PATHS"
+    for ko in "${_kmod_paths[@]}"; do
+        [ -f "$ko" ] || { echo ">>> WARN: missing kmod $ko"; continue; }
+        cp "$ko" "$STAGE/$(basename "$ko")"
+    done
+    echo ">>> bundled kmods: $(ls "$STAGE"/*.ko 2>/dev/null | wc -l) files"
+fi
 
 # Bundle firmware blobs into the initramfs at /lib/firmware/. Drivers
 # whose .probe runs at device_initcall (panel-mipi-dpi-spi, regulator

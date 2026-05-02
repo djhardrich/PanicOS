@@ -191,7 +191,14 @@ _build:
 	if [ -n "$$SOC" ]; then \
 		echo ">>> Building initramfs"; \
 		FW_DIR="$(PANICOS_ROOT)/soc/$$SOC/$$K/rootfs-overlay/usr/lib/firmware"; \
+		HOST_DIR="$$OUT/host"; \
+		KMODS=""; \
+		for ko in "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-joypad.ko"; do \
+			[ -f "$$ko" ] && KMODS="$${KMODS:+$$KMODS:}$$ko"; \
+		done; \
 		PANICOS_INITRAMFS_FIRMWARE_DIRS="$$([ -d "$$FW_DIR" ] && echo "$$FW_DIR")" \
+		PANICOS_INITRAMFS_HOST_DIR="$$([ -d "$$HOST_DIR" ] && echo "$$HOST_DIR")" \
+		PANICOS_INITRAMFS_KMOD_PATHS="$$KMODS" \
 			$(PANICOS_ROOT)/scripts/build-initramfs.sh; \
 		EXTRAS_IN="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/panicos-extras.config.fragment.in"; \
 		EXTRAS_OUT="$$OUT/panicos-extras.config.fragment"; \
