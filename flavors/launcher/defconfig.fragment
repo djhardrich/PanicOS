@@ -111,12 +111,22 @@ BR2_PACKAGE_LUA=y
 BR2_PACKAGE_LUA_5_4=y
 BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 
-# OpenAL — love2d (the Doom Engines launcher menu uses it) links
-# libopenal.so.1 dynamically. Without this the port aborts with
-# "./love: error while loading shared libraries: libopenal.so.1".
-# Most other PortMaster ports that ship a love-built launcher need
-# this too, so it's table stakes for the launcher flavor.
+# Multimedia stack PortMaster + ports rely on at startup. PortMaster's
+# pugwash dlopens pysdl2.sdlttf / sdlimage; sdl2imgshow.aarch64 dlopens
+# libSDL2_image + libSDL2_ttf; pmsplash + every love-built port engine
+# (Doom Engines, etc.) link against libvorbisfile / libtheoradec /
+# libmodplug / libmpg123 / libopenal via liblove-11.5.so's NEEDED list.
+# Bundling these system-side is the closest equivalent to ROCKNIX's
+# /usr/lib/compat/ layer — without it pugwash crashes at line 536 with
+# "AttributeError: module 'sdl2' has no attribute 'sdlttf'" and ports
+# error out with "libvorbisfile.so.3: cannot open shared object file".
+BR2_PACKAGE_SDL2_TTF=y
+BR2_PACKAGE_SDL2_IMAGE=y
 BR2_PACKAGE_OPENAL=y
+BR2_PACKAGE_LIBVORBIS=y                     # libvorbisfile, libogg
+BR2_PACKAGE_LIBTHEORA=y                     # libtheoradec
+BR2_PACKAGE_LIBMODPLUG=y
+BR2_PACKAGE_MPG123=y
 
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
