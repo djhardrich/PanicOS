@@ -16,6 +16,12 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/Install.PortMaster.sh
 	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/PortMaster.sh \
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/PortMaster.sh
+	# mod_PanicOS.txt — PortMaster's runtime contract for our CFW
+	# (CFW_NAME comes from /etc/os-release's OS_NAME field). firstboot
+	# drops this into /storage/roms/ports/PortMaster/ after extracting
+	# PortMaster.zip so PortMaster.sh sources it on launch.
+	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/mod_PanicOS.txt \
+		$(TARGET_DIR)/usr/share/panicos-launcher/tools/mod_PanicOS.txt
 endef
 # /usr/bin/sh -> bash is wired via the launcher flavor's rootfs-overlay
 # rather than this package's install step — avoids ordering races

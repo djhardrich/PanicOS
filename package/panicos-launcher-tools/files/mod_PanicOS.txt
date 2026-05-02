@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# Modular - PanicOS
+#
+# Sourced by PortMaster's outer PortMaster.sh:
+#     [ -f "${controlfolder}/mod_${CFW_NAME}.txt" ] && source "${controlfolder}/mod_${CFW_NAME}.txt"
+# CFW_NAME is set to "PanicOS" by device_info.txt's OS_NAME-fallback
+# branch (uOS/JELOS/ROCKNIX-style detection — our /etc/os-release sets
+# OS_NAME="PanicOS").
+#
+# Mirrors mod_ROCKNIX.txt's runtime contract: sets driver + Godot opts
+# and defines pm_platform_helper, which port launchers call after
+# spawning their child process so sway can grab the new window and
+# fullscreen it. /usr/bin/portmaster_sway_fullscreen.sh is shipped by
+# the panicos-sway package and uses our sway_fullscreen bash function
+# (sourced from /etc/profile.d/sway-fullscreen.sh).
+
+PORT_32BIT="${PORT_32BIT:-N}"
+
+# Mesa3D driver path — aarch64 only, no /usr/lib32 (PanicOS doesn't
+# ship 32-bit compat libs).
+export LIBGL_DRIVERS_PATH=/usr/lib/dri
+
+# Godot resolution flags used by Godot 2 / 3+ ports respectively.
+GODOT2_OPTS="-r ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+GODOT_OPTS="--resolution ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+
+pm_platform_helper() {
+    if [ -e "$PM_PIPE" ]; then
+        PortMasterDialogExit
+    fi
+    if [ -e "/usr/bin/portmaster_sway_fullscreen.sh" ]; then
+        /usr/bin/portmaster_sway_fullscreen.sh "$(basename "$1")"
+    fi
+}

@@ -53,6 +53,16 @@ if [ -d "$PRELOAD" ]; then
         chmod +x /storage/roms/ports/PortMaster/PortMaster.sh
 fi
 
+# Drop our PortMaster CFW mod into the extracted PortMaster directory.
+# PortMaster's PortMaster.sh sources $controlfolder/mod_${CFW_NAME}.txt
+# (CFW_NAME=PanicOS, set by device_info.txt's OS_NAME-fallback branch
+# reading our /etc/os-release). The mod defines pm_platform_helper +
+# LIBGL_DRIVERS_PATH for our environment.
+MOD=/usr/share/panicos-launcher/tools/mod_PanicOS.txt
+if [ -f "$MOD" ] && [ -d /storage/roms/ports/PortMaster ]; then
+    cp -f "$MOD" /storage/roms/ports/PortMaster/mod_PanicOS.txt
+fi
+
 # Top-level PortMaster.sh launcher shim. PortMaster.zip extracts only
 # under PortMaster/ — there's no top-level launcher. Symlink to the
 # vendored shim so ES's Ports menu sees a "PortMaster" entry that does
