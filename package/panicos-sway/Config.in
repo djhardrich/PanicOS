@@ -1,0 +1,18 @@
+config BR2_PACKAGE_PANICOS_SWAY
+	bool "panicos-sway"
+	depends on BR2_INIT_SYSTEMD
+	depends on BR2_PACKAGE_SWAY
+	help
+	  Kiosk-mode Sway compositor configuration for PanicOS launcher
+	  flavors. Provides:
+
+	    /etc/sway/panicos-kiosk.conf — minimal config: hide cursor,
+	      no decorations, no idle, exec the foreground app.
+	    sway.service — systemd unit that brings sway up before
+	      EmulationStation (or any other Wayland client).
+
+	  Mirrors the ROCKNIX/JELOS approach: sway runs as the display
+	  manager, ES connects as a Wayland client. Without sway in this
+	  shape, ES on KMSDRM has visible layering jank on menus and
+	  overlays — sway does the layer-shell composition that ES
+	  itself doesn't.

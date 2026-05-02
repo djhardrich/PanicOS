@@ -1,0 +1,22 @@
+[Unit]
+Description=Sway Wayland compositor (PanicOS kiosk)
+# basic+sound+network like the kiosk-flavor checklist (avoid the
+# multi-user.target ordering loop). Wayland clients (panicos-es) hang
+# off this unit via After= + Requires=.
+After=basic.target sound.target network.target
+
+[Service]
+Type=simple
+Environment=HOME=/storage
+Environment=XDG_RUNTIME_DIR=/var/run/0-runtime-dir
+ExecStart=/usr/bin/panicos-sway-launch
+StandardOutput=journal
+StandardError=journal
+Restart=always
+RestartSec=3
+# Sway needs DRM master + input devices. Run as root (handheld single-user).
+User=root
+
+[Install]
+Alias=display-manager.service
+WantedBy=multi-user.target
