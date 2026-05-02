@@ -70,18 +70,23 @@ define PANICOS_EMULATIONSTATION_INSTALL_TARGET_CMDS
 	# instead, every embedded `:/` reference fails to resolve — switches
 	# render invisible, menu fade scrim never paints, etc.
 	# Mirror ROCKNIX's install layout: drop them next to the binary.
-	cp -a $(@D)/resources $(TARGET_DIR)/usr/bin/resources
-	# Overwrite both upstream splash assets with our own PanicOS one.
-	# Splash.h hardcodes ":/splash.svg" as the default; the upstream
-	# splash_batocera.svg ships alongside it (the joystick/vaporwave
-	# image saved with sodipodi:docname="joystick.svg") and gets
-	# loaded by some code path that's not obvious from a grep — user
-	# saw the joystick splash on-device 2026-05-02 even after we'd
-	# replaced splash.svg only. Belt-and-suspenders: overwrite both.
-	$(INSTALL) -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/splash.svg \
-		$(TARGET_DIR)/usr/bin/resources/splash.svg
-	$(INSTALL) -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/splash.svg \
-		$(TARGET_DIR)/usr/bin/resources/splash_batocera.svg
+	# Use SRC/. + DST/ form so a re-install merges into existing
+	# /usr/bin/resources/ instead of nesting a /usr/bin/resources/resources/
+	# (which `cp -a SRC DST` does when DST already exists — produced a
+	# stale joystick logo.png in the nested copy on incremental builds).
+	mkdir -p $(TARGET_DIR)/usr/bin/resources
+	cp -a $(@D)/resources/. $(TARGET_DIR)/usr/bin/resources/
+	rm -rf $(TARGET_DIR)/usr/bin/resources/resources
+	# Replace upstream's branding. Linux ES uses ":/logo.png" as
+	# DEFAULT_SPLASH_IMAGE (Splash.h:14 — :/splash.svg is WIN32-only),
+	# resolved by ResourceManager to /usr/bin/resources/logo.png. The
+	# upstream PNG is a 1920x1080 batocera joystick/vaporwave hero
+	# image (~880KB). Reuse the panicos-splash payload (the same logo
+	# the bootloader/PHT splash service shows) so ES + boot stay visually
+	# coherent and the artwork has one source of truth.
+	$(INSTALL) -m 0644 \
+		$(BR2_EXTERNAL_PANICOS_PATH)/package/panicos-splash/payload/splash-1024x768.png \
+		$(TARGET_DIR)/usr/bin/resources/logo.png
 	# Our minimal es_systems.cfg overrides whatever default ES picks; lives
 	# under /etc so users can override via the overlay.
 	$(INSTALL) -D -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/es_systems.cfg \
