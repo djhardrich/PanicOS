@@ -71,6 +71,17 @@ define PANICOS_EMULATIONSTATION_INSTALL_TARGET_CMDS
 	# render invisible, menu fade scrim never paints, etc.
 	# Mirror ROCKNIX's install layout: drop them next to the binary.
 	cp -a $(@D)/resources $(TARGET_DIR)/usr/bin/resources
+	# Overwrite both upstream splash assets with our own PanicOS one.
+	# Splash.h hardcodes ":/splash.svg" as the default; the upstream
+	# splash_batocera.svg ships alongside it (the joystick/vaporwave
+	# image saved with sodipodi:docname="joystick.svg") and gets
+	# loaded by some code path that's not obvious from a grep — user
+	# saw the joystick splash on-device 2026-05-02 even after we'd
+	# replaced splash.svg only. Belt-and-suspenders: overwrite both.
+	$(INSTALL) -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/splash.svg \
+		$(TARGET_DIR)/usr/bin/resources/splash.svg
+	$(INSTALL) -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/splash.svg \
+		$(TARGET_DIR)/usr/bin/resources/splash_batocera.svg
 	# Our minimal es_systems.cfg overrides whatever default ES picks; lives
 	# under /etc so users can override via the overlay.
 	$(INSTALL) -D -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/es_systems.cfg \
