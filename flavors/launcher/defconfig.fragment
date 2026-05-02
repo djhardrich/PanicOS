@@ -111,6 +111,13 @@ BR2_PACKAGE_LUA=y
 BR2_PACKAGE_LUA_5_4=y
 BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 
+# OpenAL — love2d (the Doom Engines launcher menu uses it) links
+# libopenal.so.1 dynamically. Without this the port aborts with
+# "./love: error while loading shared libraries: libopenal.so.1".
+# Most other PortMaster ports that ship a love-built launcher need
+# this too, so it's table stakes for the launcher flavor.
+BR2_PACKAGE_OPENAL=y
+
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
 BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y

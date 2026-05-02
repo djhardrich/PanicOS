@@ -48,9 +48,20 @@ if [ -d "$PRELOAD" ]; then
     # Top-level launcher shims need executable bits; unzip preserves zip
     # internal modes which are unreliable across platforms.
     find /storage/roms/ports -maxdepth 1 -name "*.sh" -exec chmod +x {} +
-    # Inner PortMaster.sh (the GUI's main launcher) too.
-    [ -e /storage/roms/ports/PortMaster/PortMaster.sh ] && \
-        chmod +x /storage/roms/ports/PortMaster/PortMaster.sh
+    # PortMaster.zip ships exec bits ONLY on .sh files and pugwash
+    # (Python with shebang). gptokeyb, sdl2imgshow.*, xdelta3, etc.
+    # come in mode 644. Upstream PortMaster.sh fixes this with
+    # `$ESUDO chmod -R +x .`, but a port like Doom Engines.sh that
+    # invokes $GPTOKEYB before the user has run PortMaster GUI hits
+    # "/roms/ports/PortMaster/gptokeyb: Permission denied". Be eager
+    # and chmod the whole tree on first boot. Same for any extracted
+    # port subdirs that ship binaries.
+    [ -d /storage/roms/ports/PortMaster ] && \
+        chmod -R +x /storage/roms/ports/PortMaster
+    for portdir in /storage/roms/ports/*/; do
+        [ -d "$portdir" ] && [ "$portdir" != "/storage/roms/ports/PortMaster/" ] && \
+            find "$portdir" -type f \( -name "*.sh" -o -name "*.so*" \) -exec chmod +x {} + 2>/dev/null || true
+    done
 fi
 
 # Drop our PortMaster CFW mod into the extracted PortMaster directory.
