@@ -156,6 +156,25 @@ _build:
 	@# being on; flavors that boot under sway (launcher, future kiosk variants)
 	@# need ES to come up as a Wayland client. Idempotent.
 	@sed -i 's/--disable-video-wayland/--enable-video-wayland/' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# SDL2's autoconf detects WAYLAND_SCANNER via pkg-config, but ends up
+	@# baking in the build-host's /usr/bin/wayland-scanner path (which
+	@# doesn't exist on most build hosts). Force it to use the host-wayland
+	@# tool buildroot itself builds. Also explicitly depend on host-wayland
+	@# so it's present before SDL2 configures. Both inserted just before
+	@# the autotools-package eval so they take effect; idempotent guards.
+	@grep -q '^SDL2_DEPENDENCIES += host-wayland' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_DEPENDENCIES += host-wayland' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@grep -q '^SDL2_CONF_ENV += WAYLAND_SCANNER=' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_CONF_ENV += WAYLAND_SCANNER=$$(HOST_DIR)/bin/wayland-scanner' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# SDL2's autoconf takes WAYLAND_SCANNER unconditionally from
+	@# `pkg-config --variable=wayland_scanner wayland-scanner`. Buildroot's
+	@# sysroot wayland-scanner.pc has bindir=/usr/bin (target-side path),
+	@# so SDL2's generated Makefile bakes in /usr/bin/wayland-scanner —
+	@# which doesn't exist on the build host, so the SDL2 build fails at
+	@# the protocol-header gen step. Post-configure hook rewrites the
+	@# Makefile to point at the host's wayland-scanner.
+	@grep -q 'SDL2_FIX_WAYLAND_SCANNER_PATH' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i define SDL2_FIX_WAYLAND_SCANNER_PATH\n\tsed -i "s|^WAYLAND_SCANNER = .*|WAYLAND_SCANNER = $$(HOST_DIR)/bin/wayland-scanner|" $$(@D)/Makefile\nendef\nSDL2_POST_CONFIGURE_HOOKS += SDL2_FIX_WAYLAND_SCANNER_PATH\n' "$(BUILDROOT)/package/sdl2/sdl2.mk"
 	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
