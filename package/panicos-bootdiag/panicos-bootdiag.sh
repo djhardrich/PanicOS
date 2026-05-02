@@ -27,13 +27,18 @@ cat /proc/cmdline > "$OUT/cmdline.txt" 2>&1
 
 # Kernel ring buffer + systemd journal — most of the answer lives here.
 dmesg --no-pager > "$OUT/dmesg.log" 2>&1
-# --merge picks up rotated journals too (NTP often jumps the clock backwards
-# right after wifi associates, which causes journald to seal the current
-# file and start a new one — `journalctl -b` alone can miss the tail).
-journalctl -b 0 --merge --no-pager > "$OUT/journal.log" 2>&1
-# Also save the previous boot's journal (if any) so the user can compare
-# back-to-back boots when something stops working unexpectedly.
-journalctl -b -1 --merge --no-pager > "$OUT/journal.prev.log" 2>&1 || true
+# `-b 0` and `--merge` are mutually exclusive in journalctl (one selects a
+# boot, the other ignores boot grouping entirely), so keep them apart.
+# `-b 0 --no-pager` already includes rotated journals from this boot's
+# boot-id — journald assigns rotated files the same boot-id, journalctl
+# scans every file on disk and filters by it.
+journalctl -b 0 --no-pager > "$OUT/journal.log" 2>&1
+# Previous boot's journal (if any) for back-to-back compare.
+journalctl -b -1 --no-pager > "$OUT/journal.prev.log" 2>&1 || true
+# Belt and suspenders — also dump the un-boot-filtered journal so the user
+# can grep across boot boundaries when needed (e.g. when journald rotated
+# right at boot and the current boot's entries straddle two files).
+journalctl --no-pager --since "1 hour ago" > "$OUT/journal.recent.log" 2>&1 || true
 
 # Failed services + status of every subsystem-A piece individually so you
 # don't have to grep through the journal.
