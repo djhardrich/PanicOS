@@ -16,10 +16,14 @@ PANICOS_ES_THEME_ART_BOOK_NEXT_SITE = $(call github,anthonycaccese,art-book-next
 PANICOS_ES_THEME_ART_BOOK_NEXT_LICENSE = CUSTOM (Art Book Next, non-commercial)
 PANICOS_ES_THEME_ART_BOOK_NEXT_LICENSE_FILES = LICENSE.md
 
-# ES (Paths.cpp) hardcodes /usr/share/emulationstation/themes as its
-# default theme search path, so install there directly. ROCKNIX uses
-# /usr/share/themes and patches ES; we don't carry that patch.
-PANICOS_ES_THEME_ART_BOOK_NEXT_THEMEDIR = /usr/share/emulationstation/themes/es-theme-art-book-next
+# Install under /etc/emulationstation/themes/ — ThemeData.cpp:2370 adds
+# this path unconditionally as a Retropie-compat fallback, so ES finds
+# the theme regardless of which distro #define is active. With
+# -DROCKNIX=1 (which we do compile with), Paths.cpp picks
+# /storage/.config/emulationstation/themes as the primary themes path,
+# which is empty on first boot — installing there would mean shipping
+# nothing in the rootfs. The /etc fallback dodges that whole dance.
+PANICOS_ES_THEME_ART_BOOK_NEXT_THEMEDIR = /etc/emulationstation/themes/es-theme-art-book-next
 
 define PANICOS_ES_THEME_ART_BOOK_NEXT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)$(PANICOS_ES_THEME_ART_BOOK_NEXT_THEMEDIR)
