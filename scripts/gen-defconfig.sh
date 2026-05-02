@@ -101,4 +101,11 @@ mkdir -p "$(dirname "$OUTPUT")"
 			cat "$f"
 		done
 	fi
+	# Wire up BR2_GLOBAL_PATCH_DIR so Buildroot picks up our out-of-tree
+	# patches (e.g. patches/libfreeimage/) without modifying the buildroot
+	# submodule. Path is absolute since BR2_GLOBAL_PATCH_DIR doesn't expand
+	# Make variables. Inside docker, $ROOT is /work.
+	echo
+	echo "# PanicOS out-of-tree patches"
+	echo "BR2_GLOBAL_PATCH_DIR=\"$ROOT/patches\""
 } > "$OUTPUT"
