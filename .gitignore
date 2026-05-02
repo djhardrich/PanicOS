@@ -3,4 +3,5 @@ output/
 *.swp
 .env.local
 .claude/
+.serena/
 output/vbe/
