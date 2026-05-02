@@ -68,6 +68,13 @@ BR2_PACKAGE_IWD=y
 # in each regulatory domain. Without it the kernel logs "failed to
 # load regulatory.db" and iwd silently refuses to scan or associate.
 BR2_PACKAGE_WIRELESS_REGDB=y
+# Helpers wifictl shells out to: rfkill (enable/disable wifi via
+# rfkill block/unblock wifi) and iw (set regulatory domain via
+# iw reg set <country>). Without these wifictl silently no-ops at
+# `wifictl enable` and the scan never runs. NB: rfkill is now a
+# util-linux applet (the standalone BR2_PACKAGE_RFKILL was retired).
+BR2_PACKAGE_UTIL_LINUX_RFKILL=y
+BR2_PACKAGE_IW=y
 BR2_PACKAGE_BLUEZ5_UTILS=y
 BR2_PACKAGE_BLUEZ5_UTILS_CLIENT=y          # bluetoothctl
 BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
@@ -96,6 +103,10 @@ BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
 BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
 BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
+# CA bundle. Without /etc/ssl/certs/ca-certificates.crt openssl-libcurl
+# (which Install.PortMaster.sh uses to fetch the GUI release) errors with
+# "error adding trust anchors from file: /etc/ssl/certs/ca-certificates.crt".
+BR2_PACKAGE_CA_CERTIFICATES=y
 
 # Default ES theme — same one ROCKNIX/Knulli ship as default. Without
 # at least one theme installed, ES renders with no UI on first boot.
