@@ -134,6 +134,15 @@ BR2_PACKAGE_MPG123=y
 # busybox doesn't support.
 BR2_PACKAGE_PROCPS_NG=y
 
+# Doom engine binaries' dynamic deps (Doom Engines port):
+#   * crispydoom  -> libfluidsynth.so.3 + libSDL2_net-2.0.so.0
+#   * gzdoom      -> libbz2.so.1.0
+# crispydoom otherwise dies before printing anything to log.txt
+# (which is why the user saw an empty log on the WAD-load crash).
+BR2_PACKAGE_FLUIDSYNTH=y
+BR2_PACKAGE_SDL2_NET=y
+BR2_PACKAGE_BZIP2=y
+
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
 BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
