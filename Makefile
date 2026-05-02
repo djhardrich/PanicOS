@@ -223,9 +223,9 @@ pkg-rebuild:
 	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
 	@OUT="$(_outdir)"; \
 	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
-	echo ">>> pkg-rebuild: clearing $(PKG) stamps in $$OUT"; \
-	rm -rf "$$OUT/build/$(PKG)"-* \
-	       "$$OUT/build/buildroot-fs/full/.stamp_"* \
+	echo ">>> pkg-rebuild: $(PKG)-rebuild in $$OUT"; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT" $(PKG)-rebuild; \
+	rm -rf "$$OUT/build/buildroot-fs/full/.stamp_"* \
 	       "$$OUT/build/buildroot-fs/squashfs/.stamp_"*; \
 	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
 
