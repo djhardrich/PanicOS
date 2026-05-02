@@ -10,12 +10,14 @@ Conflicts=getty@tty1.service panicos-pht.service
 [Service]
 Type=simple
 ExecStart=/usr/sbin/panicos-splash
-StandardInput=tty
-StandardOutput=tty
-TTYPath=/dev/tty1
-TTYReset=no
-TTYVHangup=no
-TTYVTDisallocate=no
+# Don't claim tty1 via TTYPath — fbv writes directly to /dev/fb0 (which
+# any root process can do) and doesn't need TTY semantics. Holding tty1
+# here means systemd refuses to schedule panicos-pht.service (which DOES
+# need tty1) until we release it, which we never do voluntarily — so pht
+# stayed in "inactive (dead)" state forever waiting on us.
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
 KillMode=process
 TimeoutStopSec=2
 # fbv never exits voluntarily (no --delay); systemd needs to know that's
