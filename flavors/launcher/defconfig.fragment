@@ -1,0 +1,41 @@
+# launcher flavor — EmulationStation + PortMaster + tailscale + wireguard,
+# no built-in emulators.
+
+BR2_INIT_SYSTEMD=y
+BR2_TARGET_ROOTFS_SQUASHFS=y
+BR2_TARGET_ROOTFS_SQUASHFS4_GZIP=y
+# BR2_TARGET_ROOTFS_TAR is not set
+
+# Subsystem A (firstboot, root password, dropbear, wifi-config, sshkeys,
+# bootdiag, splash) — same baseline as minimal/pht.
+BR2_PACKAGE_PANICOS_FIRSTBOOT=y
+BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
+BR2_PACKAGE_DROPBEAR=y
+BR2_PACKAGE_PANICOS_SSHKEYS=y
+BR2_PACKAGE_PANICOS_WIFI_CONFIG=y
+BR2_PACKAGE_PANICOS_BOOTDIAG=y
+BR2_PACKAGE_IPROUTE2=y
+BR2_PACKAGE_UTIL_LINUX_LSBLK=y
+BR2_PACKAGE_PANICOS_SPLASH=y
+
+# C++ toolchain — ES is heavy C++.
+BR2_TOOLCHAIN_BUILDROOT_CXX=y
+
+# Mesa3D + KMSDRM stack — same as pht. ES uses GLES2 via KMSDRM.
+BR2_PACKAGE_MESA3D=y
+BR2_PACKAGE_MESA3D_GBM=y
+BR2_PACKAGE_MESA3D_OPENGL_EGL=y
+BR2_PACKAGE_MESA3D_OPENGL_ES=y
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
+
+# The launcher itself + the on-demand PortMaster installer.
+BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
+BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS=y
+BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
+
+# VPNs.
+BR2_PACKAGE_TAILSCALE=y
+BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m
+
+# Ports/PortMaster shell scripts assume bash (not just busybox sh).
+BR2_PACKAGE_BASH=y

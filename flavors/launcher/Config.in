@@ -1,0 +1,16 @@
+config PANICOS_FLAVOR_LAUNCHER
+	bool "launcher — EmulationStation + PortMaster + Tailscale + WireGuard"
+	depends on PANICOS_SOC_ALLWINNER_H700 || PANICOS_SOC_ROCKCHIP_RK3566
+	help
+	  ROCKNIX-style frontend with VPN tools, but no built-in
+	  emulators. EmulationStation is the launcher; PortMaster
+	  installs on demand from the Tools menu (no 100MB+ bundled in
+	  the image); tailscale and wireguard-tools cover the VPN side.
+
+	  Use this when you want a familiar handheld UI/UX that you can
+	  add your own ports to without inheriting ROCKNIX's full retro
+	  stack (RetroArch + 30+ standalone emulators).
+
+	  Pulls in mesa3d/panfrost (same as pht), plus boost + freeimage
+	  + vlc + the rest of the ES dep tree. First build is heavy
+	  (60+ min on a cold cache); incremental edits are fast.

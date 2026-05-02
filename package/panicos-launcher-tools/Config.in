@@ -1,0 +1,15 @@
+config BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS
+	bool "panicos-launcher-tools"
+	depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_UNZIP   # for unzip
+	select BR2_PACKAGE_CURL
+	help
+	  Scripts shown in the EmulationStation "Tools" submenu —
+	  user-invoked utilities that don't belong in always-on
+	  systemd-service land. Right now this is just
+	  Install.PortMaster.sh, which downloads + installs PortMaster on
+	  demand (avoids bundling 100MB+ of PortMaster.zip in every image).
+
+	  Installed under /usr/share/panicos-launcher/tools/. The launcher
+	  flavor's ES config registers that path as the Tools system so
+	  these scripts appear automatically in ES's menu — no copy step
+	  to the user's /storage/roms tree required.

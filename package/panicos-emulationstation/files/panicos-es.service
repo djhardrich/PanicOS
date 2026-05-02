@@ -1,0 +1,26 @@
+[Unit]
+Description=EmulationStation launcher
+After=multi-user.target sound.target
+# Take ownership of tty1 from getty (same pattern as panicos-pht).
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/emulationstation
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=no
+# ES sometimes exits cleanly when the user picks Quit; restart so the
+# device returns to the launcher rather than dropping to a bare TTY.
+Restart=always
+RestartSec=2
+User=root
+# ES lives in /storage and writes its config there.
+WorkingDirectory=/storage
+
+[Install]
+WantedBy=multi-user.target
