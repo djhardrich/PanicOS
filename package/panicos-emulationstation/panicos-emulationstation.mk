@@ -17,7 +17,7 @@ PANICOS_EMULATIONSTATION_LICENSE = MIT
 PANICOS_EMULATIONSTATION_LICENSE_FILES = LICENSE.md
 
 PANICOS_EMULATIONSTATION_DEPENDENCIES = \
-	sdl2 sdl2_mixer freetype freeimage libcurl openssl rapidjson pugixml \
+	sdl2 sdl2_mixer freetype libfreeimage libcurl openssl rapidjson pugixml \
 	boost vlc bash fping p7zip xmlstarlet mesa3d
 
 # CMake options tracking ROCKNIX's package.mk verbatim except:

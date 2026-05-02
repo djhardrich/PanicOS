@@ -1,7 +1,8 @@
 config BR2_PACKAGE_PANICOS_LAUNCHER_TOOLS
 	bool "panicos-launcher-tools"
 	depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_UNZIP   # for unzip
-	select BR2_PACKAGE_CURL
+	select BR2_PACKAGE_LIBCURL
+	select BR2_PACKAGE_LIBCURL_CURL
 	help
 	  Scripts shown in the EmulationStation "Tools" submenu —
 	  user-invoked utilities that don't belong in always-on
