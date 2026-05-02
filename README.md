@@ -171,8 +171,9 @@ Adding a new one is a 2-file pattern — see `flavors/minimal/` and
 
 Boots straight into [ProHandheldTracker](https://prohandheldtracker.com/)
 under `chrt -f 50` so the audio thread gets RT scheduling on the
-PREEMPT_RT kernel. The systemd service `Conflicts=getty@tty1.service`,
-so PHT owns the panel via KMSDRM cleanly.
+PREEMPT_RT kernel. PHT renders via KMSDRM (grabs DRM master directly on
+`/dev/dri/card0`) — see the kiosk-flavor checklist below for what makes
+that work.
 
 Prerequisite: the PHT payload (binary + 50MB plugins + assets) is too big
 to commit to git. Vendor a snapshot from your local
@@ -192,6 +193,52 @@ make rg35xx-pro FLAVOR=pht
 SSH still works in the pht flavor (we kept all the subsystem-A
 networking/SSH bring-up). Drop into a shell from your laptop if you need
 to poke around or read logs while PHT is running on the panel.
+
+### Kiosk-flavor checklist (KMSDRM apps: PHT, EmulationStation, …)
+
+Anything that grabs the panel via KMSDRM (PHT, ES, future kiosks) needs
+the same two pieces of plumbing. Both pht and launcher hit the same
+class of bug when one was missing — symptoms are misleading ("No
+available video device", or `ExecStart` never firing, or app stdout
+painted on top of the splash) so this is worth getting right up front.
+
+**1. SDL2 KMSDRM backend in the flavor's `defconfig.fragment`.** SDL2
+silently builds with no video driver if KMSDRM isn't selected, and any
+SDL2 app then fails at startup with `Error initializing SDL! No
+available video device`. Required:
+
+```kconfig
+BR2_PACKAGE_SDL2_KMSDRM=y
+BR2_PACKAGE_SDL2_OPENGLES=y
+BR2_PACKAGE_MESA3D=y
+BR2_PACKAGE_MESA3D_GBM=y
+BR2_PACKAGE_MESA3D_OPENGL_EGL=y
+BR2_PACKAGE_MESA3D_OPENGL_ES=y
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y     # for Mali G31 (H700)
+```
+
+**2. systemd service must NOT claim `/dev/tty1`.** Don't set `TTYPath=`,
+`StandardInput=tty`, `StandardOutput=tty`, or `Conflicts=getty@tty1` —
+those create TTY-ownership tangles between the splash, fbcon, and the
+KMSDRM app. The kernel already arbitrates DRM master, just let it. Use:
+
+```ini
+[Unit]
+After=basic.target sound.target network.target
+# NOT After=multi-user.target — combined with WantedBy=multi-user.target
+# that creates an ordering loop and systemd silently drops the unit.
+
+[Service]
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+# (no TTYPath, no Conflicts=getty@tty1)
+```
+
+`flavors/pht/` and `flavors/launcher/` both follow this pattern;
+`package/panicos-pht/panicos-pht.service` and
+`package/panicos-emulationstation/files/panicos-es.service` are the
+canonical service-file references.
 
 ### Building a real-distro squashfs (Debian / Ubuntu)
 
