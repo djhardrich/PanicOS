@@ -1,0 +1,14 @@
+config BR2_PACKAGE_PYTHON_DBUSSY
+	bool "python-dbussy"
+	depends on BR2_PACKAGE_PYTHON3
+	depends on BR2_PACKAGE_DBUS
+	help
+	  Pure-Python wrapper around libdbus, plus a higher-level
+	  asyncio-based helper module (ravel). Required by the
+	  ROCKNIX-vendored rocknix-bluetooth-agent script that ES
+	  shells out to for bluetooth pairing UX.
+
+	  Pinned to the same SHA ROCKNIX uses (third_party/rocknix
+	  has a matching dbussy package) so script ABI matches.
+
+	  https://github.com/ldo/dbussy

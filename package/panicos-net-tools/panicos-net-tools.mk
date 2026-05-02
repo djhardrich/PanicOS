@@ -11,12 +11,18 @@ PANICOS_NET_TOOLS_VERSION = 1.0
 PANICOS_NET_TOOLS_SITE = $(PANICOS_NET_TOOLS_PKGDIR)/files
 PANICOS_NET_TOOLS_SITE_METHOD = local
 PANICOS_NET_TOOLS_LICENSE = GPL-2.0
-PANICOS_NET_TOOLS_DEPENDENCIES = bash iwd bluez5_utils
+PANICOS_NET_TOOLS_DEPENDENCIES = bash iwd bluez5_utils python-dbussy
 
 define PANICOS_NET_TOOLS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/wifictl              $(TARGET_DIR)/usr/bin/wifictl
 	$(INSTALL) -D -m 0755 $(@D)/rocknix-bluetooth    $(TARGET_DIR)/usr/bin/rocknix-bluetooth
 	$(INSTALL) -D -m 0755 $(@D)/rocknix-bluetooth-agent $(TARGET_DIR)/usr/bin/rocknix-bluetooth-agent
+	# Upstream agent shebang is `#!/usr/bin/python` — Buildroot ships
+	# the interpreter as /usr/bin/python3 only (no /usr/bin/python),
+	# so the kernel ENOENT's the exec and bluetooth-agent.service
+	# crash-loops. Rewrite the shebang to point at python3.
+	sed -i '1s|^#!/usr/bin/python$$|#!/usr/bin/python3|' \
+		$(TARGET_DIR)/usr/bin/rocknix-bluetooth-agent
 	# get_setting/set_setting + friends, sourced from /etc/profile.
 	# Renamed slightly so it doesn't collide if upstream ROCKNIX is
 	# layered on top later.

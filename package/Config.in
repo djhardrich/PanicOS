@@ -13,5 +13,6 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-es-theme-art-book-next/Config
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-launcher-tools/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-net-tools/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-sway/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/python-dbussy/Config.in"
 
 endmenu
