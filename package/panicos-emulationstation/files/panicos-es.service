@@ -1,22 +1,19 @@
 [Unit]
-Description=EmulationStation launcher
-# After basic.target/sound.target/network.target — same shape as
-# panicos-pht.service. NOT After=multi-user.target: combined with
-# WantedBy=multi-user.target that creates an ordering loop where
-# systemd silently drops the unit from the activation set.
-After=basic.target sound.target network.target
+Description=EmulationStation launcher (Wayland client of panicos-sway)
+# Sway provides the panel; ES connects to its Wayland socket.
+# Mirrors ROCKNIX's essway.service design.
+After=panicos-sway.service basic.target sound.target network.target
+Requires=panicos-sway.service
 
 [Service]
 Type=simple
+# Wayland environment so SDL2 picks the wayland video backend rather
+# than KMSDRM. Sway puts its socket at $XDG_RUNTIME_DIR/wayland-1.
+Environment=HOME=/storage
+Environment=XDG_RUNTIME_DIR=/var/run/0-runtime-dir
+Environment=WAYLAND_DISPLAY=wayland-1
+Environment=SDL_VIDEODRIVER=wayland
 ExecStart=/usr/bin/emulationstation
-# No TTYPath / StandardInput=tty / StandardOutput=tty here on purpose
-# (same lesson as panicos-pht.service): ES renders via KMSDRM (grabs
-# DRM master directly on /dev/dri/card0), it doesn't need TTY
-# semantics. Keeping a TTY claim caused two visible regressions on
-# rg35xx-pro: ES's stdout ("creating config directory...") was painted
-# by fbcon over the boot splash, and SDL's KMSDRM backend then failed
-# with "No available video device" because fbcon/getty were fighting
-# us for vtcon1 / DRM master ownership.
 StandardInput=null
 StandardOutput=journal
 StandardError=journal
@@ -25,7 +22,6 @@ StandardError=journal
 Restart=always
 RestartSec=2
 User=root
-# ES lives in /storage and writes its config there.
 WorkingDirectory=/storage
 
 [Install]

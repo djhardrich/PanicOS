@@ -1,18 +1,22 @@
 # launcher flavor — EmulationStation + PortMaster + tailscale + wireguard,
-# no built-in emulators.
+# no built-in emulators. ES runs as a Wayland client of sway (mirrors
+# ROCKNIX's essway.service architecture).
 
 BR2_INIT_SYSTEMD=y
 BR2_TARGET_ROOTFS_SQUASHFS=y
 BR2_TARGET_ROOTFS_SQUASHFS4_GZIP=y
 # BR2_TARGET_ROOTFS_TAR is not set
 
-# Subsystem A (firstboot, root password, dropbear, wifi-config, sshkeys,
-# bootdiag, splash) — same baseline as minimal/pht.
+# Subsystem A baseline (firstboot, root password, sshd, sshkeys,
+# bootdiag, splash). NOTE: panicos-wifi-config (wpa_supplicant + the
+# /boot/panicos-wifi.cfg boot-time seed) is intentionally NOT enabled
+# in the launcher flavor — wifi management goes through iwd/wifictl
+# from ES menus instead. wpa_supplicant + iwd both wanting to manage
+# wlan0 is a conflict; one tool only.
 BR2_PACKAGE_PANICOS_FIRSTBOOT=y
 BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
 BR2_PACKAGE_DROPBEAR=y
 BR2_PACKAGE_PANICOS_SSHKEYS=y
-BR2_PACKAGE_PANICOS_WIFI_CONFIG=y
 BR2_PACKAGE_PANICOS_BOOTDIAG=y
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_UTIL_LINUX_LSBLK=y
@@ -21,19 +25,55 @@ BR2_PACKAGE_PANICOS_SPLASH=y
 # C++ toolchain — ES is heavy C++.
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
 
-# SDL2 video stack — KMSDRM is the only viable backend on this fbdev-only
-# system (no X, no Wayland). ES is a hard SDL2 dep and silently fails with
-# "No available video device" if SDL2 was built without these. KMSDRM
-# uses GBM + EGL + GLES2 internally, hence the mesa3d block below.
+# SDL2 video stack. Wayland is the runtime backend (sway composes the
+# panel) but keep KMSDRM/OPENGLES enabled too so the binary still works
+# if WAYLAND_DISPLAY is unset (e.g. SSH'd-in debug session running ES
+# manually). BR2_PACKAGE_WAYLAND being on triggers SDL2's wayland
+# backend at configure time (paired with the Makefile sed that flips
+# --disable-video-wayland → --enable-video-wayland in buildroot's
+# stock sdl2.mk).
 BR2_PACKAGE_SDL2_KMSDRM=y
 BR2_PACKAGE_SDL2_OPENGLES=y
 
-# Mesa3D + KMSDRM stack — same as pht. ES uses GLES2 via KMSDRM.
+# Mesa3D — Panfrost driver for Mali G31 on H700, with GBM + EGL +
+# GLES + Wayland platform support (pulled in transitively when
+# BR2_PACKAGE_WAYLAND is on).
 BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
+
+# Wayland + Sway. Sway pulls wlroots, libinput, libxkbcommon, wayland
+# protocols, etc. transitively. panicos-sway ships our kiosk config
+# and the systemd unit that brings sway up.
+BR2_PACKAGE_WAYLAND=y
+BR2_PACKAGE_WAYLAND_PROTOCOLS=y
+BR2_PACKAGE_LIBXKBCOMMON=y
+BR2_PACKAGE_LIBINPUT=y
+BR2_PACKAGE_SWAY=y
+BR2_PACKAGE_PANICOS_SWAY=y
+
+# Bluetooth + iwd-based wifi runtime UX. wifictl + rocknix-bluetooth
+# (vendored from third_party/rocknix) are the scripts ES menus shell
+# out to.
+BR2_PACKAGE_IWD=y
+BR2_PACKAGE_BLUEZ5_UTILS=y
+BR2_PACKAGE_BLUEZ5_UTILS_CLIENT=y          # bluetoothctl
+BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
+BR2_PACKAGE_PANICOS_NET_TOOLS=y
+
+# Audio routing: pipewire + wireplumber session manager. Required for
+# bluetooth-audio routing (BT speakers/headphones via bluez), and the
+# pipewire-alsa/pipewire-jack compat shims so legacy ALSA/JACK clients
+# (e.g. SDL2_mixer in ES, RetroArch cores) play through pipewire.
+BR2_PACKAGE_PIPEWIRE=y
+BR2_PACKAGE_PIPEWIRE_ALSA=y                # ALSA → pipewire shim
+BR2_PACKAGE_PIPEWIRE_JACK=y                # JACK → pipewire shim
+# Lua needed by wireplumber's session-policy scripts.
+BR2_PACKAGE_LUA=y
+BR2_PACKAGE_LUA_5_4=y
+BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 
 # The launcher itself + the on-demand PortMaster installer.
 BR2_PACKAGE_PANICOS_EMULATIONSTATION=y
@@ -50,3 +90,10 @@ BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m
 
 # Ports/PortMaster shell scripts assume bash (not just busybox sh).
 BR2_PACKAGE_BASH=y
+
+# Rootfs overlay applied after all packages install. We use it to land
+# /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
+# call `/usr/bin/sh -lc "..."` and rely on real bash semantics. Doing
+# this via overlay rather than panicos-launcher-tools post-install
+# avoids ordering races against busybox's own sh symlink.
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/flavors/launcher/rootfs-overlay"

@@ -151,6 +151,11 @@ _build:
 	@# rejects them on cosmetic context shifts. Idempotent — sed is a no-op once
 	@# applied.
 	@sed -i 's/patch -F0 /patch -F2 /' "$(BUILDROOT)/support/scripts/apply-patches.sh"
+	@# Flip Buildroot's SDL2 from --disable-video-wayland to --enable-video-wayland.
+	@# Stock buildroot hard-disables Wayland regardless of BR2_PACKAGE_WAYLAND
+	@# being on; flavors that boot under sway (launcher, future kiosk variants)
+	@# need ES to come up as a Wayland client. Idempotent.
+	@sed -i 's/--disable-video-wayland/--enable-video-wayland/' "$(BUILDROOT)/package/sdl2/sdl2.mk"
 	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
