@@ -108,4 +108,14 @@ mkdir -p "$(dirname "$OUTPUT")"
 	echo
 	echo "# PanicOS out-of-tree patches"
 	echo "BR2_GLOBAL_PATCH_DIR=\"$ROOT/patches\""
+	# ccache shared across O= dirs (per-host, lives in repo at .ccache/
+	# so it persists across docker runs — $HOME=/tmp inside the container
+	# would otherwise wipe it every invocation). Massive speedup when
+	# building a second device variant (e.g. rg35xx-pro then -lpddr3) —
+	# the cross-toolchain rebuild hits the cache instead of redoing 30+
+	# minutes of gcc-final.
+	echo
+	echo "# Shared ccache for fast cross-output-dir rebuilds"
+	echo "BR2_CCACHE=y"
+	echo "BR2_CCACHE_DIR=\"$ROOT/.ccache\""
 } > "$OUTPUT"

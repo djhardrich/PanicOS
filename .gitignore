@@ -4,4 +4,5 @@ output/
 .env.local
 .claude/
 .serena/
+.ccache/
 output/vbe/
