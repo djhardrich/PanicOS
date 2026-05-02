@@ -43,6 +43,12 @@ BR2_PACKAGE_MESA3D_GBM=y
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
+# H700 has split GPU (panfrost on card0) and display (sun4i-drm on
+# card1). Mesa needs the KMSRO ("KMS Render-Only") gallium driver to
+# do indirect rendering across this split — without it, eglChooseConfig
+# returns 0 configs for Wayland surfaces, SDL2's wayland backend fails
+# at "Couldn't find matching EGL config", and ES never paints anything.
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_KMSRO=y
 
 # Wayland + Sway. Sway pulls wlroots, libinput, libxkbcommon, wayland
 # protocols, etc. transitively. panicos-sway ships our kiosk config
@@ -58,9 +64,20 @@ BR2_PACKAGE_PANICOS_SWAY=y
 # (vendored from third_party/rocknix) are the scripts ES menus shell
 # out to.
 BR2_PACKAGE_IWD=y
+# regulatory.db: cfg80211 needs this to know what channels are legal
+# in each regulatory domain. Without it the kernel logs "failed to
+# load regulatory.db" and iwd silently refuses to scan or associate.
+BR2_PACKAGE_WIRELESS_REGDB=y
 BR2_PACKAGE_BLUEZ5_UTILS=y
 BR2_PACKAGE_BLUEZ5_UTILS_CLIENT=y          # bluetoothctl
 BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
+# python3 + python-dbussy for the BT pairing agent (rocknix-bluetooth-agent
+# is a Python script that imports dbussy + ravel; both ship in our local
+# python-dbussy package, vendored at the same SHA ROCKNIX uses).
+BR2_PACKAGE_PYTHON3=y
+BR2_PACKAGE_PYTHON3_PYEXPAT=y                # dbussy imports xml.etree
+BR2_PACKAGE_DBUS=y
+BR2_PACKAGE_PYTHON_DBUSSY=y
 BR2_PACKAGE_PANICOS_NET_TOOLS=y
 
 # Audio routing: pipewire + wireplumber session manager. Required for
