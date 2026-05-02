@@ -15,6 +15,7 @@ PANICOS_NET_TOOLS_DEPENDENCIES = bash iwd bluez5_utils python-dbussy
 
 define PANICOS_NET_TOOLS_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/wifictl              $(TARGET_DIR)/usr/bin/wifictl
+	$(INSTALL) -D -m 0755 $(@D)/iwd_get-networks     $(TARGET_DIR)/usr/bin/iwd_get-networks
 	$(INSTALL) -D -m 0755 $(@D)/rocknix-bluetooth    $(TARGET_DIR)/usr/bin/rocknix-bluetooth
 	$(INSTALL) -D -m 0755 $(@D)/rocknix-bluetooth-agent $(TARGET_DIR)/usr/bin/rocknix-bluetooth-agent
 	# Upstream agent shebang is `#!/usr/bin/python` — Buildroot ships
