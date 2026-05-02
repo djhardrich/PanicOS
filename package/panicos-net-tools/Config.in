@@ -1,0 +1,30 @@
+config BR2_PACKAGE_PANICOS_NET_TOOLS
+	bool "panicos-net-tools"
+	depends on BR2_INIT_SYSTEMD
+	depends on BR2_PACKAGE_BASH
+	depends on BR2_PACKAGE_IWD
+	depends on BR2_PACKAGE_BLUEZ5_UTILS
+	help
+	  Backend scripts for the runtime network/bluetooth menus that
+	  EmulationStation calls into:
+
+	    wifictl              — wifi management (iwd backend). ES
+	                           shells out to this for scan/connect/
+	                           disable/list etc.
+	    rocknix-bluetooth    — bluetooth pairing (bluez backend). ES
+	                           shells out for live discovery, trust,
+	                           connect, disconnect, remove.
+	    rocknix-bluetooth-agent — agent that auto-confirms passkey
+	                              prompts during pairing.
+	    /etc/profile.d/001-panicos-functions — get_setting/set_setting
+	                                            shell helpers the
+	                                            scripts depend on.
+	    /usr/config/system/configs/system.cfg — default settings
+	                                            seeded onto /storage
+	                                            on first boot.
+
+	  Vendored verbatim from the ROCKNIX submodule
+	  (third_party/rocknix). Keeps wifictl/bluetooth UX feature-parity
+	  with ROCKNIX so users coming from those distros find the same
+	  menu behaviors. The agent service starts automatically with
+	  bluetooth.service.
