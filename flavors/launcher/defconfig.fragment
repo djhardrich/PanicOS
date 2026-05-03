@@ -132,8 +132,9 @@ BR2_PACKAGE_SDL2_IMAGE=y
 BR2_PACKAGE_OPENAL=y
 BR2_PACKAGE_LIBVORBIS=y                     # libvorbisfile, libogg
 BR2_PACKAGE_LIBTHEORA=y                     # libtheoradec
-BR2_PACKAGE_LIBMODPLUG=y
+BR2_PACKAGE_LIBMODPLUG=y                    # SDL2_mixer Mix_LoadMUS for .mod
 BR2_PACKAGE_MPG123=y
+BR2_PACKAGE_OPUSFILE=y                      # SDL2_mixer Mix_LoadMUS for .opus
 # procps-ng — pugwash invokes pgrep via subprocess at startup to check
 # whether love.${arch} is already running; busybox ships ps but not
 # pgrep / pidof / pkill, so it crashes with FileNotFoundError. procps-ng
