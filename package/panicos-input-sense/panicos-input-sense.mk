@@ -50,9 +50,21 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 	# Patch (1): SDL gamecontrollerdb path → /usr/share location.
 	sed -i 's|/storage/.config/SDL-GameControllerDB/gamecontrollerdb.txt|/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt|' \
 		$(TARGET_DIR)/etc/profile.d/001-functions.sh
-	# Patch (2): `volume` script → wpctl (per user preference). Other
-	# scripts keep pactl — pactl talks to pipewire-pulse just fine.
-	sed -i 's|pactl -- set-sink-volume @DEFAULT_SINK@|wpctl set-volume @DEFAULT_AUDIO_SINK@|' \
+	# Patch (2): `volume` script → wpctl + 150% boost ceiling.
+	#
+	# (a) ROCKNIX uses pactl by default; user preference is wpctl
+	#     specifically for volume control. Other ROCKNIX scripts keep
+	#     pactl — pactl talks to pipewire-pulse just fine.
+	# (b) Raise MAX_VOLUME 100 → 150. Anbernic H700 boards have a
+	#     fixed-gain external speaker amp; the codec DAC is already
+	#     pinned at max via the H616 UCM, so the only remaining knob
+	#     is software pre-amp via PipeWire's >100% sink-volume
+	#     handling. Mirrors Batocera's `audio.volume.boost=150`
+	#     mechanism (their batocera-audio script — see PR #4334).
+	# (c) Pass `--limit 1.5` to wpctl so the boost actually applies
+	#     (without it, wpctl rejects values >100%).
+	sed -i 's|pactl -- set-sink-volume @DEFAULT_SINK@ \$${VOLUME}%|wpctl set-volume @DEFAULT_AUDIO_SINK@ --limit 1.5 \$${VOLUME}%|; \
+	        s|^MAX_VOLUME=100|MAX_VOLUME=150|' \
 		$(TARGET_DIR)/usr/bin/volume
 
 	# tmpfiles.d to create the /storage skeleton on every boot. ROCKNIX
