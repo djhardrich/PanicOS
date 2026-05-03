@@ -42,9 +42,12 @@ then
   done
 fi
 
-### Start the automount service
-tocon "Starting storage services..."
-systemctl start rocknix-automount
+### rocknix-automount is intentionally disabled on PanicOS.
+# ROCKNIX's automount bind-mounts /storage/games-internal/roms over
+# /storage/roms, masking the roms that panicos-firstboot extracted there.
+# The service is installed for users who explicitly want the merged-storage
+# layout but must not run by default.
+# systemctl start rocknix-automount
 
 ### Run common start scripts
 for script in /usr/lib/autostart/common/*

@@ -91,6 +91,15 @@ define PANICOS_EMULATIONSTATION_INSTALL_TARGET_CMDS
 	# under /etc so users can override via the overlay.
 	$(INSTALL) -D -m 0644 $(PANICOS_EMULATIONSTATION_PKGDIR)/files/es_systems.cfg \
 		$(TARGET_DIR)/etc/emulationstation/es_systems.cfg
+	# System-level input config (ROCKNIX build: mEmulationStationPath = getExePath()
+	# = /usr/bin, so the shared path ES checks is /usr/bin/es_input.cfg).
+	# Sourced verbatim from ROCKNIX's canonical es_input.cfg — covers every device
+	# ROCKNIX ships (H700, RK3566, S922X, SM6115, …). Pre-seeds all known gamepads
+	# so ES never shows the "configure controller" wizard on first boot or after an
+	# ES restart. The user's /storage/.config/emulationstation/es_input.cfg wins.
+	$(INSTALL) -D -m 0644 \
+		$(BR2_EXTERNAL_PANICOS_PATH)/third_party/rocknix/projects/ROCKNIX/packages/ui/emulationstation/config/common/es_input.cfg \
+		$(TARGET_DIR)/usr/bin/es_input.cfg
 	# Pre-create the ports + tools rom dirs on the persistent storage so
 	# ES doesn't complain on first boot.
 	mkdir -p $(TARGET_DIR)/storage/roms/ports

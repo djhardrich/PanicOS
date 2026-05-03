@@ -80,6 +80,13 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 	# call /usr/bin/python; we ship python3 only. Symlink avoids patching
 	# every shebang.
 	ln -sf python3 $(TARGET_DIR)/usr/bin/python
+	# Patch (3): rocknix-fake-suspend INPUT_WHITELIST — add "H700 Gamepad" so
+	# block_input does not grab the joystick during fake-sleep. Without this,
+	# evtest --grab on the joystick can cause SDL in ES to fire
+	# SDL_JOYDEVICEREMOVED/JOYDEVICEADDED, which ES interprets as a new device
+	# and shows the "configure controller" wizard on the next button press.
+	sed -i 's|# H700$$|# H700\n  "H700 Gamepad" \\|' \
+		$(TARGET_DIR)/usr/bin/rocknix-fake-suspend
 endef
 
 define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
