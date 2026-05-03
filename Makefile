@@ -156,6 +156,25 @@ _build:
 	@# being on; flavors that boot under sway (launcher, future kiosk variants)
 	@# need ES to come up as a Wayland client. Idempotent.
 	@sed -i 's/--disable-video-wayland/--enable-video-wayland/' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# Flip --disable-video-vulkan → --enable-video-vulkan, same rationale.
+	@# SDL2 picks up Vulkan automatically when vulkan-headers are present at
+	@# build time; the loader (libvulkan.so.1) is dlopen'd at runtime by any
+	@# port that asks for Vulkan rendering. Without the configure flip, SDL2
+	@# refuses to even probe for Vulkan and apps fall back to GLES.
+	@sed -i 's/--disable-video-vulkan/--enable-video-vulkan/' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# Pull SDL2's vulkan-headers dep through buildroot's dependency graph
+	@# so vulkan-headers is built/staged before SDL2 configures. Without
+	@# this, SDL2's autoconf check for Vulkan fails (headers missing) and
+	@# Vulkan support is silently dropped even with --enable-video-vulkan.
+	@grep -q '^SDL2_DEPENDENCIES += vulkan-headers' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_DEPENDENCIES += vulkan-headers' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# libsamplerate dep — SDL2's autoconf probes for it via pkg-config and
+	@# enables `--enable-libsamplerate` by default; we just need the lib
+	@# present at SDL2 build time. Without this dep ordering, libsamplerate
+	@# may not be staged when SDL2 configures and the resampler silently
+	@# falls back to SDL2's built-in lower-quality version.
+	@grep -q '^SDL2_DEPENDENCIES += libsamplerate' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_DEPENDENCIES += libsamplerate' "$(BUILDROOT)/package/sdl2/sdl2.mk"
 	@# SDL2's autoconf detects WAYLAND_SCANNER via pkg-config, but ends up
 	@# baking in the build-host's /usr/bin/wayland-scanner path (which
 	@# doesn't exist on most build hosts). Force it to use the host-wayland

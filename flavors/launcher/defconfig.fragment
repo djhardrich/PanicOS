@@ -42,6 +42,25 @@ BR2_TOOLCHAIN_BUILDROOT_CXX=y
 BR2_PACKAGE_SDL2_KMSDRM=y
 BR2_PACKAGE_SDL2_OPENGLES=y
 
+# Vulkan headers + loader. Mali G31 (Bifrost) supports Vulkan via Mesa's
+# panvk driver, which is auto-built when MESA3D_GALLIUM_DRIVER_PANFROST
+# is enabled. Shipping the userspace loader + headers is what makes
+# `vkCreateInstance()` succeed for any port that asks for Vulkan; SDL2's
+# `--enable-video-vulkan` (flipped from upstream's --disable in our
+# top-level Makefile) needs the headers at SDL2 build time. PortMaster
+# ports increasingly assume Vulkan availability for newer engines.
+BR2_PACKAGE_VULKAN_HEADERS=y
+BR2_PACKAGE_VULKAN_LOADER=y
+BR2_PACKAGE_VULKAN_TOOLS=y                  # vulkaninfo for diagnostics
+
+# libsamplerate — high-quality audio resampling. SDL2's autoconf picks
+# this up automatically when present (`--enable-libsamplerate` is the
+# default). Enables better resampling quality for any SDL2 client that
+# does sample-rate conversion. Also makes libsamplerate.so available
+# for ports that dlopen it directly (Crispy Doom's `use_libsamplerate=1`
+# config option, etc.).
+BR2_PACKAGE_LIBSAMPLERATE=y
+
 # Mesa3D — Panfrost driver for Mali G31 on H700, with GBM + EGL +
 # GLES + Wayland platform support (pulled in transitively when
 # BR2_PACKAGE_WAYLAND is on).
@@ -106,6 +125,35 @@ BR2_PACKAGE_DBUS=y
 BR2_PACKAGE_PYTHON_DBUSSY=y
 BR2_PACKAGE_PANICOS_NET_TOOLS=y
 
+# alsa-utils — amixer / alsactl / aplay / arecord. Diagnostic baseline:
+# without these, you can't check whether a card is muted, list controls,
+# play a test wav, or restore a saved mixer state on boot. Small (~300KB)
+# and worth shipping by default in any flavor that touches audio.
+BR2_PACKAGE_ALSA_UTILS=y
+BR2_PACKAGE_ALSA_UTILS_AMIXER=y
+BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
+BR2_PACKAGE_ALSA_UTILS_APLAY=y
+# alsaucm — UCM (Use Case Manager) tool. Selecting it pulls in
+# BR2_PACKAGE_ALSA_LIB_UCM which links libasound against the UCM
+# library. Required so that pipewire/wireplumber's alsa monitor
+# discovers and applies UCM configs at /usr/share/alsa/ucm2/.
+# Without it, our SoC-overlay UCM file for the H616 codec sits on disk
+# unused, the codec boots with `DAC Playback Switch=off` +
+# `Speaker Switch=off`, and audio is barely audible (Rockbox / PHT /
+# anything routing through the speaker hits the quiet-audio symptom).
+BR2_PACKAGE_ALSA_UTILS_ALSAUCM=y
+
+# pulseaudio package — utils-only (DAEMON=n). We want pactl / pacmd /
+# paplay / parec as Pulse-protocol clients so vendored ROCKNIX scripts
+# (rocknix-fake-suspend, brightness, etc.) that use `pactl set-sink-mute`
+# Just Work without us patching every call site to wpctl. Our actual
+# audio server is pipewire-pulse (a multi-call symlink off pipewire,
+# already shipped); pactl talks to it over the standard Pulse socket.
+# DAEMON=n leaves pulseaudio.service un-installed so the actual
+# pulseaudio binary doesn't auto-start and conflict with pipewire.
+BR2_PACKAGE_PULSEAUDIO=y
+# BR2_PACKAGE_PULSEAUDIO_DAEMON is not set
+
 # Audio routing: pipewire + wireplumber session manager. Required for
 # bluetooth-audio routing (BT speakers/headphones via bluez), and the
 # pipewire-alsa/pipewire-jack compat shims so legacy ALSA/JACK clients
@@ -141,6 +189,38 @@ BR2_PACKAGE_OPUSFILE=y                      # SDL2_mixer Mix_LoadMUS for .opus
 # also gives ports the real ps/top in case any of them rely on flags
 # busybox doesn't support.
 BR2_PACKAGE_PROCPS_NG=y
+
+# evtest — print evdev events with symbolic key/code names. Required on
+# device to diagnose input-routing bugs (e.g. which event* node a given
+# physical button shows up on, which key codes it actually emits, whether
+# sway/libinput is grabbing it). Hexdumping /dev/input/event* gives raw
+# bytes but no symbolic names; evtest is the standard tool. ROCKNIX's
+# input_sense daemon is built on top of it. ~30KB.
+BR2_PACKAGE_EVTEST=y
+
+# panicos-input-sense — ROCKNIX's input_sense daemon (vendored verbatim).
+# Listens to evdev events from every input device and routes special
+# keys: KEY_VOLUMEUP/DOWN/MUTE → wpctl, KEY_POWER → fake suspend (when
+# rocknix-fake-suspend is implemented), and various controller-key
+# combos to brightness / screenshot / mangohud (also pending helper
+# stubs). Without this, sway-level `bindsym XF86Audio*` doesn't fire
+# because gpio-keys-volume isn't grabbed by sway/libinput as a keyboard
+# device. ROCKNIX solves this with their daemon — we vendor it.
+BR2_PACKAGE_PANICOS_INPUT_SENSE=y
+
+# panicos-quirks — vendored ROCKNIX hardware quirks system. Sets DEVICE_*
+# env vars per SoC/device (LED control, fan, audio mixer, brightness,
+# suspend mode, etc.). The vendored ROCKNIX scripts in panicos-input-sense
+# (rocknix-fake-suspend, ledcontrol, brightness, fancontrol, etc.) consult
+# these vars to dispatch hardware-specific behavior. Without quirks, the
+# scripts run on bare defaults and skip device-specific paths.
+BR2_PACKAGE_PANICOS_QUIRKS=y
+
+# wlr-randr — wlroots randr CLI. Used by ROCKNIX scripts (screen_switch,
+# vertical-check, paneladj) to query/configure outputs. Tiny package
+# (~50KB) and required for any output-management quirk script to do
+# anything useful.
+BR2_PACKAGE_WLR_RANDR=y
 
 # Doom engine binaries' dynamic deps (Doom Engines port):
 #   * crispydoom  -> libfluidsynth.so.3 + libSDL2_net-2.0.so.0

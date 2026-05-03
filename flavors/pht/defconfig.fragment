@@ -52,3 +52,19 @@ BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y
 
 # chrt lives in util-linux schedutils. PHT needs it for RT scheduling.
 BR2_PACKAGE_UTIL_LINUX_SCHEDUTILS=y
+
+# alsa-utils — amixer / alsactl / aplay / arecord. Diagnostic baseline:
+# without these, you can't check whether a card is muted, list controls,
+# play a test wav, or restore a saved mixer state on boot. PHT talks
+# ALSA directly (no pipewire in this flavor), so amixer is the only way
+# to confirm output routing on device.
+BR2_PACKAGE_ALSA_UTILS=y
+BR2_PACKAGE_ALSA_UTILS_AMIXER=y
+BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
+BR2_PACKAGE_ALSA_UTILS_APLAY=y
+# alsaucm — see launcher flavor for full rationale. Same H616 codec UCM
+# from soc/allwinner-h700/mainline/rootfs-overlay/usr/share/alsa/ucm2/
+# applies to PHT flavor too (PHT runs ALSA-direct, so even without
+# pipewire it benefits from the FixedBootSequence flipping
+# `DAC Playback Switch=on`).
+BR2_PACKAGE_ALSA_UTILS_ALSAUCM=y
