@@ -92,6 +92,12 @@ define PANICOS_PORTMASTER_PRELOAD_INSTALL_TARGET_CMDS
 	cd $(@D)/podone-stage && \
 		unzip -q $(PANICOS_PORTMASTER_PRELOAD_PKGDIR)/files/PodOne-r75-themesite.zip
 	cp -a $(@D)/podone-stage/.rockbox/. $(@D)/rockbox-stage/rockbox/
+	# Re-brand PodOne's status bar from "iPod" to "PanicOS". The strings
+	# live in PodOne.sbs as `%?Lt<%?if(%Lt, =, Rockbox)<iPod|%Lt>|iPod>`
+	# — Rockbox's `iPod` literal is the displayed title when the menu
+	# would otherwise show "Rockbox".
+	sed -i 's/iPod/PanicOS/g' \
+		$(@D)/rockbox-stage/rockbox/wps/PodOne.sbs
 	# Default config: select PodOne as the theme on first launch. Inside
 	# Rockbox config the data dir is always referenced as /.rockbox/
 	# regardless of on-disk name (Rockbox virtual filesystem).

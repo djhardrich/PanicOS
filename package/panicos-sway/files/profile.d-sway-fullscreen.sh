@@ -12,6 +12,29 @@
 
 export UI_SERVICE="panicos-sway.service"
 
+# swaymsg looks at $SWAYSOCK first; if unset it falls back to $I3SOCK
+# then `i3 --get-socketpath`, with no XDG_RUNTIME_DIR autoscan. systemd
+# launches panicos-es.service (and therefore every port we spawn) with
+# only XDG_RUNTIME_DIR set — sway's own SWAYSOCK never propagates.
+# Discover the running socket on shell startup and export it. We only
+# do the find when SWAYSOCK is unset to avoid clobbering anything sway
+# itself set for its own subshells.
+if [ -z "${SWAYSOCK:-}" ] && [ -d "${XDG_RUNTIME_DIR:-/var/run/0-runtime-dir}" ]; then
+    for sock in "${XDG_RUNTIME_DIR:-/var/run/0-runtime-dir}"/sway-ipc.*.sock; do
+        [ -S "$sock" ] || continue
+        export SWAYSOCK="$sock"
+        break
+    done
+fi
+
+# OpenAL backend preference. Default backend list picks alsa first,
+# which routes through the pipewire-alsa shim and produces "Wait
+# timeout... buffer size too low?" spam from ALSOFT under load
+# (visible in the Doom Engines / Wolf3D logs). Native pipewire backend
+# avoids the shim. Falls through to alsa / sdl2 if pipewire isn't
+# available for whatever reason.
+export ALSOFT_DRIVERS="pipewire,alsa,sdl2"
+
 function sway_fullscreen {
   local VALUE="${1}"
   local ATTRIBUTE="${2:-app_id}"
