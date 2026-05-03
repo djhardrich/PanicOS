@@ -58,6 +58,7 @@ define PANICOS_LIBFREEIMAGE_BUILD_CMDS
 		sed -i 's|Source/LibPNG/[^ ]*.c ||g' $(@D)/Makefile.srcs; \
 		sed -i 's/LIBRARIES = -lstdc++/LIBRARIES = -lstdc++ -lpng  # system-libpng/' $(@D)/Makefile.gnu; \
 		cp $(STAGING_DIR)/usr/include/pnglibconf.h $(@D)/Source/LibPNG/pnglibconf.h; \
+		rm -f $(@D)/libfreeimage-3.18.0.so $(@D)/libfreeimage.so $(@D)/libfreeimage.a; \
 	}
 	$(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) \
 		CXXFLAGS="$(TARGET_CXXFLAGS) -std=c++11 -Wno-deprecated-declarations" $(MAKE) -C $(@D)
