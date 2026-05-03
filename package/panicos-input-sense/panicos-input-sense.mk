@@ -108,9 +108,22 @@ define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
 	done
 
 	# Enable the ones that should auto-start at boot.
+	#
+	# rocknix-automount.service is INTENTIONALLY excluded — ROCKNIX's
+	# automount assumes an internal-vs-external SD storage split where
+	# /storage/games-internal/roms is the underlying real path and
+	# /storage/roms is a bind/overlay target. PanicOS puts roms directly
+	# in /storage/roms (panicos-firstboot extracts PortMaster + bundled
+	# ports there), so rocknix-automount's bind-mount of
+	# /storage/games-internal/roms (empty after first boot) over
+	# /storage/roms MASKS everything firstboot put there — the Ports
+	# menu in ES disappears, every PortMaster port path 404s. Script
+	# stays installed at /usr/bin/automount for users who explicitly
+	# want the ROCKNIX merged-storage layout, but the service is left
+	# disabled.
 	for unit in batteryledstatus.service fancontrol.service \
 	            headphones.service rocknix-memory-manager.service \
-	            rocknix-automount.service hdmi-hotplug.path; do \
+	            hdmi-hotplug.path; do \
 		ln -sf "../$$unit" \
 			"$(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/$$unit"; \
 	done
