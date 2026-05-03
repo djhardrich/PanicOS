@@ -35,13 +35,11 @@ BR2_PACKAGE_PANICOS_SPLASH=y
 # C++ toolchain — ES is heavy C++.
 BR2_TOOLCHAIN_BUILDROOT_CXX=y
 
-# SDL2 video stack. Wayland is the runtime backend (sway composes the
-# panel) but keep KMSDRM/OPENGLES enabled too so the binary still works
-# if WAYLAND_DISPLAY is unset (e.g. SSH'd-in debug session running ES
-# manually). BR2_PACKAGE_WAYLAND being on triggers SDL2's wayland
-# backend at configure time (paired with the Makefile sed that flips
-# --disable-video-wayland → --enable-video-wayland in buildroot's
-# stock sdl2.mk).
+# SDL2 video stack. Wayland is the primary runtime backend (ES runs as a
+# Wayland client of sway; SDL_VIDEODRIVER=wayland is set in panicos-es.service).
+# KMSDRM + OPENGLES are also enabled so the binary still works if
+# WAYLAND_DISPLAY is unset (e.g. SSH debug session).
+BR2_PACKAGE_SDL2_WAYLAND=y
 BR2_PACKAGE_SDL2_KMSDRM=y
 BR2_PACKAGE_SDL2_OPENGLES=y
 

@@ -15,16 +15,17 @@ Environment=WAYLAND_DISPLAY=wayland-1
 Environment=SDL_VIDEODRIVER=wayland
 # SWAYSOCK is needed by every port that calls swaymsg (PortMaster's
 # pm_platform_helper, port wrappers that fullscreen themselves).
-# panicos-sway-launch symlinks sway's per-PID socket to this stable
-# path on startup; setting the env here means children of ES inherit
-# it via execve without /etc/profile.d sourcing — non-login bash
-# launched by ES doesn't run profile.d.
-Environment=SWAYSOCK=/run/panicos-sway/ipc.sock
+# sway-100.01-static-ipc-socket.patch makes the path predictable (no PID).
+Environment=SWAYSOCK=/var/run/0-runtime-dir/sway-ipc.0.sock
 # OpenAL Soft default backend list picks alsa first, which routes
 # through the pipewire-alsa shim and produces "Wait timeout... buffer
 # size too low?" spam under load (see Doom Engines / Wolfenstein log).
 # Native pipewire backend avoids the shim. Inherited by every port.
 Environment=ALSOFT_DRIVERS=pipewire,alsa,sdl2
+# Wait up to 10 s for sway to create its Wayland socket before launching ES.
+# sway 1.11 has no sd_notify, so Type=simple on the sway unit means systemd
+# marks it "active" the instant the process forks — before the socket exists.
+ExecStartPre=/bin/sh -c 'i=0; while [ $i -lt 100 ]; do [ -S "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ] && exit 0; sleep 0.1; i=$((i+1)); done; echo "panicos-es: timed out waiting for wayland socket" >&2; exit 1'
 ExecStart=/usr/bin/emulationstation
 StandardInput=null
 StandardOutput=journal

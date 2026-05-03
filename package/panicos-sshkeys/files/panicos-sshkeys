@@ -1,0 +1,13 @@
+#!/bin/sh
+# Generate OpenSSH host keys at first boot. Self-disabling via marker on
+# the storage partition so keys survive overlay wipes only intentionally.
+set -eu
+
+MARKER=/storage/.panicos-sshkeys-done
+[ -f "$MARKER" ] && exit 0
+
+echo ">>> panicos-sshkeys: generating openssh host keys"
+ssh-keygen -A
+
+touch "$MARKER"
+echo ">>> panicos-sshkeys: done"

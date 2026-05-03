@@ -1,0 +1,16 @@
+[Unit]
+Description=PanicOS first-boot: generate per-device SSH host keys
+DefaultDependencies=no
+After=local-fs.target
+Before=basic.target sysinit.target sshd.service
+ConditionPathExists=!/storage/.panicos-sshkeys-done
+RequiresMountsFor=/storage
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/panicos-sshkeys
+StandardOutput=journal
+
+[Install]
+WantedBy=sysinit.target
