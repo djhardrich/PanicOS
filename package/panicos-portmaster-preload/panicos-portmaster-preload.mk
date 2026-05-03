@@ -98,11 +98,19 @@ define PANICOS_PORTMASTER_PRELOAD_INSTALL_TARGET_CMDS
 	# would otherwise show "Rockbox".
 	sed -i 's/iPod/PanicOS/g' \
 		$(@D)/rockbox-stage/rockbox/wps/PodOne.sbs
-	# Default config: select PodOne as the theme on first launch. Inside
-	# Rockbox config the data dir is always referenced as /.rockbox/
-	# regardless of on-disk name (Rockbox virtual filesystem).
-	echo "selected theme: /.rockbox/themes/PodOne.cfg" \
-		> $(@D)/rockbox-stage/rockbox/config.cfg
+	# Default config: actually apply PodOne on first launch. `selected
+	# theme:` alone is just a label — Rockbox doesn't follow the theme
+	# from there, it expects all the individual settings (font, wps,
+	# sbs, colors, iconset) to already be in config.cfg from when the
+	# user "selected" the theme via the menu. Concatenate PodOne.cfg's
+	# contents to mimic that selection state. Inside Rockbox config the
+	# data dir is always referenced as /.rockbox/ regardless of on-disk
+	# name (Rockbox virtual filesystem).
+	{ \
+		echo "selected theme: /.rockbox/themes/PodOne.cfg"; \
+		cat $(@D)/podone-stage/.rockbox/themes/PodOne.cfg \
+			| grep -vE '^#|^$$'; \
+	} > $(@D)/rockbox-stage/rockbox/config.cfg
 	# Re-zip with deterministic ordering so the output is reproducible
 	# across rebuilds (-X strips extra metadata, sort by name). Use the
 	# absolute path to host-zip's binary — buildroot's package recipe
