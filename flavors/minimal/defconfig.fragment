@@ -8,7 +8,11 @@ BR2_PACKAGE_PANICOS_FIRSTBOOT=y
 
 # Console + wifi bootstrap (subsystem A).
 BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
-BR2_PACKAGE_DROPBEAR=y
+# OpenSSH replaces dropbear (real sftp-server + scp/ssh/ssh-keygen).
+BR2_PACKAGE_OPENSSH=y
+BR2_PACKAGE_OPENSSH_SERVER=y
+BR2_PACKAGE_OPENSSH_CLIENT=y
+BR2_PACKAGE_OPENSSH_KEY_UTILS=y
 BR2_PACKAGE_PANICOS_SSHKEYS=y
 BR2_PACKAGE_PANICOS_WIFI_CONFIG=y
 # Autologin off by default; flip the line below in a kiosk flavor:

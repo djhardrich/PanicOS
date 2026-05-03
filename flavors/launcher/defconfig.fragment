@@ -15,8 +15,15 @@ BR2_TARGET_ROOTFS_SQUASHFS4_GZIP=y
 # wlan0 is a conflict; one tool only.
 BR2_PACKAGE_PANICOS_FIRSTBOOT=y
 BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
-BR2_PACKAGE_DROPBEAR=y
-BR2_PACKAGE_PANICOS_SSHKEYS=y
+# OpenSSH (server + client + ssh-keygen). Replaces dropbear because
+# dropbear's SFTP subsystem is incomplete — most graphical SFTP clients
+# fail to list directories or transfer files reliably. OpenSSH ships a
+# real sftp-server, plus `ssh`/`scp` on-device for ad-hoc admin.
+BR2_PACKAGE_OPENSSH=y
+BR2_PACKAGE_OPENSSH_SERVER=y
+BR2_PACKAGE_OPENSSH_CLIENT=y
+BR2_PACKAGE_OPENSSH_KEY_UTILS=y
+BR2_PACKAGE_PANICOS_SSHKEYS=y     # symlinks sshd.service into multi-user.target.wants
 BR2_PACKAGE_PANICOS_BOOTDIAG=y
 BR2_PACKAGE_IPROUTE2=y
 BR2_PACKAGE_UTIL_LINUX_LSBLK=y
