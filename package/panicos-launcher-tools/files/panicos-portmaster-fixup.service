@@ -1,0 +1,18 @@
+[Unit]
+Description=PanicOS — re-apply PortMaster overrides (CFW mod, H700 gcdb, exec bits)
+# Run on every panicos-es.service start so the next ES restart re-applies
+# our customizations after a PortMaster upgrade via Install.PortMaster.sh
+# (which would otherwise replace our gamecontrollerdb symlink with
+# upstream's bundled file). RemainAfterExit=no so the unit re-fires.
+Before=panicos-es.service
+RequiresMountsFor=/storage
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/sbin/panicos-portmaster-fixup
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=panicos-es.service

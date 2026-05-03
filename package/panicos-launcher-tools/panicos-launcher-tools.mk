@@ -33,6 +33,19 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/share/SDL-GameControllerDB
 	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/gamecontrollerdb.txt \
 		$(TARGET_DIR)/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
+	# panicos-portmaster-fixup re-applies our overrides on every ES
+	# start (mirror's ROCKNIX's start_portmaster.sh approach). Lives
+	# at /usr/sbin/.
+	$(INSTALL) -D -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/panicos-portmaster-fixup.sh \
+		$(TARGET_DIR)/usr/sbin/panicos-portmaster-fixup
+endef
+
+define PANICOS_LAUNCHER_TOOLS_INSTALL_INIT_SYSTEMD
+	$(INSTALL) -D -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/panicos-portmaster-fixup.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/panicos-portmaster-fixup.service
+	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/panicos-es.service.wants
+	ln -sf ../panicos-portmaster-fixup.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/panicos-es.service.wants/panicos-portmaster-fixup.service
 endef
 # /usr/bin/sh -> bash is wired via the launcher flavor's rootfs-overlay
 # rather than this package's install step — avoids ordering races

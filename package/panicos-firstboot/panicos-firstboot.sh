@@ -48,42 +48,20 @@ if [ -d "$PRELOAD" ]; then
     # Top-level launcher shims need executable bits; unzip preserves zip
     # internal modes which are unreliable across platforms.
     find /storage/roms/ports -maxdepth 1 -name "*.sh" -exec chmod +x {} +
-    # PortMaster.zip ships exec bits ONLY on .sh files and pugwash
-    # (Python with shebang). gptokeyb, sdl2imgshow.*, xdelta3, etc.
-    # come in mode 644. Upstream PortMaster.sh fixes this with
-    # `$ESUDO chmod -R +x .`, but a port like Doom Engines.sh that
-    # invokes $GPTOKEYB before the user has run PortMaster GUI hits
-    # "/roms/ports/PortMaster/gptokeyb: Permission denied". Be eager
-    # and chmod the whole tree on first boot. Same for any extracted
-    # port subdirs that ship binaries.
-    [ -d /storage/roms/ports/PortMaster ] && \
-        chmod -R +x /storage/roms/ports/PortMaster
+    # Other-port subdir binaries (rockbox, doomengines, pht, etc.) —
+    # PortMaster's own dir is handled by panicos-portmaster-fixup which
+    # runs before every ES start.
     for portdir in /storage/roms/ports/*/; do
         [ -d "$portdir" ] && [ "$portdir" != "/storage/roms/ports/PortMaster/" ] && \
             find "$portdir" -type f \( -name "*.sh" -o -name "*.so*" \) -exec chmod +x {} + 2>/dev/null || true
     done
 fi
 
-# Drop our PortMaster CFW mod into the extracted PortMaster directory.
-# PortMaster's PortMaster.sh sources $controlfolder/mod_${CFW_NAME}.txt
-# (CFW_NAME=PanicOS, set by device_info.txt's OS_NAME-fallback branch
-# reading our /etc/os-release). The mod defines pm_platform_helper +
-# LIBGL_DRIVERS_PATH for our environment.
-MOD=/usr/share/panicos-launcher/tools/mod_PanicOS.txt
-if [ -f "$MOD" ] && [ -d /storage/roms/ports/PortMaster ]; then
-    cp -f "$MOD" /storage/roms/ports/PortMaster/mod_PanicOS.txt
-fi
-
-# Override PortMaster's bundled gamecontrollerdb.txt with our vendored
-# ROCKNIX copy — has the H700 Gamepad mapping (and other handheld pads)
-# that PortMaster's generic upstream version is missing. Without this
-# A/B come up swapped and Start+Select hotkey combos don't register
-# (e.g. Rockbox quit). Symlink rather than copy so a system-package
-# upgrade auto-applies.
-GCDB=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
-if [ -f "$GCDB" ] && [ -d /storage/roms/ports/PortMaster ]; then
-    ln -sf "$GCDB" /storage/roms/ports/PortMaster/gamecontrollerdb.txt
-fi
+# PortMaster customization (mod_PanicOS.txt + gamecontrollerdb symlink
+# + chmod +x) runs every boot via panicos-portmaster-fixup.service, so
+# users who later upgrade PortMaster via Install.PortMaster.sh have
+# their overrides re-applied on the next ES restart rather than being
+# stranded with whatever upstream zip lays down.
 
 # Top-level PortMaster.sh launcher shim. PortMaster.zip extracts only
 # under PortMaster/ — there's no top-level launcher. Symlink to the
