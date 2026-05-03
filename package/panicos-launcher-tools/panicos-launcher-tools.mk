@@ -22,6 +22,17 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	# PortMaster.zip so PortMaster.sh sources it on launch.
 	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/mod_PanicOS.txt \
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/mod_PanicOS.txt
+	# SDL_GameControllerDB entry for our hardware. Vendored from ROCKNIX's
+	# apps/gamecontrollerdb so PortMaster + ports get the right A/B/X/Y
+	# mapping for the H700 Gamepad (and other handheld pads ROCKNIX
+	# tracks). PortMaster ships a generic gamecontrollerdb.txt that
+	# doesn't have an H700 entry — without ours, A and B come up swapped
+	# and start+select hotkeys don't register. firstboot drops a symlink
+	# to this file at /storage/roms/ports/PortMaster/gamecontrollerdb.txt
+	# overriding PortMaster's bundled one.
+	mkdir -p $(TARGET_DIR)/usr/share/SDL-GameControllerDB
+	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/gamecontrollerdb.txt \
+		$(TARGET_DIR)/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
 endef
 # /usr/bin/sh -> bash is wired via the launcher flavor's rootfs-overlay
 # rather than this package's install step — avoids ordering races

@@ -74,6 +74,17 @@ if [ -f "$MOD" ] && [ -d /storage/roms/ports/PortMaster ]; then
     cp -f "$MOD" /storage/roms/ports/PortMaster/mod_PanicOS.txt
 fi
 
+# Override PortMaster's bundled gamecontrollerdb.txt with our vendored
+# ROCKNIX copy — has the H700 Gamepad mapping (and other handheld pads)
+# that PortMaster's generic upstream version is missing. Without this
+# A/B come up swapped and Start+Select hotkey combos don't register
+# (e.g. Rockbox quit). Symlink rather than copy so a system-package
+# upgrade auto-applies.
+GCDB=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
+if [ -f "$GCDB" ] && [ -d /storage/roms/ports/PortMaster ]; then
+    ln -sf "$GCDB" /storage/roms/ports/PortMaster/gamecontrollerdb.txt
+fi
+
 # Top-level PortMaster.sh launcher shim. PortMaster.zip extracts only
 # under PortMaster/ — there's no top-level launcher. Symlink to the
 # vendored shim so ES's Ports menu sees a "PortMaster" entry that does
