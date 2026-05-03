@@ -39,7 +39,11 @@ BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
+# Mesa 26+ panfrost requires LLVM (host-side panfrost_compile precompiler).
+# KMSRO absorbed into panfrost in Mesa 26 — no separate driver needed.
+BR2_PACKAGE_MESA3D_LLVM=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
+BR2_PACKAGE_MESA3D_VULKAN_DRIVER_PANFROST=y
 
 # PHT ships a few cdig_*.py helper scripts (yt-dlp / copyparty / Crate Dig
 # proxy/fetcher/daemon). Pull in python3 so those work; they're small

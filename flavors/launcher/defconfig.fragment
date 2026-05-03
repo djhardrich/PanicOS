@@ -68,13 +68,20 @@ BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
+# Mesa 26+ panfrost (gallium + panvk) requires LLVM for the host-side
+# panfrost_compile shader precompiler (NEEDS_PRECOMP_COMPILER path).
+# This pulls in host-llvm + OpenCL + Clang + SPIRV tools — a heavy
+# chain, but unavoidable for hardware GPU on H700.
+# KMSRO was a separate gallium driver in older Mesa for devices with a
+# split GPU/display DRM topology (H700: panfrost on card0, sun4i-drm
+# on card1). Mesa 26 absorbed renderonly support directly into
+# panfrost — KMSRO no longer exists as a separate Kconfig option.
+BR2_PACKAGE_MESA3D_LLVM=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST=y
-# H700 has split GPU (panfrost on card0) and display (sun4i-drm on
-# card1). Mesa needs the KMSRO ("KMS Render-Only") gallium driver to
-# do indirect rendering across this split — without it, eglChooseConfig
-# returns 0 configs for Wayland surfaces, SDL2's wayland backend fails
-# at "Couldn't find matching EGL config", and ES never paints anything.
-BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_KMSRO=y
+# panvk — Vulkan via panfrost. Mali G31 (Bifrost) supports Vulkan;
+# panvk is the Mesa Vulkan driver. Requires LLVM (same as gallium
+# panfrost above).
+BR2_PACKAGE_MESA3D_VULKAN_DRIVER_PANFROST=y
 
 # Wayland + Sway. Sway pulls wlroots, libinput, libxkbcommon, wayland
 # protocols, etc. transitively. panicos-sway ships our kiosk config
@@ -106,7 +113,7 @@ BR2_PACKAGE_NETWORKMANAGER=y
 # NM transitive deps. Mostly auto-selected by Config.in; explicit here
 # so the config diff makes them visible.
 BR2_PACKAGE_LIBNDP=y
-BR2_PACKAGE_NSS=y
+BR2_PACKAGE_LIBNSS=y
 # Helpers wifictl shells out to: rfkill (enable/disable wifi via
 # rfkill block/unblock wifi) and iw (set regulatory domain via
 # iw reg set <country>). Without these wifictl silently no-ops at

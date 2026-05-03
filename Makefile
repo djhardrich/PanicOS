@@ -217,6 +217,15 @@ _build:
 	@# scripts left by previously-interrupted installs. Idempotent.
 	@$(PANICOS_ROOT)/scripts/buildroot-pyinstaller-fix-overwrite.py \
 		"$(BUILDROOT)/support/scripts/pyinstaller.py"
+	@# host-python-packaging uses a flit-bootstrap setup type that invokes
+	@# pyinstaller.py, which does "from installer import install".  With
+	@# buildroot master the host-python-installer dep is missing from
+	@# python-packaging.mk, so a clean build hits ModuleNotFoundError when
+	@# packaging is the first wheel to install.  Idempotent.
+	@grep -q 'HOST_PYTHON_PACKAGING_DEPENDENCIES' \
+		"$(BUILDROOT)/package/python-packaging/python-packaging.mk" || \
+		sed -i '/^\$$(eval \$$(host-python-package))/i HOST_PYTHON_PACKAGING_DEPENDENCIES = host-python-installer\n' \
+		"$(BUILDROOT)/package/python-packaging/python-packaging.mk"
 	@# A few buildroot 2026.02.1 patches are HARD failures (not "Reversed")
 	@# because the upstream tarball drifted too much for fuzz=2. The
 	@# lenience above can't help — we just rename them out of the patches
