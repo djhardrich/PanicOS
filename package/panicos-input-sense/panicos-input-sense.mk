@@ -133,6 +133,15 @@ define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
 	# stays installed at /usr/bin/automount for users who explicitly
 	# want the ROCKNIX merged-storage layout, but the service is left
 	# disabled.
+	#
+	# Explicit `rm -f` of the rocknix-automount.service enable symlink
+	# is critical: prior package versions DID install it, so on
+	# incremental rebuilds the symlink survives in TARGET_DIR even
+	# after we stop creating it. Without this rm, fixing the bug in
+	# source has no effect on incremental rebuilds — only a clean
+	# rebuild picks up the change. Bit by this on rb35 (user flashed,
+	# Ports menu still missing).
+	rm -f $(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/rocknix-automount.service
 	for unit in batteryledstatus.service fancontrol.service \
 	            headphones.service rocknix-memory-manager.service \
 	            hdmi-hotplug.path; do \
