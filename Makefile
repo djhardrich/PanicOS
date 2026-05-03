@@ -226,6 +226,16 @@ _build:
 		"$(BUILDROOT)/package/python-packaging/python-packaging.mk" || \
 		sed -i '/^\$$(eval \$$(host-python-package))/i HOST_PYTHON_PACKAGING_DEPENDENCIES = host-python-installer\n' \
 		"$(BUILDROOT)/package/python-packaging/python-packaging.mk"
+	@# wlroots 0.20.0 in buildroot master is incompatible with sway 1.11 which
+	@# requires wlroots >=0.19.0,<0.20.0. Pin to 0.19.3. Idempotent.
+	@grep -q 'WLROOTS_VERSION = 0.19' \
+		"$(BUILDROOT)/package/wlroots/wlroots.mk" || \
+		sed -i 's/WLROOTS_VERSION = 0.20.0/WLROOTS_VERSION = 0.19.3/' \
+		"$(BUILDROOT)/package/wlroots/wlroots.mk"
+	@grep -q 'wlroots-0.19.3.tar.gz' \
+		"$(BUILDROOT)/package/wlroots/wlroots.hash" || \
+		sed -i 's/sha256  33f52414e1b280839aeb70786f0ae2c9f54e27ad4873108d86270a2f89c4934b  wlroots-0.20.0.tar.gz/sha256  5d02693175e5afd9af5f10e3e4976d6e9249dc39a90eb17d23fa5f54b125ccc5  wlroots-0.19.3.tar.gz/' \
+		"$(BUILDROOT)/package/wlroots/wlroots.hash"
 	@# A few buildroot 2026.02.1 patches are HARD failures (not "Reversed")
 	@# because the upstream tarball drifted too much for fuzz=2. The
 	@# lenience above can't help — we just rename them out of the patches
