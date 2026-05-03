@@ -102,6 +102,7 @@ BR2_PACKAGE_WIRELESS_REGDB=y
 # nmcli when present. Steam D-Bus integration + several other userspace
 # pieces also expect org.freedesktop.NetworkManager on the system bus.
 BR2_PACKAGE_NETWORKMANAGER=y
+
 # NM transitive deps. Mostly auto-selected by Config.in; explicit here
 # so the config diff makes them visible.
 BR2_PACKAGE_LIBNDP=y

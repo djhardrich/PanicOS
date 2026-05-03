@@ -1,7 +1,5 @@
 config BR2_PACKAGE_PANICOS_INPUT_SENSE
 	bool "panicos-input-sense"
-	depends on BR2_PACKAGE_BASH
-	depends on BR2_PACKAGE_EVTEST
 	depends on BR2_PACKAGE_PIPEWIRE && BR2_PACKAGE_WIREPLUMBER
 	select BR2_PACKAGE_BASH
 	select BR2_PACKAGE_EVTEST
