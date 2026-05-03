@@ -1,0 +1,36 @@
+config BR2_PACKAGE_PANICOS_INPUT_SENSE
+	bool "panicos-input-sense"
+	depends on BR2_PACKAGE_BASH
+	depends on BR2_PACKAGE_EVTEST
+	depends on BR2_PACKAGE_PIPEWIRE && BR2_PACKAGE_WIREPLUMBER
+	select BR2_PACKAGE_BASH
+	select BR2_PACKAGE_EVTEST
+	help
+	  ROCKNIX's input_sense daemon, vendored verbatim. Listens to evdev
+	  events from every input device on the system and routes special
+	  keys: volume up/down (wpctl), volume mute, power button (fake
+	  suspend), lid open/close, controller function-key combos
+	  (brightness, screenshot, mangohud toggle, etc.).
+
+	  We need this because handheld inputs (gpio-keys-volume,
+	  axp20x-pek power button) don't route through sway by default —
+	  sway-level bindsym only fires for keys that hit sway's libinput
+	  pipeline. ROCKNIX's daemon reads evdev directly and side-steps
+	  the WM entirely.
+
+	  Source: third_party/rocknix/projects/ROCKNIX/packages/sysutils/
+	  system-utils/sources/scripts/input_sense (and 001-functions
+	  + sources/scripts/volume from packages/rocknix). Vendored with
+	  two minimal adaptations: input_sense + volume source the
+	  functions library from a private path
+	  (/usr/lib/panicos-input-sense/) instead of /etc/profile to avoid
+	  polluting global env, and `volume` calls `wpctl set-volume`
+	  instead of `pactl --set-sink-volume` since we ship pipewire's
+	  wpctl rather than pulseaudio-utils.
+
+	  Many of the function-key actions invoke helpers that don't exist
+	  on PanicOS yet (rocknix-fake-suspend, brightness, mango-notify,
+	  screen_switch, ledcontrol, wifictl). Those handlers fail with
+	  "command not found" — relevant key combos just no-op until the
+	  helpers are stubbed in. Volume + mute work today; others come
+	  online as we port the rest.

@@ -1,0 +1,34 @@
+config BR2_PACKAGE_PANICOS_QUIRKS
+	bool "panicos-quirks"
+	depends on BR2_PACKAGE_BASH
+	depends on BR2_INIT_SYSTEMD
+	select BR2_PACKAGE_BASH
+	help
+	  ROCKNIX's hardware-quirks system, vendored verbatim from
+	  third_party/rocknix/projects/ROCKNIX/packages/hardware/quirks/
+	  plus the autostart runner from sysutils/autostart.
+
+	  At boot, panicos-quirks-autostart.service runs /usr/bin/autostart,
+	  which walks /usr/lib/autostart/quirks/platforms/${HW_DEVICE}/ and
+	  /usr/lib/autostart/quirks/devices/${QUIRK_DEVICE}/ in numeric
+	  order. Each quirk script writes per-device defaults into
+	  /storage/.config/profile.d/001-device_config (DEVICE_AUDIO_MIXER,
+	  DEVICE_KEY_VOLUMEUP, DEVICE_HAS_FAN, DEVICE_PWM_FAN, etc.) and
+	  /etc/profile.d/999-quirks-export.sh exports them so every later
+	  shell sees them.
+
+	  The vendored ROCKNIX scripts (rocknix-fake-suspend, ledcontrol,
+	  brightness, fancontrol, headphone_sense, ...) consult these vars
+	  to dispatch hardware-specific behavior — which is why vendoring
+	  the quirks system "for free" lights up correct behavior on any
+	  device ROCKNIX already supports the moment we add its DT model
+	  to the platforms/ or devices/ tree.
+
+	  Adaptations vs upstream: rocknix-autostart.service is renamed
+	  panicos-quirks-autostart.service and retargeted to
+	  WantedBy=multi-user.target (no rocknix.target on PanicOS); the
+	  Before=emustation.service / weston.service ordering is dropped
+	  (we use ES under different names and don't ship weston). HW_DEVICE
+	  is set via /etc/profile.d/045-hw-device.sh by sniffing the device
+	  tree compatible string instead of hardcoding it in /etc/os-release
+	  the way ROCKNIX's image script does.

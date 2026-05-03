@@ -15,6 +15,8 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-portmaster-preload/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-pht-portmaster/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-net-tools/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-sway/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-input-sense/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-quirks/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/python-dbussy/Config.in"
 
 endmenu

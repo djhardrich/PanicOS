@@ -1,0 +1,75 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2024-present ROCKNIX (https://github.com/ROCKNIX)
+#
+# This script will update the ABL on the internal eMMC/UFS.
+
+. $SYSTEM_ROOT/etc/os-release
+
+case "$HW_DEVICE" in
+  SM6115|SM8250|SM8550|SM8650)
+    ;;
+  *)
+    echo "This script is not compatible with this device!"
+    exit 1
+    ;;
+esac
+
+# ---- Paths ----
+ELF="$SYSTEM_ROOT/usr/share/bootloader/rocknix_abl/abl_signed-${HW_DEVICE}.elf"
+TMP_ABL_A="/tmp/current_abl_a.bin"
+TMP_ABL_B="/tmp/current_abl_b.bin"
+
+# ---- Sanity checks ----
+if [ ! -f "${ELF}" ]; then
+  echo "Error: ABL update not found"
+  exit 1
+fi
+
+ABL_A="$($SYSTEM_ROOT/usr/sbin/blkid -t PARTLABEL=abl_a -o device)"
+ABL_B="$($SYSTEM_ROOT/usr/sbin/blkid -t PARTLABEL=abl_b -o device)"
+if [ ! -b "${ABL_A}" ] || [ ! -b "${ABL_B}" ]; then
+  echo "Error: ABL partitions not found"
+  exit 1
+fi
+
+# ---- Get sector size ----
+SS="$($SYSTEM_ROOT/usr/sbin/blockdev --getss "${ABL_A}")"
+[ -z "${SS}" ] && echo "Error: failed to get sector size" && exit 1
+
+
+# ---- Determine how many sectors to read ----
+ELF_SIZE=$($SYSTEM_ROOT/usr/bin/stat -c%s "${ELF}")
+COUNT=$(( (ELF_SIZE + SS - 1) / SS ))
+
+# ---- Read current ABLs ----
+echo "Reading ${COUNT} sectors from ABL_A..."
+dd if="${ABL_A}" of="${TMP_ABL_A}" bs="${SS}" count="${COUNT}" status=none
+
+echo "Reading ${COUNT} sectors from ABL_B..."
+dd if="${ABL_B}" of="${TMP_ABL_B}" bs="${SS}" count="${COUNT}" status=none
+
+# ---- Calculate checksums ----
+SUM_A="$($SYSTEM_ROOT/usr/bin/sha256sum "${TMP_ABL_A}" | awk '{print $1}')"
+SUM_B="$($SYSTEM_ROOT/usr/bin/sha256sum "${TMP_ABL_B}" | awk '{print $1}')"
+SUM_UPDATE="$($SYSTEM_ROOT/usr/bin/sha256sum "${ELF}" | awk '{print $1}')"
+
+echo "Checksum abl_a: ${SUM_A}"
+echo "Checksum abl_b: ${SUM_B}"
+echo "Checksum update: ${SUM_UPDATE}"
+
+# ---- Compare ----
+if [ "${SUM_A}" = "${SUM_UPDATE}" ] && [ "${SUM_B}" = "${SUM_UPDATE}" ]; then
+    echo "ABL_A and ABL_B match update version — skipping flash."
+    exit 0
+fi
+
+echo "Checksums differ — flashing ABL partitions..."
+
+# ---- Flash ----
+dd if="${ELF}" of="${ABL_A}" bs="${SS}" conv=fsync,notrunc status=none
+dd if="${ELF}" of="${ABL_B}" bs="${SS}" conv=fsync,notrunc status=none
+
+sync
+
+echo "ABL update completed successfully..."

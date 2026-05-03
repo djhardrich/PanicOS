@@ -1,0 +1,23 @@
+[Unit]
+# Adapted from ROCKNIX's sysutils/autostart/system.d/rocknix-autostart.service.
+# WantedBy retargeted from rocknix.target → multi-user.target. Before=
+# emustation.service / weston.service dropped (PanicOS uses
+# panicos-es.service under a different name; no weston). After=
+# userconfig.service dropped (no userconfig step on PanicOS).
+#
+# /usr/bin/autostart walks /usr/lib/autostart/quirks/{platforms,devices}/
+# in numeric order, applying per-SoC and per-device quirks. Each quirk
+# script writes DEVICE_* env vars into /storage/.config/profile.d/
+# 001-device_config; quirks/profile.d/999-export then exports them.
+Description=PanicOS hardware quirks bootstrap (vendored from ROCKNIX rocknix-autostart)
+After=network.target graphical.target
+Before=panicos-es.service panicos-pht.service
+
+[Service]
+Type=oneshot
+Environment=HOME=/storage
+ExecStart=/bin/bash -a -c 'source /etc/profile && exec /usr/bin/autostart'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
