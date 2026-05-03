@@ -35,7 +35,7 @@ NETWORKMANAGER_DEPENDENCIES = \
 	dbus \
 	libglib2 \
 	libndp \
-	nss \
+	libnss \
 	systemd \
 	util-linux \
 	readline \

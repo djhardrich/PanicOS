@@ -40,22 +40,29 @@ PANICOS_LIBFREEIMAGE_IGNORE_CVES += CVE-2023-47995
 # 0016-CVE-2023-47997.patch
 PANICOS_LIBFREEIMAGE_IGNORE_CVES += CVE-2023-47997
 
-define LIBFREEIMAGE_EXTRACT_CMDS
+define PANICOS_LIBFREEIMAGE_EXTRACT_CMDS
 	$(UNZIP) $(PANICOS_LIBFREEIMAGE_DL_DIR)/$(PANICOS_LIBFREEIMAGE_SOURCE) -d $(@D)
 	mv $(@D)/FreeImage/* $(@D)
 	rmdir $(@D)/FreeImage
 endef
 
-define LIBFREEIMAGE_BUILD_CMDS
+define PANICOS_LIBFREEIMAGE_BUILD_CMDS
+	grep -q '__builtin_bswap32' $(@D)/Source/LibJXR/image/sys/windowsmediaphoto.h || \
+		printf '\n#ifndef _MSC_VER\n#define _byteswap_ushort(x) __builtin_bswap16(x)\n#define _byteswap_ulong(x)  __builtin_bswap32(x)\n#define _byteswap_uint64(x) __builtin_bswap64(x)\n#endif\n' \
+		>> $(@D)/Source/LibJXR/image/sys/windowsmediaphoto.h
+	grep -q 'Wno-implicit-function-declaration' $(@D)/Makefile.gnu || \
+		sed -i 's/^CFLAGS += -DDISABLE_PERF_MEASUREMENT/CFLAGS += -DDISABLE_PERF_MEASUREMENT \\\n\t-Wno-implicit-function-declaration -Wno-implicit-int/' \
+		$(@D)/Makefile.gnu
+	sed -i 's/ -o root -g root//' $(@D)/Makefile.gnu
 	$(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) \
-		CXXFLAGS="$(TARGET_CXXFLAGS) -std=c++11" $(MAKE) -C $(@D)
+		CXXFLAGS="$(TARGET_CXXFLAGS) -std=c++11 -Wno-deprecated-declarations" $(MAKE) -C $(@D)
 endef
 
-define LIBFREEIMAGE_INSTALL_STAGING_CMDS
+define PANICOS_LIBFREEIMAGE_INSTALL_STAGING_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) DESTDIR=$(STAGING_DIR) install
 endef
 
-define LIBFREEIMAGE_INSTALL_TARGET_CMDS
+define PANICOS_LIBFREEIMAGE_INSTALL_TARGET_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) DESTDIR=$(TARGET_DIR) install
 endef
 
