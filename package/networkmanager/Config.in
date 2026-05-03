@@ -1,0 +1,35 @@
+config BR2_PACKAGE_NETWORKMANAGER
+	bool "networkmanager"
+	depends on BR2_INIT_SYSTEMD
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	depends on BR2_USE_WCHAR
+	depends on !BR2_STATIC_LIBS
+	# meson + ninja host builders
+	depends on BR2_PACKAGE_HOST_PYTHON3 || true
+	# transitive runtime deps
+	select BR2_PACKAGE_DBUS
+	select BR2_PACKAGE_LIBGLIB2
+	select BR2_PACKAGE_LIBNDP
+	select BR2_PACKAGE_NSS
+	select BR2_PACKAGE_NSPR
+	select BR2_PACKAGE_UTIL_LINUX
+	select BR2_PACKAGE_READLINE
+	select BR2_PACKAGE_NCURSES
+	select BR2_PACKAGE_IWD
+	help
+	  NetworkManager (1.51.4) with iwd as the Wi-Fi backend, vendored
+	  from ROCKNIX (commit beb5d8a239 — "Network: Add NetworkManager
+	  with iwd Wi-Fi backend"). Replaces our previous standalone-iwd +
+	  manual networkd setup.
+
+	  Buildroot 2026.02.1 doesn't ship a networkmanager package, so
+	  we build it from the upstream gnome.org tarball with the same
+	  meson configuration ROCKNIX uses (Wi-Fi via iwd, no
+	  PolicyKit/SELinux/audit/PPP/ModemManager — the lean handheld
+	  profile).
+
+	  Why we want it: ROCKNIX's wifictl detects whether NM is active
+	  and uses nmcli when it is. Steam D-Bus integration and several
+	  other userspace pieces also expect NetworkManager on the system
+	  bus. Sticking with raw iwd would mean reimplementing all of that
+	  every time it changes upstream.

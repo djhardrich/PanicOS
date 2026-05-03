@@ -94,6 +94,18 @@ BR2_PACKAGE_IWD=y
 # in each regulatory domain. Without it the kernel logs "failed to
 # load regulatory.db" and iwd silently refuses to scan or associate.
 BR2_PACKAGE_WIRELESS_REGDB=y
+
+# networkmanager — NetworkManager 1.51.4 with iwd as Wi-Fi
+# backend, vendored from ROCKNIX (commit beb5d8a239). Owns DHCP/IP
+# (iwd hands off via EnableNetworkConfiguration=false in our overridden
+# main.conf); ROCKNIX's vendored wifictl detects NM-active and uses
+# nmcli when present. Steam D-Bus integration + several other userspace
+# pieces also expect org.freedesktop.NetworkManager on the system bus.
+BR2_PACKAGE_NETWORKMANAGER=y
+# NM transitive deps. Mostly auto-selected by Config.in; explicit here
+# so the config diff makes them visible.
+BR2_PACKAGE_LIBNDP=y
+BR2_PACKAGE_NSS=y
 # Helpers wifictl shells out to: rfkill (enable/disable wifi via
 # rfkill block/unblock wifi) and iw (set regulatory domain via
 # iw reg set <country>). Without these wifictl silently no-ops at
