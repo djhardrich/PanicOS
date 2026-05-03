@@ -1,5 +1,15 @@
 BR2_aarch64=y
 BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+
+# Build GCC with OpenMP support so libgomp.so.1 lands in /usr/lib. Required
+# by vendored binaries that link OpenMP — currently the shairport-sync
+# aarch64 blob bundled with PHT (AirPlay receiver). Without this, shairport
+# dies at startup with "error while loading shared libraries: libgomp.so.1:
+# cannot open shared object file" and PHT logs the failure but otherwise
+# runs without AirPlay. The lpddr3 variant inherits this via image-variant
+# (shared rootfs/host toolchain), so only set on the base board.
+BR2_GCC_ENABLE_OPENMP=y
+
 BR2_TARGET_GENERIC_HOSTNAME="panicos-rg35xx-pro"
 BR2_TARGET_GENERIC_ISSUE="PanicOS — RG35XX Pro (LPDDR4)"
 
