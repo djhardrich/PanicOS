@@ -37,7 +37,7 @@ cherry_picks:
 
   # The 4 base H700 DTBs (rg35xx-2024, rg35xx-h, rg35xx-plus, rg35xx-sp
   # without panel-revision suffix) are not separately imported; they
-  # exist in upstream Linux 7.0.1's arch/arm64/boot/dts/allwinner/ and
+  # exist in upstream Linux 7.0.2's arch/arm64/boot/dts/allwinner/ and
   # are added via BR2_LINUX_KERNEL_INTREE_DTS_NAME so Buildroot compiles
   # them.
 
