@@ -33,3 +33,29 @@ pm_platform_helper() {
         /usr/bin/portmaster_sway_fullscreen.sh "$(basename "$1")"
     fi
 }
+
+# Override PortMaster's get_controls. The upstream get_controls() in
+# control.txt hardcodes /dev/input/by-path/platform-* device-detection
+# (Anbernic, OdroidGo, GameForce, RG552, GKD-Pixel, etc.) — none of which
+# match our rocknix-joypad. With no match, DEVICE falls through to empty,
+# so PortMaster writes an EMPTY /tmp/gamecontrollerdb.txt. SDL2 then
+# falls back to its built-in default mapping (Xbox-positional A=south),
+# which contradicts our system gamecontrollerdb (Nintendo-positional
+# a:b1, b:b0 — A=east, the right physical button), and every PortMaster
+# port comes up with A/B/X/Y reversed.
+#
+# ROCKNIX replaces get_controls with one that runs their mapper.txt to
+# synthesize the db from EmulationStation config. We don't have ES, so
+# we just stuff our system-wide gamecontrollerdb into /tmp directly.
+# Sourced AFTER control.txt and BEFORE the wrapper calls get_controls,
+# so this definition wins.
+get_controls() {
+    export SDL_GAMECONTROLLERCONFIG_FILE="/tmp/gamecontrollerdb.txt"
+    if [ -f /usr/share/SDL-GameControllerDB/gamecontrollerdb.txt ]; then
+        cp -f /usr/share/SDL-GameControllerDB/gamecontrollerdb.txt \
+              "${SDL_GAMECONTROLLERCONFIG_FILE}"
+    else
+        : > "${SDL_GAMECONTROLLERCONFIG_FILE}"
+    fi
+    sdl_controllerconfig="$(< "${SDL_GAMECONTROLLERCONFIG_FILE}")"
+}

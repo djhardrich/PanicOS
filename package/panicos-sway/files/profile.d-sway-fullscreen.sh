@@ -35,6 +35,47 @@ fi
 # available for whatever reason.
 export ALSOFT_DRIVERS="pipewire,alsa,sdl2"
 
+# Wayland / SDL2 env, mirroring ROCKNIX's profile.d/050-sway.conf.
+# These need to live in profile.d (not just panicos-es.service
+# Environment=) because PortMaster ports spawn fresh login shells via
+# `Doom Engines.sh` / `Rockbox.sh` style wrappers that source
+# /etc/profile — env that lives only in the parent service unit can be
+# lost across the chain.
+#
+# SDL_VIDEODRIVER=wayland is critical: without it, SDL2 binaries fall
+# back to KMSDRM, try to grab DRM master sway already holds, hang
+# silently, and the user gets a black screen. Doom Engines' Crispy/
+# GZDoom/PrBoom binaries all hit this — Crispy's last log line is
+# `I_SDL_InitSound` and the next step `I_InitGraphics` never produces
+# output. Ports that genuinely want X11 or kmsdrm can override
+# per-launcher.
+#
+# WAYLAND_DISPLAY=wayland-1 is sway's default socket name. Setting it
+# explicitly so systemd-spawned children of panicos-es.service can
+# connect even if sway hasn't pushed it into their env.
+#
+# XKB_CONFIG_ROOT pins where xkbcommon looks for keymap data. Without
+# it we get `xkbcommon: ERROR: couldn't find a Compose file for locale`
+# in port logs.
+export SDL_VIDEODRIVER=wayland
+export WAYLAND_DISPLAY=wayland-1
+export XKB_CONFIG_ROOT=/usr/share/X11/xkb
+
+# XDG_RUNTIME_DIR — also set as Environment= in panicos-sway.service,
+# but PortMaster ports that go through `bash --login` chains can drop
+# parent service env. Belt-and-suspenders, matches ROCKNIX's
+# profile.d/001-functions which exports the same.
+export XDG_RUNTIME_DIR=/var/run/0-runtime-dir
+
+# SDL_GAMECONTROLLERCONFIG_FILE — points SDL2 at our system-wide
+# gamecontrollerdb (vendored from ROCKNIX, contains the H700 Gamepad
+# Nintendo-positional mapping). PortMaster ports override this to
+# /tmp/gamecontrollerdb.txt via mod_PanicOS.txt's get_controls — that
+# override happens after this export so it wins inside PortMaster.
+# Non-PortMaster SDL2 apps (ES itself, anything launched outside the
+# port wrapper) get our system db here.
+export SDL_GAMECONTROLLERCONFIG_FILE=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
+
 function sway_fullscreen {
   local VALUE="${1}"
   local ATTRIBUTE="${2:-app_id}"

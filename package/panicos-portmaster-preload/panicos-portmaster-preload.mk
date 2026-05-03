@@ -103,13 +103,24 @@ define PANICOS_PORTMASTER_PRELOAD_INSTALL_TARGET_CMDS
 	# from there, it expects all the individual settings (font, wps,
 	# sbs, colors, iconset) to already be in config.cfg from when the
 	# user "selected" the theme via the menu. Concatenate PodOne.cfg's
-	# contents to mimic that selection state. Inside Rockbox config the
-	# data dir is always referenced as /.rockbox/ regardless of on-disk
-	# name (Rockbox virtual filesystem).
+	# contents to mimic that selection state.
+	#
+	# Path rewrite: PortMaster's Rockbox.sh bind-mounts the port dir to
+	# /tmp/rockbox at launch and runs `sed -i 's#/.rockbox#/tmp/rockbox#g'`
+	# on every themes/*.cfg before starting Rockbox. Our config.cfg lives
+	# at the port root (rockbox/config.cfg), NOT under themes/, so that
+	# sed loop never touches it. If we leave the upstream PodOne.cfg's
+	# /.rockbox/... paths in our config.cfg, Rockbox boots, fails to
+	# resolve wps/sbs/fms/font/iconset (those literal paths don't exist
+	# on the SDL App build), and silently falls back to defaults for each
+	# missing file — colors apply (path-free) but the layout reverts to
+	# stock cabbiev2. Apply the same /.rockbox -> /tmp/rockbox sed here
+	# so our paths match what PortMaster's runtime expects.
 	{ \
-		echo "selected theme: /.rockbox/themes/PodOne.cfg"; \
+		echo "selected theme: PodOne"; \
 		cat $(@D)/podone-stage/.rockbox/themes/PodOne.cfg \
-			| grep -vE '^#|^$$'; \
+			| grep -vE '^#|^$$' \
+			| sed 's#/.rockbox#/tmp/rockbox#g'; \
 	} > $(@D)/rockbox-stage/rockbox/config.cfg
 	# Re-zip with deterministic ordering so the output is reproducible
 	# across rebuilds (-X strips extra metadata, sort by name). Use the
