@@ -41,11 +41,35 @@ or the device vendor BSP):
 | Target            | SoC family            | Build command                |
 |-------------------|-----------------------|------------------------------|
 | `rg35xx-pro`      | Allwinner H700 (LPDDR4) | `make rg35xx-pro`          |
-| `rg35xx-pro-lpddr3` | Allwinner H700 (LPDDR3) | `make rg35xx-pro-lpddr3` |
+| `rg35xx-pro-lpddr3` | Allwinner H700 (LPDDR3) | see below — **do not** `make rg35xx-pro-lpddr3` to iterate |
 | `rg353p`          | Rockchip RK3566       | `make rg353p`                |
 | `trimui-brick`    | Allwinner A133 (vendor BSP) | `make trimui-brick`    |
 
 Each writes its image to `output/<device>-<flavor>-<kernel>/images/panicos-<device>-<flavor>-<rev>.img.gz`.
+
+### U-Boot-only variants (`rg35xx-pro-lpddr3`)
+
+`rg35xx-pro-lpddr3` differs from `rg35xx-pro` in **only the U-Boot SPL** (LPDDR3
+vs LPDDR4 RAM training) — same SoC, same kernel, same rootfs. Running
+`make rg35xx-pro-lpddr3` builds an entire second buildroot tree from scratch
+(toolchain, kernel, every package) for what is effectively a swapped SPL blob.
+Don't.
+
+Use `image-variant` instead. Build the base once, then produce variant images
+by rebuilding only u-boot against the variant's defconfig and symlinking the
+base's kernel/DTBs/rootfs:
+
+```
+make rg35xx-pro FLAVOR=launcher                                      # base
+make image-variant DEVICE=rg35xx-pro-lpddr3 BASE=rg35xx-pro \        # variant
+                   FLAVOR=launcher
+```
+
+Variant builds finish in minutes (one u-boot compile) instead of an hour+.
+Caveat: the rootfs is shared with `BASE`, so `/etc/hostname` and `/etc/issue`
+say `panicos-rg35xx-pro` rather than `-lpddr3` — cosmetic. If you need a
+fully variant-correct rootfs, fall back to `make rg35xx-pro-lpddr3` and
+accept the cold-build time (ccache helps).
 
 Mainline-kernel builds run with `CONFIG_PREEMPT_RT=y` (mainlined in 6.12;
 we're on 7.0.1 so it's a Kconfig-only switch). Adds priority inheritance +
@@ -166,6 +190,71 @@ make rg353p FLAVOR=minimal       # default, can omit FLAVOR=
 Each flavor lives at `flavors/<name>/{Config.in,defconfig.fragment}`.
 Adding a new one is a 2-file pattern — see `flavors/minimal/` and
 `flavors/pht/` as references.
+
+### `launcher` flavor (PortMaster + Rockbox + Doom Engines)
+
+Boots into a panicos-launcher TUI under sway, with PortMaster, Rockbox
+(themed with PodOne), and Doom Engines pre-installed via
+`panicos-portmaster-preload`. No first-boot install round-trip — the GUI
+appears on first launch.
+
+Two non-obvious integration fixes worth documenting because the symptoms
+were misleading:
+
+#### A/B (and X/Y) reversed in PortMaster ports
+
+Symptom: every PortMaster port came up with A and B swapped — pressing
+the bottom physical button gave "A" instead of "B" — and Rockbox's
+Start+Select quit combo never registered (because it was actually
+firing as Start+different-button).
+
+Root cause: PortMaster's upstream `get_controls()` in `control.txt`
+hardcodes `/dev/input/by-path/platform-*` device-detection for known
+handhelds (Anbernic-rg351v, OdroidGo, GameForce, etc.). None of those
+match our `rocknix-singleadc-joypad` device path, so `DEVICE` falls
+through empty and PortMaster writes an **empty**
+`/tmp/gamecontrollerdb.txt`. SDL2 then has no mapping for the H700
+Gamepad GUID `1900f6a24b480000df14000000010000` and falls back to its
+built-in default — which is Xbox-positional (`A=south`). Our system
+gamecontrollerdb (vendored from ROCKNIX) is Nintendo-positional
+(`a:b1, b:b0` — A=east, the right physical button), so SDL's fallback
+inverts every face button vs. what our DB says, and gptokeyb hotkey
+combos like Start+Select fail to match because the IDs don't line up.
+
+Fix: `mod_PanicOS.txt` overrides PortMaster's `get_controls()` with a
+4-line replacement that just `cp`s our system gamecontrollerdb
+(`/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt`) into
+`/tmp/gamecontrollerdb.txt`. `mod_*.txt` is sourced by `PortMaster.sh`
+*after* `control.txt` and *before* `get_controls` is called, so our
+override wins.
+
+ROCKNIX solves the same problem with a 5-line `get_controls` that
+synthesises the DB from EmulationStation config via their `mapper.txt`.
+We don't ship ES, so we just stuff the system DB in directly. Same
+outcome.
+
+#### Rockbox boots with PodOne colors but stock layout
+
+Symptom: PodOne's color scheme applied (dark text on tan background)
+but the WPS/SBS/FMS layout reverted to stock cabbiev2.
+
+Root cause: PortMaster's bundled `Rockbox.sh` bind-mounts the port dir
+to `/tmp/rockbox` at launch and runs
+`sed -i 's#/.rockbox#/tmp/rockbox#g'` on every `themes/*.cfg` before
+starting Rockbox. Our `panicos-portmaster-preload` writes a default
+`config.cfg` at the port root (`rockbox/config.cfg`, NOT under
+`themes/`) that contains the upstream PodOne paths
+(`wps: /.rockbox/wps/PodOne.wps`, etc). The `themes/*.cfg` sed loop
+never touches it. At runtime Rockbox loads `config.cfg`, fails to
+resolve the literal `/.rockbox/...` paths (those don't exist on the
+SDL App build — only `/tmp/rockbox/...` does), and silently falls back
+to defaults for each individual setting (wps, sbs, fms, font, iconset).
+Colors apply because they're path-free.
+
+Fix: apply the same `/.rockbox` → `/tmp/rockbox` sed transformation to
+our generated `config.cfg` at build time in
+`panicos-portmaster-preload.mk`, mirroring what PortMaster's runtime
+does to themes/*.cfg.
 
 ### `pht` flavor (ProHandheldTracker)
 
