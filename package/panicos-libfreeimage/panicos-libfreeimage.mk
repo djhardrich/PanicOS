@@ -54,6 +54,11 @@ define PANICOS_LIBFREEIMAGE_BUILD_CMDS
 		sed -i 's/^CFLAGS += -DDISABLE_PERF_MEASUREMENT/CFLAGS += -DDISABLE_PERF_MEASUREMENT \\\n\t-Wno-implicit-function-declaration -Wno-implicit-int/' \
 		$(@D)/Makefile.gnu
 	sed -i 's/ -o root -g root//' $(@D)/Makefile.gnu
+	grep -q 'system-libpng' $(@D)/Makefile.gnu || { \
+		sed -i 's|Source/LibPNG/[^ ]*.c ||g' $(@D)/Makefile.srcs; \
+		sed -i 's/LIBRARIES = -lstdc++/LIBRARIES = -lstdc++ -lpng  # system-libpng/' $(@D)/Makefile.gnu; \
+		cp $(STAGING_DIR)/usr/include/pnglibconf.h $(@D)/Source/LibPNG/pnglibconf.h; \
+	}
 	$(TARGET_MAKE_ENV) $(TARGET_CONFIGURE_OPTS) \
 		CXXFLAGS="$(TARGET_CXXFLAGS) -std=c++11 -Wno-deprecated-declarations" $(MAKE) -C $(@D)
 endef

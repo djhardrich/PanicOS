@@ -1,3 +1,3 @@
 # XDG_RUNTIME_DIR for sway and Wayland clients.
 # 0700 root root — sway runs as root, only root reads/writes the socket.
-d /var/run/0-runtime-dir 0700 root root - -
+d /run/0-runtime-dir 0700 root root - -

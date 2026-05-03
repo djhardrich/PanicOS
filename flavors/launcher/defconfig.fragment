@@ -15,6 +15,9 @@ BR2_TARGET_ROOTFS_SQUASHFS4_GZIP=y
 # wlan0 is a conflict; one tool only.
 BR2_PACKAGE_PANICOS_FIRSTBOOT=y
 BR2_TARGET_GENERIC_ROOT_PASSWD="panicos"
+# Disable dropbear — buildroot enables it by default, but we ship OpenSSH.
+# Both bind port 22; dropbear wins the race and sshd.service fails.
+# BR2_PACKAGE_DROPBEAR is not set
 # OpenSSH (server + client + ssh-keygen). Replaces dropbear because
 # dropbear's SFTP subsystem is incomplete — most graphical SFTP clients
 # fail to list directories or transfer files reliably. OpenSSH ships a

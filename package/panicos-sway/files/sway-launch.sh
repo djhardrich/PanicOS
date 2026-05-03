@@ -18,6 +18,17 @@ export WLR_BACKENDS=drm,libinput
 # any input devices yet (gamepad/keyboard may come up later via udev).
 export WLR_LIBINPUT_NO_DEVICES=1
 
+# Point wlroots at the DRM card that has display connectors (DSI/HDMI/DP).
+# On H700 there are two cards: card0=panfrost (GPU, no connectors) and
+# card1=sun4i-drm (display controller). Without this, wlroots may probe
+# card0 first, find no outputs, and render to nothing (black screen).
+# Same approach as ROCKNIX's 111-sway-init.
+_card_no=$(ls /sys/class/drm/ 2>/dev/null | grep -E "card[0-9]-(DP|HDMI|DSI)" | head -n 1 | cut -c5)
+if [ -n "$_card_no" ]; then
+    export WLR_DRM_DEVICES=/dev/dri/card${_card_no}
+fi
+unset _card_no
+
 # Stable path where panicos-es.service expects to find sway's IPC socket.
 # Matches `Environment=SWAYSOCK=/run/panicos-sway/ipc.sock` in that unit.
 STABLE_SOCK=/run/panicos-sway/ipc.sock
