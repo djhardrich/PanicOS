@@ -26,7 +26,8 @@ uname -a > "$OUT/uname.txt" 2>&1
 cat /proc/cmdline > "$OUT/cmdline.txt" 2>&1
 
 # Kernel ring buffer + systemd journal — most of the answer lives here.
-dmesg --no-pager > "$OUT/dmesg.log" 2>&1
+# busybox dmesg does not support --no-pager (that's a util-linux flag).
+dmesg > "$OUT/dmesg.log" 2>&1
 # `-b 0` and `--merge` are mutually exclusive in journalctl (one selects a
 # boot, the other ignores boot grouping entirely), so keep them apart.
 # `-b 0 --no-pager` already includes rotated journals from this boot's
@@ -50,10 +51,10 @@ systemctl status \
     panicos-bootdiag.service \
     panicos-splash.service \
     panicos-pht.service \
+    sshd.service \
     'wpa_supplicant@*.service' \
     systemd-networkd.service \
     'getty@tty1.service' \
-    dropbear.service \
     --no-pager > "$OUT/services.log" 2>&1
 
 # Network state.
@@ -102,8 +103,8 @@ cat /proc/mounts > "$OUT/mounts.log" 2>&1
     fi
 } > "$OUT/wpa-runtime.log" 2>&1
 
-# Dropbear host keys exist?
-ls -la /etc/dropbear 2>&1 > "$OUT/dropbear-keys.log"
+# OpenSSH host keys exist?
+ls -la /etc/ssh/ssh_host_* 2>&1 > "$OUT/sshd-keys.log"
 
 sync
 

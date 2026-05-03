@@ -1,0 +1,3 @@
+# Services installed for compatibility/manual use that must NOT auto-start.
+# This overrides the systemd default (enable) that preset-all would otherwise apply.
+disable rocknix-automount.service

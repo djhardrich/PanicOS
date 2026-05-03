@@ -19,6 +19,13 @@ define PANICOS_SSHKEYS_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/sbin/panicos-sshkeys
 	install -D -m 0644 $(PANICOS_SSHKEYS_PKGDIR)/files/panicos-sshkeys.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/panicos-sshkeys.service
+	# Allow root password logins. OpenSSH 10.x defaults to prohibit-password
+	# which blocks ES's SSH toggle (the user has no other login mechanism).
+	# UseDNS no avoids 5-10 s delay on connection when no DNS is reachable.
+	$(SED) 's|^#PermitRootLogin.*|PermitRootLogin yes|' \
+		$(TARGET_DIR)/etc/ssh/sshd_config
+	$(SED) 's|^#UseDNS.*|UseDNS no|' \
+		$(TARGET_DIR)/etc/ssh/sshd_config
 endef
 
 define PANICOS_SSHKEYS_INSTALL_INIT_SYSTEMD

@@ -154,6 +154,11 @@ define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
 	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/shutdown.target.wants
 	ln -sf ../save-sysconfig.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/shutdown.target.wants/save-sysconfig.service
+	# Preset file so `systemctl preset-all` (run by buildroot fakeroot) explicitly
+	# disables rocknix-automount.service. Without this, preset-all's default "enable"
+	# action re-creates the multi-user.target.wants symlink we rm -f above.
+	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/system-preset/90-panicos-disable.preset \
+		$(TARGET_DIR)/usr/lib/systemd/system-preset/90-panicos-disable.preset
 endef
 
 $(eval $(generic-package))
