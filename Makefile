@@ -194,6 +194,45 @@ _build:
 	@# Makefile to point at the host's wayland-scanner.
 	@grep -q 'SDL2_FIX_WAYLAND_SCANNER_PATH' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
 		sed -i '/^\$$(eval \$$(autotools-package))/i define SDL2_FIX_WAYLAND_SCANNER_PATH\n\tsed -i "s|^WAYLAND_SCANNER = .*|WAYLAND_SCANNER = $$(HOST_DIR)/bin/wayland-scanner|" $$(@D)/Makefile\nendef\nSDL2_POST_CONFIGURE_HOOKS += SDL2_FIX_WAYLAND_SCANNER_PATH\n' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# Buildroot 2026.02.1 ships xz 5.8.3 with four backport patches
+	@# (mt-dec comment fix + 3 CVE backports) that are already in 5.8.3
+	@# upstream. patch -F2 still fails because the upstream code has
+	@# moved on past where the patches were context-anchored. Skip all
+	@# four — buildroot only applies *.patch (not *.patch.skip).
+	@# Idempotent.
+	@# Buildroot 2026.02.1 ships several CVE / bugfix backport patches
+	@# that are already in the version-bumped upstream tarballs. patch(1)
+	@# detects this with "Reversed (or previously applied) patch detected!"
+	@# and exits non-zero — buildroot's apply-patches.sh treats that as
+	@# fatal. Pre-skipping each by hand was whack-a-mole (xz had 4,
+	@# fakeroot 1, alsa-lib 1, ncurses 1, ...).
+	@#
+	@# Instead, patch apply-patches.sh once to tolerate that specific
+	@# exit. Real patch failures (hunk offset too large, malformed patch,
+	@# etc.) still exit 1. Idempotent — the python script no-ops if the
+	@# lenience block is already present.
+	@$(PANICOS_ROOT)/scripts/buildroot-apply-patches-lenient.py \
+		"$(BUILDROOT)/support/scripts/apply-patches.sh"
+	@# Patch pyinstaller.py to retry on FileExistsError from orphaned host
+	@# scripts left by previously-interrupted installs. Idempotent.
+	@$(PANICOS_ROOT)/scripts/buildroot-pyinstaller-fix-overwrite.py \
+		"$(BUILDROOT)/support/scripts/pyinstaller.py"
+	@# A few buildroot 2026.02.1 patches are HARD failures (not "Reversed")
+	@# because the upstream tarball drifted too much for fuzz=2. The
+	@# lenience above can't help — we just rename them out of the patches
+	@# dir. Each entry needs a comment explaining what we're skipping +
+	@# what the consequence is.
+	@for p in \
+	  $(BUILDROOT)/package/ncurses/0001-fix-XOPEN_SOURCE-detection.patch ; \
+	do \
+	  [ -f "$$p" ] && mv "$$p" "$$p.skip"; \
+	done; true
+	@# Rationale per skipped patch:
+	@# * ncurses 0001-fix-XOPEN_SOURCE-detection — patches the autotools-
+	@#   generated `configure` script at line 10411; recent ncurses snapshots
+	@#   have a substantially different configure (autoconf bumped). The
+	@#   underlying issue (host XOPEN_SOURCE detection) doesn't bite us
+	@#   on a 2025-vintage Ubuntu/Debian build host.
 	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
