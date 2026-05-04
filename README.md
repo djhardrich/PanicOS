@@ -256,6 +256,24 @@ our generated `config.cfg` at build time in
 `panicos-portmaster-preload.mk`, mirroring what PortMaster's runtime
 does to themes/*.cfg.
 
+#### SDL audio crashes in PHT and RockBox ("Audio target not available")
+
+Symptom: PHT and RockBox both exited immediately with `Error: sdl audio /
+Audio target 'pulseaudio' not available`, even after SDL2 was built with
+`--enable-pulseaudio`.
+
+Root cause: SDL2 loads PulseAudio at runtime via `dlopen("libpulse.so.0")`.
+`libpulse.so.0` has `RUNPATH=/usr/lib/pulseaudio` to find
+`libpulsecommon-17.0.so`, but the dlopen chain inside SDL2 doesn't inherit
+the RUNPATH walk, so the secondary `dlopen` for `libpulsecommon` fails and
+SDL silently marks the pulseaudio driver unavailable.
+
+Fix: `Environment=SDL_AUDIODRIVER=pipewire` in `panicos-es.service` (and
+mirrored in `profile.d/sway-fullscreen.sh` so it survives PortMaster's
+`control.txt` re-sourcing `/etc/profile`). SDL 2.32.10 has a native PipeWire
+driver; `libpipewire-0.3.so.0` lives in `/usr/lib/` directly so dlopen finds
+it without any RUNPATH indirection.
+
 ### `pht` flavor (ProHandheldTracker)
 
 Boots straight into [ProHandheldTracker](https://prohandheldtracker.com/)
