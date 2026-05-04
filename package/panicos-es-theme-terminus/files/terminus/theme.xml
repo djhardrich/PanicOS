@@ -16,6 +16,11 @@ description: Monochrome terminal-style theme for handheld devices.
       <include name="white" displayName="White" />
       <include name="green" displayName="Phosphor Green" />
       <include name="amber" displayName="Amber" />
+      <include name="cyan"  displayName="Cyan" />
+      <include name="blue"  displayName="Blue" />
+      <include name="red"   displayName="Red" />
+      <include name="lime"  displayName="Lime" />
+      <include name="paper" displayName="Paper" />
    </subset>
 
    <!-- ============================================================
@@ -191,7 +196,6 @@ description: Monochrome terminal-style theme for handheld devices.
          <fontPath>${fontRegular}</fontPath>
          <fontSize>${listFontSize}</fontSize>
          <selectorColor>${colorAccent}</selectorColor>
-         <selectorHeight>0</selectorHeight>
          <selectedColor>${colorBg}</selectedColor>
          <primaryColor>${colorPrimary}</primaryColor>
          <secondaryColor>${colorDim}</secondaryColor>
@@ -215,7 +219,6 @@ description: Monochrome terminal-style theme for handheld devices.
          <fontPath>${fontRegular}</fontPath>
          <fontSize>${listFontSize}</fontSize>
          <selectorColor>${colorAccent}</selectorColor>
-         <selectorHeight>0</selectorHeight>
          <selectedColor>${colorBg}</selectedColor>
          <primaryColor>${colorPrimary}</primaryColor>
          <secondaryColor>${colorDim}</secondaryColor>

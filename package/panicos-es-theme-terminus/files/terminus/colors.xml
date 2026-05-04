@@ -2,40 +2,93 @@
 <theme>
    <formatVersion>7</formatVersion>
 
-   <!-- White: near-white text on pure black -->
+   <!--
+      colorBg      — background fill
+      colorPrimary — normal text / unselected items
+      colorAccent  — selection bar / highlight / cursor glyph
+      colorDim     — secondary text, separators, help bar
+      colorRule    — thin rule lines
+   -->
+
+   <!-- White: near-white on pure black (default) -->
    <variables ifSubset="color:white">
       <colorBg>000000ff</colorBg>
       <colorPrimary>e8e8e8ff</colorPrimary>
       <colorAccent>ffffffff</colorAccent>
       <colorDim>555555ff</colorDim>
-      <colorRule>333333ff</colorRule>
+      <colorRule>2a2a2aff</colorRule>
    </variables>
 
-   <!-- Phosphor green: classic terminal green on black -->
+   <!-- Phosphor Green: classic P1 long-persistence green -->
    <variables ifSubset="color:green">
       <colorBg>000000ff</colorBg>
       <colorPrimary>39ff14ff</colorPrimary>
       <colorAccent>66ff44ff</colorAccent>
-      <colorDim>1a5c0aff</colorDim>
-      <colorRule>0d330aff</colorRule>
+      <colorDim>155808ff</colorDim>
+      <colorRule>0a2e05ff</colorRule>
    </variables>
 
-   <!-- Amber: warm amber/orange on black -->
+   <!-- Amber: warm P3 amber phosphor -->
    <variables ifSubset="color:amber">
       <colorBg>000000ff</colorBg>
       <colorPrimary>ffb000ff</colorPrimary>
       <colorAccent>ffcc44ff</colorAccent>
-      <colorDim>664400ff</colorDim>
-      <colorRule>331f00ff</colorRule>
+      <colorDim>5c3800ff</colorDim>
+      <colorRule>2e1c00ff</colorRule>
    </variables>
 
-   <!-- Default fallback (white) -->
+   <!-- Cyan: blue-green; looks great on small LCDs -->
+   <variables ifSubset="color:cyan">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>00e5ffff</colorPrimary>
+      <colorAccent>66f0ffff</colorAccent>
+      <colorDim>005c6aff</colorDim>
+      <colorRule>003040ff</colorRule>
+   </variables>
+
+   <!-- Blue: cold blue-white phosphor (P7 / IBM 5151 style) -->
+   <variables ifSubset="color:blue">
+      <colorBg>00091aff</colorBg>
+      <colorPrimary>a8c8ffff</colorPrimary>
+      <colorAccent>cce0ffff</colorAccent>
+      <colorDim>2a4a7aff</colorDim>
+      <colorRule>0f2040ff</colorRule>
+   </variables>
+
+   <!-- Red: warning-terminal red on black -->
+   <variables ifSubset="color:red">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>ff3c3cff</colorPrimary>
+      <colorAccent>ff7070ff</colorAccent>
+      <colorDim>660f0fff</colorDim>
+      <colorRule>330808ff</colorRule>
+   </variables>
+
+   <!-- Lime: bright yellow-green, almost neon -->
+   <variables ifSubset="color:lime">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>ccff00ff</colorPrimary>
+      <colorAccent>ddff44ff</colorAccent>
+      <colorDim>4d5f00ff</colorDim>
+      <colorRule>252e00ff</colorRule>
+   </variables>
+
+   <!-- Paper: dark ink on warm off-white (inverted; for bright environments) -->
+   <variables ifSubset="color:paper">
+      <colorBg>f0ece0ff</colorBg>
+      <colorPrimary>1a1a1aff</colorPrimary>
+      <colorAccent>000000ff</colorAccent>
+      <colorDim>888880ff</colorDim>
+      <colorRule>ccccbbff</colorRule>
+   </variables>
+
+   <!-- Fallback = white (must be last; matches everything) -->
    <variables>
       <colorBg>000000ff</colorBg>
       <colorPrimary>e8e8e8ff</colorPrimary>
       <colorAccent>ffffffff</colorAccent>
       <colorDim>555555ff</colorDim>
-      <colorRule>333333ff</colorRule>
+      <colorRule>2a2a2aff</colorRule>
    </variables>
 
 </theme>
