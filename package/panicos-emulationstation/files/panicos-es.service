@@ -22,6 +22,12 @@ Environment=SWAYSOCK=/var/run/0-runtime-dir/sway-ipc.0.sock
 # size too low?" spam under load (see Doom Engines / Wolfenstein log).
 # Native pipewire backend avoids the shim. Inherited by every port.
 Environment=ALSOFT_DRIVERS=pipewire,alsa,sdl2
+# Force SDL audio through PulseAudio (handled by PipeWire's compat
+# server). Without this SDL tries ALSA first, bypassing PipeWire's
+# sink routing — Rockbox and other SDL apps then miss headphone
+# hotplug events and stay routed to the speaker even when USB-C
+# headphones are plugged in. Inherited by all PortMaster ports.
+Environment=SDL_AUDIODRIVER=pulseaudio
 # Wait up to 10 s for sway to create its Wayland socket before launching ES.
 # sway 1.11 has no sd_notify, so Type=simple on the sway unit means systemd
 # marks it "active" the instant the process forks — before the socket exists.

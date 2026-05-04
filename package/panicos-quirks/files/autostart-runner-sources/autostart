@@ -48,6 +48,20 @@ then
   done
 fi
 
+### Run common quirk scripts
+if [ -d "/usr/lib/autostart/quirks/autostart" ]
+then
+  tocon "Applying common quirks..."
+  for script in /usr/lib/autostart/quirks/autostart/*
+  do
+    log "Run ${script}"
+    if [ -f "${script}" ]
+    then
+      "${script}" 2>&1 >>${BOOTLOG}
+    fi
+  done
+fi
+
 ### rocknix-automount is intentionally disabled on PanicOS.
 # ROCKNIX's automount bind-mounts /storage/games-internal/roms over
 # /storage/roms, masking the roms that panicos-firstboot extracted there.

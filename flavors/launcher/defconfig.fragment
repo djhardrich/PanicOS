@@ -275,6 +275,10 @@ BR2_PACKAGE_CA_CERTIFICATES=y
 # at least one theme installed, ES renders with no UI on first boot.
 BR2_PACKAGE_PANICOS_ES_THEME_ART_BOOK_NEXT=y
 
+# Network services (user-togglable via ES network settings menu).
+BR2_PACKAGE_PANICOS_SAMBA=y         # SMB file share of /storage (smbd)
+BR2_PACKAGE_PANICOS_COPYPARTY=y     # HTTP file server of /storage (copyparty)
+
 # VPNs.
 BR2_PACKAGE_TAILSCALE=y
 BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m

@@ -1,0 +1,11 @@
+config BR2_PACKAGE_PANICOS_COPYPARTY
+	bool "panicos-copyparty"
+	depends on BR2_PACKAGE_PYTHON3
+	depends on BR2_INIT_SYSTEMD
+	help
+	  Copyparty HTTP file server, serving /storage over port 3923.
+	  Provides a web UI for browsing, uploading, and downloading game
+	  files without needing Samba or a desktop file manager.
+
+	  Disabled by default — enable via the ES network settings menu.
+	  Ships the upstream copyparty.pyz single-file distribution.

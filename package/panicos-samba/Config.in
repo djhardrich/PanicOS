@@ -1,0 +1,12 @@
+config BR2_PACKAGE_PANICOS_SAMBA
+	bool "panicos-samba"
+	select BR2_PACKAGE_SAMBA4
+	depends on BR2_INIT_SYSTEMD
+	help
+	  Samba SMB file server for PanicOS. Shares /storage over the
+	  local network for easy game and config file transfer from a PC.
+
+	  Disabled by default — enable via the ES network settings menu
+	  (Main Menu → Network Settings → Enable Samba). The toggle calls
+	  `systemctl start/stop smbd` and persists via samba.enabled in
+	  system.cfg.

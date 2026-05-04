@@ -1,0 +1,18 @@
+[Unit]
+Description=Samba SMB Daemon
+After=network-online.target
+Wants=network-online.target
+# Only start if user enabled samba via ES network settings toggle
+ConditionPathExists=/storage/.cache/services/smb.conf
+
+[Service]
+Type=forking
+PIDFile=/run/samba/smbd.pid
+ExecStart=/usr/sbin/smbd --daemon
+ExecReload=/bin/kill -HUP $MAINPID
+TimeoutStopSec=2s
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
