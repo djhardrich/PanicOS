@@ -98,6 +98,9 @@ help:
 	@echo "  make pkg-rebuild PACKAGE=<pkg> DEVICE=<dev> [FLAVOR=<fl>]"
 	@echo "                               Rebuild ONE buildroot package + image"
 	@echo "                               (e.g. PACKAGE=panicos-pht, PACKAGE=linux, PACKAGE=mesa3d)"
+	@echo "  make pkgs-rebuild PACKAGES='a b c' DEVICE=<dev> [FLAVOR=<fl>]"
+	@echo "                               Rebuild multiple packages; re-runs defconfig"
+	@echo "                               so newly-added packages land in .config first"
 	@echo "  make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]"
 	@echo "                               Rebuild squashfs + flashable image only"
 	@echo
@@ -314,9 +317,14 @@ clean-%:
 # rebuild. These targets clear stamps surgically so changes propagate without
 # a full clean. Use:
 #
-#   make pkg-rebuild PKG=panicos-pht DEVICE=rg35xx-pro FLAVOR=pht
-#   make pkg-rebuild PKG=linux DEVICE=rg35xx-pro     # rebuild kernel only
-#   make image-rebuild DEVICE=rg35xx-pro FLAVOR=pht  # squashfs + image only
+#   make pkg-rebuild PACKAGE=panicos-pht DEVICE=rg35xx-pro FLAVOR=pht
+#   make pkg-rebuild PACKAGE=linux DEVICE=rg35xx-pro   # rebuild kernel only
+#   make image-rebuild DEVICE=rg35xx-pro FLAVOR=pht    # squashfs + image only
+#
+#   make pkgs-rebuild PACKAGES="a b c" DEVICE=rg35xx-pro FLAVOR=pht
+#                              Rebuild multiple packages + re-run defconfig
+#                              (needed when adding new packages to defconfig)
+#                              then a single image rebuild.
 #
 # DEVICE is required; FLAVOR defaults to minimal; KERNEL defaults to mainline.
 
@@ -336,6 +344,38 @@ pkg-rebuild:
 	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT" $$_PKG-rebuild; \
 	rm -rf "$$OUT/build/buildroot-fs/full/.stamp_"* \
 	       "$$OUT/build/buildroot-fs/squashfs/.stamp_"*; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
+
+# pkgs-rebuild: like pkg-rebuild but for a space-separated list of packages,
+# plus a defconfig re-run so newly-added packages land in .config.
+# All stamp clearing happens before the single final make, so the image is
+# only assembled once.
+.PHONY: pkgs-rebuild
+pkgs-rebuild:
+	@test -n "$(PACKAGES)" || (echo "PACKAGES not set" >&2; exit 1)
+	@test -n "$(DEVICE)"   || (echo "DEVICE not set"   >&2; exit 1)
+	@OUT="$(_outdir)"; \
+	SOC="$(call _device_soc,$(DEVICE))"; \
+	K="$(KERNEL)"; \
+	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
+	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	echo ">>> pkgs-rebuild: regenerating defconfig in $$OUT"; \
+	scripts/gen-defconfig.sh \
+		--device "$(DEVICE)" \
+		--flavor "$(FLAVOR)" \
+		$${SOC:+--soc "$$SOC"} \
+		$${K:+--kernel "$$K"} \
+		--output "$$OUT/.defconfig"; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT" \
+		defconfig BR2_DEFCONFIG="$$OUT/.defconfig"; \
+	for _pkg in $(PACKAGES); do \
+		echo ">>> pkgs-rebuild: clearing stamps for $$_pkg"; \
+		find "$$OUT/build" -maxdepth 1 -type d -name "$$_pkg-*" \
+			-exec sh -c 'rm -rf "$$1"/.stamp_*' _ {} \;; \
+	done; \
+	rm -rf "$$OUT/build/buildroot-fs/full/.stamp_"* \
+	       "$$OUT/build/buildroot-fs/squashfs/.stamp_"*; \
+	echo ">>> pkgs-rebuild: building"; \
 	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
 
 .PHONY: image-rebuild
