@@ -286,6 +286,7 @@ BR2_PACKAGE_AVAHI_LIBDNSSD_COMPATIBILITY=y   # lets apps use dns_sd.h API
 # Network services (user-togglable via ES network settings menu).
 BR2_PACKAGE_PANICOS_SAMBA=y         # SMB file share of /storage (smbd)
 BR2_PACKAGE_PANICOS_COPYPARTY=y     # HTTP file server of /storage (copyparty)
+BR2_PACKAGE_PANICOS_UMTPRD=y        # MTP daemon for usbgadget file_transfer mode
 
 # VPNs.
 BR2_PACKAGE_TAILSCALE=y

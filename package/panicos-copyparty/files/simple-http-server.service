@@ -6,6 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /usr/bin/copyparty.pyz \
+    -i 0.0.0.0 \
     -p 3923 \
     --name PanicOS \
     -a panicos:panicos \

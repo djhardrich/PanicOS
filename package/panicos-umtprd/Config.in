@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PANICOS_UMTPRD
+	bool "panicos-umtprd"
+	help
+	  Lightweight USB MTP responder daemon for usbgadget file_transfer mode.
+	  Exposes /storage/roms to the host PC as an MTP device when the USB
+	  gadget is switched to file_transfer in the ES network settings.

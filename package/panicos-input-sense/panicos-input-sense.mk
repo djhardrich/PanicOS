@@ -63,6 +63,8 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 	#   packages/sysutils/system-utils/udev.d/99-input.rules
 	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/udev.d/99-input.rules \
 		$(TARGET_DIR)/etc/udev/rules.d/99-input.rules
+	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/udev.d/80-usbgadget.rules \
+		$(TARGET_DIR)/etc/udev/rules.d/80-usbgadget.rules
 
 	# python → python3 symlink. ROCKNIX scripts (e.g. rocknix-bluetooth-agent)
 	# call /usr/bin/python; we ship python3 only. Symlink avoids patching

@@ -23,5 +23,6 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-libfreeimage/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/python-dbussy/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-samba/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-copyparty/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-umtprd/Config.in"
 
 endmenu

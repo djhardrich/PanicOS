@@ -13,7 +13,8 @@
 . /etc/os-release
 
 MACHINEIDFILE=/storage/.cache/systemd-machine-id
-SERIAL=$(cat ${MACHINEIDFILE})
+SERIAL=$(cat ${MACHINEIDFILE} 2>/dev/null)
+[ -z "${SERIAL}" ] && SERIAL=$(cat /etc/machine-id 2>/dev/null)
 
 CACHEDIR=/storage/.cache/usbgadget
 GADGETCONF=${CACHEDIR}/usbgadget.conf
@@ -209,22 +210,14 @@ EOF
     ip -6 address add fe80::2/64 dev ${IFACE_NAME} scope link 2>/dev/null
 	ip link set ${IFACE_NAME} up
 
-	cat <<EOF > ${UDHCPCONF}
-interface ${IFACE_NAME}
-start ${HOSTIP}
-end ${HOSTIP}
-opt subnet ${NETMASK}
-
-# Windows needs some route to "indentify" network, this allows to make connection "private" and accept samba announces
-option msstaticroutes 0.0.0.0/32 ${IP}
-
-opt lease 86400
-max_leases 1
-lease_file /dev/null
-pidfile	${UDHCPPIDFILE}
-remaining no
-EOF
-	/usr/sbin/udhcpd -S ${UDHCPCONF}
+	dnsmasq \
+		--interface="${IFACE_NAME}" \
+		--bind-interfaces \
+		--dhcp-range="${HOSTIP},${HOSTIP},${NETMASK},86400" \
+		--dhcp-option=3 \
+		--dhcp-option=option:classless-static-route,0.0.0.0/32,${IP} \
+		--no-resolv --no-hosts \
+		--pid-file="${UDHCPPIDFILE}"
 }
 
 
