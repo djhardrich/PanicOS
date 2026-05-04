@@ -1,20 +1,23 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0
 # Copyright (C) 2023 JELOS (https://github.com/JustEnoughLinuxOS)
+#
+# Report whether the device has network connectivity.
+# Original implementation pinged www.google.com with a 1-second timeout,
+# which reports "false" whenever the ping fails even if WiFi is fully
+# associated — intermittent DNS or Google downtime would flip ES's
+# "Network Settings" to "not connected". Use nmcli's own connectivity
+# state instead: "full" or "limited" both mean the interface is up and
+# associated; "none"/"portal"/"unknown" mean genuinely offline.
 
-ip route | awk '/default/ {print $3}' >/dev/null 2>&1
-if [ ! $? = 0 ]
-then
-  echo false
-  exit 1
-else
-  ping www.google.com -c1 -w1 >/dev/null 2>&1
-  if [ ! $? = 0 ]
-  then
-    echo false
-    exit 1
-  else
+state=$(nmcli -t -f CONNECTIVITY general 2>/dev/null)
+case "$state" in
+  full|limited)
     echo true
     exit 0
-  fi
-fi
+    ;;
+  *)
+    echo false
+    exit 1
+    ;;
+esac
