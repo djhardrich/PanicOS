@@ -2,7 +2,7 @@
 <theme>
    <formatVersion>7</formatVersion>
    <variables>
-      <fontRegular>./_inc/fonts/NotoSansMono-Regular.ttf</fontRegular>
-      <fontBold>./_inc/fonts/NotoSansMono-Bold.ttf</fontBold>
+      <fontRegular>./_inc/fonts/SpaceMono-Regular.ttf</fontRegular>
+      <fontBold>./_inc/fonts/SpaceMono-Bold.ttf</fontBold>
    </variables>
 </theme>
