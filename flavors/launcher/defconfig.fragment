@@ -277,6 +277,14 @@ BR2_PACKAGE_CA_CERTIFICATES=y
 BR2_PACKAGE_PANICOS_ES_THEME_TERMINUS=y
 BR2_PACKAGE_PANICOS_ES_THEME_ART_BOOK_NEXT=y
 
+# mDNS — avahi-daemon advertises the device as panicos.local on the LAN.
+# Requires dbus (already present for bluetooth). No extra config needed;
+# avahi reads the hostname from /etc/hostname which firstboot sets to
+# the system.hostname value in system.cfg (default: "panicos").
+BR2_PACKAGE_AVAHI=y
+BR2_PACKAGE_AVAHI_DAEMON=y
+BR2_PACKAGE_AVAHI_LIBDNSSD_COMPATIBILITY=y   # lets apps use dns_sd.h API
+
 # Network services (user-togglable via ES network settings menu).
 BR2_PACKAGE_PANICOS_SAMBA=y         # SMB file share of /storage (smbd)
 BR2_PACKAGE_PANICOS_COPYPARTY=y     # HTTP file server of /storage (copyparty)
