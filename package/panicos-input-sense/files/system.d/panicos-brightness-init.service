@@ -9,6 +9,7 @@ Before=panicos-input-sense.service panicos-es.service panicos-pht.service
 Type=oneshot
 RemainAfterExit=yes
 Environment=HOME=/storage
+ExecStartPre=/bin/sh -c 'echo -ne "\033[1000H\033[2K==> Restoring brightness..." >/dev/console'
 ExecStart=/bin/sh -c '. /etc/profile.d/001-functions; \
     PCT=$(get_setting display.brightness); \
     [ -z "$PCT" ] && PCT=80; \

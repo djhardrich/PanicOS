@@ -8,6 +8,7 @@ RequiresMountsFor=/boot
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+ExecStartPre=/bin/sh -c 'echo -ne "\033[1000H\033[2K==> Applying Wi-Fi config..." >/dev/console'
 ExecStart=/usr/sbin/panicos-wifi-config
 StandardOutput=journal
 

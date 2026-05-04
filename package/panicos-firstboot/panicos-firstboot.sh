@@ -21,6 +21,7 @@ DISK="$(echo "$STORAGE_DEV" | sed 's/p[0-9]*$//')"
 PARTNUM="$(echo "$STORAGE_DEV" | sed 's|.*p||')"
 
 echo ">>> panicos-firstboot: growing $STORAGE_DEV (disk=$DISK partnum=$PARTNUM)"
+echo -ne "\033[1000H\033[2K==> Resizing SD card storage partition..." >/dev/console
 
 # Grow the partition to fill remaining free space (`,+` = keep start, max size).
 echo ',+' | sfdisk -N "$PARTNUM" --no-reread --force "$DISK"
@@ -41,6 +42,7 @@ if [ -d "$PRELOAD" ]; then
     mkdir -p /storage/roms/ports
     for z in "$PRELOAD"/*.zip; do
         [ -e "$z" ] || continue
+        echo -ne "\033[1000H\033[2K==> Installing $(basename "$z" .zip)..." >/dev/console
         # -n: never overwrite — if a user has already started using a port
         # (saves, configs), we must not stomp on it on a re-firstboot.
         unzip -q -n "$z" -d /storage/roms/ports

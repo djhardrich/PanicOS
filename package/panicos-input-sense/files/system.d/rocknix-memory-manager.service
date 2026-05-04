@@ -8,6 +8,7 @@ Before=shutdown.target
 [Service]
 Environment=HOME=/storage
 Type=oneshot
+ExecStartPre=/bin/sh -c 'echo -ne "\033[1000H\033[2K==> Configuring memory..." >/dev/console'
 ExecStart=/usr/bin/rocknix-memory-manager --setup
 ExecReload=/usr/bin/rocknix-memory-manager --reload
 ExecStop=/usr/bin/rocknix-memory-manager --stop

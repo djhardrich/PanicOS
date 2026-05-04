@@ -6,6 +6,7 @@ StartLimitIntervalSec=0
 
 [Service]
 Environment=HOME=/storage
+ExecStartPre=/bin/sh -c 'echo -ne "\033[1000H\033[2K==> Starting input daemon..." >/dev/console'
 ExecStart=/usr/bin/input_sense
 Restart=always
 RestartSec=1

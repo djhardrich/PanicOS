@@ -9,6 +9,7 @@ RequiresMountsFor=/storage
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+ExecStartPre=/bin/sh -c 'echo -ne "\033[1000H\033[2K==> First-boot setup, please wait..." >/dev/console'
 ExecStart=/usr/sbin/panicos-firstboot
 StandardOutput=journal
 
