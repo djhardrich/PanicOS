@@ -13,14 +13,26 @@ description: Monochrome terminal-style theme for handheld devices.
         Subset: Color variant
         ============================================================ -->
    <subset name="color" displayName="Color">
-      <include name="white" displayName="White" />
-      <include name="green" displayName="Phosphor Green" />
-      <include name="amber" displayName="Amber" />
-      <include name="cyan"  displayName="Cyan" />
-      <include name="blue"  displayName="Blue" />
-      <include name="red"   displayName="Red" />
-      <include name="lime"  displayName="Lime" />
-      <include name="paper" displayName="Paper" />
+      <include name="white"    displayName="White" />
+      <include name="green"    displayName="Phosphor Green" />
+      <include name="amber"    displayName="Amber" />
+      <include name="cyan"     displayName="Cyan" />
+      <include name="blue"     displayName="Blue" />
+      <include name="red"      displayName="Red" />
+      <include name="magenta"  displayName="Magenta" />
+      <include name="orange"   displayName="Orange" />
+      <include name="paper"    displayName="Paper" />
+      <include name="dos"      displayName="DOS Blue" />
+      <include name="slate"    displayName="Slate" />
+      <include name="forest"   displayName="Forest" />
+      <include name="ocean"    displayName="Ocean" />
+      <include name="rose"     displayName="Rose" />
+      <include name="sepia"    displayName="Sepia" />
+      <include name="chalk"    displayName="Chalk" />
+      <include name="matrix"   displayName="Matrix" />
+      <include name="solar"    displayName="Solar" />
+      <include name="mint"     displayName="Mint" />
+      <include name="lavender" displayName="Lavender" />
    </subset>
 
    <!-- ============================================================

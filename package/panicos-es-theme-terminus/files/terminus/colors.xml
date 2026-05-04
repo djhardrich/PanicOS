@@ -3,92 +3,201 @@
    <formatVersion>7</formatVersion>
 
    <!--
-      colorBg      — background fill
+      colorBg      — screen background
       colorPrimary — normal text / unselected items
-      colorAccent  — selection bar / highlight / cursor glyph
-      colorDim     — secondary text, separators, help bar
-      colorRule    — thin rule lines
+      colorAccent  — selection bar; selectedColor is always colorBg so
+                     the selected item reads as colorBg-on-colorAccent
+      colorDim     — secondary text, help bar, unselected carousel items
+      colorRule    — thin separator lines
    -->
 
-   <!-- White: near-white on pure black (default) -->
+   <!-- 1. White — bright white phosphor on pure black -->
    <variables ifSubset="color:white">
       <colorBg>000000ff</colorBg>
       <colorPrimary>e8e8e8ff</colorPrimary>
       <colorAccent>ffffffff</colorAccent>
-      <colorDim>555555ff</colorDim>
-      <colorRule>2a2a2aff</colorRule>
+      <colorDim>444444ff</colorDim>
+      <colorRule>222222ff</colorRule>
    </variables>
 
-   <!-- Phosphor Green: classic P1 long-persistence green -->
+   <!-- 2. Green — classic P1 long-persistence phosphor -->
    <variables ifSubset="color:green">
       <colorBg>000000ff</colorBg>
-      <colorPrimary>39ff14ff</colorPrimary>
-      <colorAccent>66ff44ff</colorAccent>
-      <colorDim>155808ff</colorDim>
-      <colorRule>0a2e05ff</colorRule>
+      <colorPrimary>33ff33ff</colorPrimary>
+      <colorAccent>66ff66ff</colorAccent>
+      <colorDim>0d4d0dff</colorDim>
+      <colorRule>061f06ff</colorRule>
    </variables>
 
-   <!-- Amber: warm P3 amber phosphor -->
+   <!-- 3. Amber — warm P3 amber/orange phosphor -->
    <variables ifSubset="color:amber">
       <colorBg>000000ff</colorBg>
       <colorPrimary>ffb000ff</colorPrimary>
-      <colorAccent>ffcc44ff</colorAccent>
-      <colorDim>5c3800ff</colorDim>
-      <colorRule>2e1c00ff</colorRule>
+      <colorAccent>ffd055ff</colorAccent>
+      <colorDim>553a00ff</colorDim>
+      <colorRule>2a1d00ff</colorRule>
    </variables>
 
-   <!-- Cyan: blue-green; looks great on small LCDs -->
+   <!-- 4. Cyan — cold blue-green on black -->
    <variables ifSubset="color:cyan">
       <colorBg>000000ff</colorBg>
       <colorPrimary>00e5ffff</colorPrimary>
-      <colorAccent>66f0ffff</colorAccent>
-      <colorDim>005c6aff</colorDim>
-      <colorRule>003040ff</colorRule>
+      <colorAccent>66efffff</colorAccent>
+      <colorDim>00535dff</colorDim>
+      <colorRule>00282eff</colorRule>
    </variables>
 
-   <!-- Blue: cold blue-white phosphor (P7 / IBM 5151 style) -->
+   <!-- 5. Blue — P7 blue-white phosphor on dark blue-black -->
    <variables ifSubset="color:blue">
       <colorBg>00091aff</colorBg>
-      <colorPrimary>a8c8ffff</colorPrimary>
+      <colorPrimary>a0c8ffff</colorPrimary>
       <colorAccent>cce0ffff</colorAccent>
-      <colorDim>2a4a7aff</colorDim>
-      <colorRule>0f2040ff</colorRule>
+      <colorDim>203a66ff</colorDim>
+      <colorRule>0d1f3aff</colorRule>
    </variables>
 
-   <!-- Red: warning-terminal red on black -->
+   <!-- 6. Red — warning terminal -->
    <variables ifSubset="color:red">
       <colorBg>000000ff</colorBg>
-      <colorPrimary>ff3c3cff</colorPrimary>
-      <colorAccent>ff7070ff</colorAccent>
-      <colorDim>660f0fff</colorDim>
+      <colorPrimary>ff4444ff</colorPrimary>
+      <colorAccent>ff8888ff</colorAccent>
+      <colorDim>661111ff</colorDim>
       <colorRule>330808ff</colorRule>
    </variables>
 
-   <!-- Lime: bright yellow-green, almost neon -->
-   <variables ifSubset="color:lime">
+   <!-- 7. Magenta — purple-pink on black -->
+   <variables ifSubset="color:magenta">
       <colorBg>000000ff</colorBg>
-      <colorPrimary>ccff00ff</colorPrimary>
-      <colorAccent>ddff44ff</colorAccent>
-      <colorDim>4d5f00ff</colorDim>
-      <colorRule>252e00ff</colorRule>
+      <colorPrimary>ff44ffff</colorPrimary>
+      <colorAccent>ff88ffff</colorAccent>
+      <colorDim>661166ff</colorDim>
+      <colorRule>330033ff</colorRule>
    </variables>
 
-   <!-- Paper: dark ink on warm off-white (inverted; for bright environments) -->
+   <!-- 8. Orange — deep orange on black -->
+   <variables ifSubset="color:orange">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>ff8800ff</colorPrimary>
+      <colorAccent>ffaa44ff</colorAccent>
+      <colorDim>553000ff</colorDim>
+      <colorRule>2a1700ff</colorRule>
+   </variables>
+
+   <!-- 9. Paper — dark ink on warm off-white (bright room use) -->
    <variables ifSubset="color:paper">
       <colorBg>f0ece0ff</colorBg>
       <colorPrimary>1a1a1aff</colorPrimary>
       <colorAccent>000000ff</colorAccent>
       <colorDim>888880ff</colorDim>
-      <colorRule>ccccbbff</colorRule>
+      <colorRule>d0ccbcff</colorRule>
    </variables>
 
-   <!-- Fallback = white (must be last; matches everything) -->
+   <!-- 10. DOS — white + yellow on classic DOS blue -->
+   <variables ifSubset="color:dos">
+      <colorBg>0000aaff</colorBg>
+      <colorPrimary>ffffffff</colorPrimary>
+      <colorAccent>ffff55ff</colorAccent>
+      <colorDim>8888ccff</colorDim>
+      <colorRule>3333aaff</colorRule>
+   </variables>
+
+   <!-- 11. Slate — cool blue-white on dark blue-black -->
+   <variables ifSubset="color:slate">
+      <colorBg>0d1220ff</colorBg>
+      <colorPrimary>c8d8f0ff</colorPrimary>
+      <colorAccent>e8f0ffff</colorAccent>
+      <colorDim>3a4a66ff</colorDim>
+      <colorRule>1e2a40ff</colorRule>
+   </variables>
+
+   <!-- 12. Forest — bright green on very dark green -->
+   <variables ifSubset="color:forest">
+      <colorBg>001400ff</colorBg>
+      <colorPrimary>44ff44ff</colorPrimary>
+      <colorAccent>88ff88ff</colorAccent>
+      <colorDim>1a4d1aff</colorDim>
+      <colorRule>0a240aff</colorRule>
+   </variables>
+
+   <!-- 13. Ocean — cyan on deep navy -->
+   <variables ifSubset="color:ocean">
+      <colorBg>001428ff</colorBg>
+      <colorPrimary>44ccffff</colorPrimary>
+      <colorAccent>88ddffff</colorAccent>
+      <colorDim>1a4466ff</colorDim>
+      <colorRule>0a2233ff</colorRule>
+   </variables>
+
+   <!-- 14. Rose — warm pink on dark maroon -->
+   <variables ifSubset="color:rose">
+      <colorBg>1a000fff</colorBg>
+      <colorPrimary>ff66aaff</colorPrimary>
+      <colorAccent>ff99ccff</colorAccent>
+      <colorDim>66204aff</colorDim>
+      <colorRule>330d24ff</colorRule>
+   </variables>
+
+   <!-- 15. Sepia — golden on dark warm brown -->
+   <variables ifSubset="color:sepia">
+      <colorBg>120a00ff</colorBg>
+      <colorPrimary>d4a855ff</colorPrimary>
+      <colorAccent>f0cc88ff</colorAccent>
+      <colorDim>5c441aff</colorDim>
+      <colorRule>2e2208ff</colorRule>
+   </variables>
+
+   <!-- 16. Chalk — warm white on dark charcoal (softer than white-on-black) -->
+   <variables ifSubset="color:chalk">
+      <colorBg>1e1e18ff</colorBg>
+      <colorPrimary>f0f0e4ff</colorPrimary>
+      <colorAccent>ffffffff</colorAccent>
+      <colorDim>555548ff</colorDim>
+      <colorRule>2e2e28ff</colorRule>
+   </variables>
+
+   <!-- 17. Matrix — bright green on very dark green background -->
+   <variables ifSubset="color:matrix">
+      <colorBg>001100ff</colorBg>
+      <colorPrimary>00ff41ff</colorPrimary>
+      <colorAccent>44ff77ff</colorAccent>
+      <colorDim>004d14ff</colorDim>
+      <colorRule>00260aff</colorRule>
+   </variables>
+
+   <!-- 18. Solar — warm gold on near-black warm background -->
+   <variables ifSubset="color:solar">
+      <colorBg>0f0c00ff</colorBg>
+      <colorPrimary>ffd444ff</colorPrimary>
+      <colorAccent>ffe888ff</colorAccent>
+      <colorDim>5c4a00ff</colorDim>
+      <colorRule>2e2500ff</colorRule>
+   </variables>
+
+   <!-- 19. Mint — cool mint green on dark teal background -->
+   <variables ifSubset="color:mint">
+      <colorBg>001a14ff</colorBg>
+      <colorPrimary>44ffc4ff</colorPrimary>
+      <colorAccent>88ffe0ff</colorAccent>
+      <colorDim>1a6650ff</colorDim>
+      <colorRule>0a3328ff</colorRule>
+   </variables>
+
+   <!-- 20. Lavender — soft purple on very dark purple -->
+   <variables ifSubset="color:lavender">
+      <colorBg>0d0020ff</colorBg>
+      <colorPrimary>cc88ffff</colorPrimary>
+      <colorAccent>e0aaffff</colorAccent>
+      <colorDim>4d2266ff</colorDim>
+      <colorRule>260d33ff</colorRule>
+   </variables>
+
+   <!-- Fallback = white (must be last, matches when no subset is active) -->
    <variables>
       <colorBg>000000ff</colorBg>
       <colorPrimary>e8e8e8ff</colorPrimary>
       <colorAccent>ffffffff</colorAccent>
-      <colorDim>555555ff</colorDim>
-      <colorRule>2a2a2aff</colorRule>
+      <colorDim>444444ff</colorDim>
+      <colorRule>222222ff</colorRule>
    </variables>
 
 </theme>
