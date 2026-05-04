@@ -255,6 +255,15 @@ _build:
 	@#   have a substantially different configure (autoconf bumped). The
 	@#   underlying issue (host XOPEN_SOURCE detection) doesn't bite us
 	@#   on a 2025-vintage Ubuntu/Debian build host.
+	@# Buildroot host-python3.14 is built without the _ssl extension (Python
+	@# 3.14's OpenSSL detection regressed vs the host's libssl-dev). Samba4's
+	@# waf does `import ssl` at configure time and hard-fails without it.
+	@# Use the system Python3 from the Debian Bookworm base image (3.11,
+	@# has _ssl) for samba4 only. Idempotent.
+	@grep -q 'samba4_syspython_applied' "$(BUILDROOT)/package/samba4/samba4.mk" || \
+		sed -i \
+		's|SAMBA4_PYTHON = PYTHON="$$(HOST_DIR)/bin/python3"|SAMBA4_PYTHON = PYTHON="/usr/bin/python3" # samba4_syspython_applied|' \
+		"$(BUILDROOT)/package/samba4/samba4.mk"
 	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
