@@ -36,15 +36,18 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 	for f in $(PANICOS_INPUT_SENSE_PKGDIR)/files/scripts/*; do \
 		$(INSTALL) -m 0755 "$$f" $(TARGET_DIR)/usr/bin/; \
 	done
-	# All ROCKNIX profile.d → /etc/profile.d/, suffixed with .sh because
-	# buildroot's busybox /etc/profile only sources files matching *.sh.
+	# All ROCKNIX profile.d → /etc/profile.d/ without .sh suffix, matching
+	# ROCKNIX's install layout. Scripts source ". /etc/profile.d/001-functions"
+	# directly; adding .sh broke get_setting/set_setting in brightness,
+	# input_sense, and every other helper that calls these functions.
+	# Our /etc/profile overlay sources /etc/profile.d/* (no *.sh restriction).
 	mkdir -p $(TARGET_DIR)/etc/profile.d
 	for f in $(PANICOS_INPUT_SENSE_PKGDIR)/files/profile.d/*; do \
-		$(INSTALL) -m 0644 "$$f" "$(TARGET_DIR)/etc/profile.d/$$(basename $$f).sh"; \
+		$(INSTALL) -m 0644 "$$f" "$(TARGET_DIR)/etc/profile.d/$$(basename $$f)"; \
 	done
 	# Patch (1): SDL gamecontrollerdb path → /usr/share location.
 	sed -i 's|/storage/.config/SDL-GameControllerDB/gamecontrollerdb.txt|/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt|' \
-		$(TARGET_DIR)/etc/profile.d/001-functions.sh
+		$(TARGET_DIR)/etc/profile.d/001-functions
 	# tmpfiles.d to create the /storage skeleton on every boot. ROCKNIX
 	# initializes /storage in busybox/scripts/init at first boot before
 	# systemd starts; we use stock systemd init so we go via tmpfiles.d.

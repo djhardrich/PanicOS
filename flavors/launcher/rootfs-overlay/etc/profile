@@ -11,7 +11,7 @@ fi
 export EDITOR='/bin/vi'
 
 # Source system profile.d scripts (device vars, functions, etc.)
-for i in /etc/profile.d/*.sh ; do
+for i in /etc/profile.d/* ; do
 	if [ -r "$i" ]; then
 		. $i
 	fi
