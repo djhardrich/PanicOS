@@ -5,6 +5,14 @@
 # Minimal OS variable loading for performance
 . /etc/profile.d/001-functions
 
+# One-time fixup: ES defaults system.hostname to "BATOCERA" when the key
+# is absent from system.cfg.  Seed it to "panicos" on first encounter so
+# the network settings widget never shows the Batocera branding.
+CURRENT_HOSTNAME=$(get_setting system.hostname)
+if [ -z "${CURRENT_HOSTNAME}" ] || [ "${CURRENT_HOSTNAME}" = "BATOCERA" ]; then
+  set_setting system.hostname panicos
+fi
+
 (
 
   if [ -d "/usr/lib/autostart/quirks/platforms/${HW_DEVICE}/config" ] && \
