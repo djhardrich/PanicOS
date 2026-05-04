@@ -95,9 +95,9 @@ help:
 	@echo "  make clean-<device>          Clean a device's output dir"
 	@echo
 	@echo "Iteration helpers (avoid full clean rebuilds):"
-	@echo "  make pkg-rebuild PKG=<pkg> DEVICE=<dev> [FLAVOR=<fl>]"
+	@echo "  make pkg-rebuild PACKAGE=<pkg> DEVICE=<dev> [FLAVOR=<fl>]"
 	@echo "                               Rebuild ONE buildroot package + image"
-	@echo "                               (e.g. PKG=panicos-pht, PKG=linux, PKG=mesa3d)"
+	@echo "                               (e.g. PACKAGE=panicos-pht, PACKAGE=linux, PACKAGE=mesa3d)"
 	@echo "  make image-rebuild DEVICE=<dev> [FLAVOR=<fl>]"
 	@echo "                               Rebuild squashfs + flashable image only"
 	@echo
@@ -327,12 +327,13 @@ endef
 
 .PHONY: pkg-rebuild
 pkg-rebuild:
-	@test -n "$(PKG)"    || (echo "PKG not set"    >&2; exit 1)
-	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@test -n "$(PACKAGE)" || (echo "PACKAGE not set" >&2; exit 1)
+	@test -n "$(DEVICE)"  || (echo "DEVICE not set"  >&2; exit 1)
 	@OUT="$(_outdir)"; \
+	_PKG="$(PACKAGE)"; \
 	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
-	echo ">>> pkg-rebuild: $(PKG)-rebuild in $$OUT"; \
-	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT" $(PKG)-rebuild; \
+	echo ">>> pkg-rebuild: $$_PKG-rebuild in $$OUT"; \
+	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT" $$_PKG-rebuild; \
 	rm -rf "$$OUT/build/buildroot-fs/full/.stamp_"* \
 	       "$$OUT/build/buildroot-fs/squashfs/.stamp_"*; \
 	$(MAKE) -C "$(BUILDROOT)" BR2_EXTERNAL=$(PANICOS_ROOT) O="$$OUT"
