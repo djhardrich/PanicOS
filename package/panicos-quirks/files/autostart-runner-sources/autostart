@@ -4,12 +4,18 @@
 
 . /etc/os-release
 
+# 001-functions defines tocon, get_setting, set_setting, performance, etc.
+# The service ExecStart sources /etc/profile then exec's this script, but
+# bash functions are not inherited across exec — source explicitly here.
+. /etc/profile.d/001-functions 2>/dev/null || true
+
 BOOTLOG="/var/log/boot.log"
 
 log() {
   echo "$(date): Autostart: $*" >>${BOOTLOG} 2>&1
 }
 
+tocon "PanicOS initializing..."
 performance 2>/dev/null
 
 ### Load platform specific quirks
@@ -50,6 +56,7 @@ fi
 # systemctl start rocknix-automount
 
 ### Run common start scripts
+tocon "Starting services..."
 for script in /usr/lib/autostart/common/*
 do
   log "Run ${script}"
