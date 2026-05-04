@@ -61,12 +61,26 @@ description: Monochrome terminal-style theme for handheld devices.
    <include ifSubset="aspect-ratio:4-3">./aspect-ratio-4-3.xml</include>
 
    <!-- ============================================================
-        Screen-level overlay: tint the battery/network indicator
+        Screen-level overlay: battery tint, clock position, hide pad activity
         ============================================================ -->
    <view name="screen">
       <batteryIndicator name="batteryIndicator">
          <color>${colorPrimary}</color>
       </batteryIndicator>
+      <!-- Move clock to top-right, ending just left of the battery indicator -->
+      <text name="clock">
+         <pos>0.02 0.003</pos>
+         <size>0.86 0.055</size>
+         <color>${colorPrimary}</color>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.028</fontSize>
+         <alignment>right</alignment>
+         <zIndex>50</zIndex>
+      </text>
+      <!-- Hide the controller-activity pad diagram (flashing red box) -->
+      <controllerActivity name="controllerActivity">
+         <visible>false</visible>
+      </controllerActivity>
    </view>
 
    <!-- ============================================================
