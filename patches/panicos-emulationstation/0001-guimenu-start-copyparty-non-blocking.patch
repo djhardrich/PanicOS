@@ -1,0 +1,16 @@
+diff --git a/es-app/src/guis/GuiMenu.cpp b/es-app/src/guis/GuiMenu.cpp
+index 462926e93..2c3da74ed 100644
+--- a/es-app/src/guis/GuiMenu.cpp
++++ b/es-app/src/guis/GuiMenu.cpp
+@@ -5392,9 +5392,9 @@ void GuiMenu::openNetworkSettings(bool selectWifiEnable, bool selectAdhocEnable)
+ 	s->addWithLabel(_("ENABLE SIMPLE HTTP SERVER"), simple_http_enabled);
+ 	simple_http_enabled->setOnChangedCallback([simple_http_enabled] {
+ 		if(simple_http_enabled->getState() == false) {
+-			Utils::Platform::runSystemCommand("systemctl disable --now simple-http-server", "", nullptr);
++			Utils::Platform::runSystemCommand("systemctl disable simple-http-server && systemctl stop --no-block simple-http-server", "", nullptr);
+ 		} else {
+-			Utils::Platform::runSystemCommand("systemctl enable --now simple-http-server", "", nullptr);
++			Utils::Platform::runSystemCommand("systemctl enable simple-http-server && systemctl start --no-block simple-http-server", "", nullptr);
+ 		}
+ 		bool simplehttpenabled = simple_http_enabled->getState();
+ 		SystemConf::getInstance()->set("simplehttp.enabled", simplehttpenabled ? "1" : "0");

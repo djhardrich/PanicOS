@@ -295,6 +295,9 @@ BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m
 # Ports/PortMaster shell scripts assume bash (not just busybox sh).
 BR2_PACKAGE_BASH=y
 
+# Debug/monitoring tools
+BR2_PACKAGE_HTOP=y
+
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
 # call `/usr/bin/sh -lc "..."` and rely on real bash semantics. Doing
