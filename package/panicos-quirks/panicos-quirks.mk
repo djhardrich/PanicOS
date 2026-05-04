@@ -29,6 +29,12 @@ define PANICOS_QUIRKS_INSTALL_TARGET_CMDS
 	cp -a $(PANICOS_QUIRKS_PKGDIR)/files/autostart   $(TARGET_DIR)/usr/lib/autostart/quirks/
 	cp -a $(PANICOS_QUIRKS_PKGDIR)/files/devices     $(TARGET_DIR)/usr/lib/autostart/quirks/
 	cp -a $(PANICOS_QUIRKS_PKGDIR)/files/platforms   $(TARGET_DIR)/usr/lib/autostart/quirks/
+	# Common autostart scripts → /usr/lib/autostart/common/
+	# The autostart runner sources /usr/lib/autostart/common/* for every device.
+	# Mirrors ROCKNIX's packages/rocknix/autostart/ install target.
+	mkdir -p $(TARGET_DIR)/usr/lib/autostart/common
+	cp -a $(PANICOS_QUIRKS_PKGDIR)/files/common/. $(TARGET_DIR)/usr/lib/autostart/common/
+	chmod +x $(TARGET_DIR)/usr/lib/autostart/common/[0-9]* 2>/dev/null || true
 	# system.d (led-poweroff.service, volume-fixup.service) — ship as-is to
 	# /usr/lib/systemd/system/ so they're available; not enabled by default.
 	$(INSTALL) -D -m 0644 $(PANICOS_QUIRKS_PKGDIR)/files/system.d/led-poweroff.service \

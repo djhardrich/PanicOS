@@ -1,0 +1,13 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2024 ROCKNIX (https://github.com/ROCKNIX)
+
+# H700/H616: audio routing is managed entirely by UCM (sun4i-h616/HiFi.conf).
+# WirePlumber's ALSA monitor reads the JackControl="Headphone Jack" entry and
+# auto-switches between the Speaker and Headphones devices when the jack state
+# changes.  headphone_sense checks AUDIO_MANAGEMENT: when UCM, it calls
+# `volume restore` and exits — skipping the amixer/GPIO fallback path that
+# would otherwise block on an empty DEVICE_HEADPHONE_DEV.
+cat <<EOF >/storage/.config/profile.d/002-audio_path
+AUDIO_MANAGEMENT=UCM
+EOF

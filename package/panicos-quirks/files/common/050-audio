@@ -1,0 +1,48 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2023 JELOS (https://github.com/JustEnoughLinuxOS)
+# Adapted for PanicOS from ROCKNIX packages/rocknix/autostart/050-audio
+
+. /etc/profile.d/001-functions
+
+tocon "Configuring Audio..."
+
+# PipeWire runs as root; its sockets are under /var/run/0-runtime-dir.
+export XDG_RUNTIME_DIR=/var/run/0-runtime-dir
+
+STATE=$(systemctl is-active pipewire-pulse)
+if [ "${STATE}" = "inactive" ]; then
+  systemctl start pipewire-pulse
+fi
+
+# Auto-switch streams to a newly-connected sink (USB-C audio, BT, HDMI).
+# Mirrors ROCKNIX 050-audio: loads the PulseAudio compat module into
+# pipewire-pulse so PA-protocol clients (SDL/libpulse emulators) also
+# follow the new default when a higher-priority sink appears.
+# Blocklist: DirtyWave M8 USB MIDI device (not an audio sink); hdmi (we
+# don't want to auto-switch to HDMI when it's just plugged in for video).
+pactl load-module module-switch-on-connect blocklist="DirtyWave_M8|hdmi" 2>/dev/null
+
+### Set the default audio path for devices that need explicit mixer switching.
+# H700 uses UCM (WirePlumber reads JackControl from the HiFi profile and
+# handles speaker/headphone switching automatically), so DEVICE_PLAYBACK_PATH_SPK
+# is not set and this block is a no-op on H700.
+if [ -n "${DEVICE_PLAYBACK_PATH_SPK}" ]; then
+  : "${DEVICE_PLAYBACK_PATH:=Playback Path}"
+  amixer -c "${ALSA_PRIMARY_CARD:-0}" cset name="${DEVICE_PLAYBACK_PATH}" "${DEVICE_PLAYBACK_PATH_SPK}" 2>/dev/null
+fi
+
+VOLUME=$(get_setting audio.volume)
+: "${VOLUME:=60}"
+if [ -n "${DEVICE_VOLUME}" ]; then
+  VOLUME="${DEVICE_VOLUME}"
+fi
+
+# Pin the ALSA Master mixer to 100% so the full dynamic range is available
+# to PipeWire's software volume stage.  On H700 the codec DAC is already
+# pinned to max via UCM; for other devices this eliminates the "quiet audio"
+# symptom caused by a low Master level at boot.
+amixer -c "${ALSA_PRIMARY_CARD:-0}" -q sset "Master" 100% 2>/dev/null
+
+# Restore the user's saved volume (via wpctl, which handles the >100% boost).
+/usr/bin/volume ${VOLUME}
