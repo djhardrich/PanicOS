@@ -86,12 +86,28 @@ description: Monochrome terminal-style theme for handheld devices.
          <backgroundColor>00000000</backgroundColor>
       </helpsystem>
 
+      <!-- Status indicators — tint to match theme color variant -->
+      <batteryText name="system-battery-text">
+         <color>${colorPrimary}</color>
+      </batteryText>
+      <batteryIcon name="system-battery-icon">
+         <color>${colorPrimary}</color>
+      </batteryIcon>
+      <networkIcon name="system-network-icon">
+         <color>${colorPrimary}</color>
+      </networkIcon>
+
    </view>
 
    <!-- ============================================================
         System view
         ============================================================ -->
    <view name="system">
+
+      <!-- Hide the built-in "N GAMES" banner that fades in after ~2s -->
+      <text name="systemInfo">
+         <visible>false</visible>
+      </text>
 
       <!-- Vertical carousel — no images shipped so all items render as logoText -->
       <carousel name="systemcarousel">
