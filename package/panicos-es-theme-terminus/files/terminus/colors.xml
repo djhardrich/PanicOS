@@ -11,6 +11,18 @@
       colorRule    — thin separator lines
    -->
 
+   <!-- Default fallback = White. MUST be first so ifSubset blocks below
+        override it. An unconditional <variables> block always applies;
+        placing it last caused every variant to be overwritten back to
+        white regardless of which color the user selected. -->
+   <variables>
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>e8e8e8ff</colorPrimary>
+      <colorAccent>ffffffff</colorAccent>
+      <colorDim>444444ff</colorDim>
+      <colorRule>222222ff</colorRule>
+   </variables>
+
    <!-- 1. White — bright white phosphor on pure black -->
    <variables ifSubset="color:white">
       <colorBg>000000ff</colorBg>
@@ -191,13 +203,5 @@
       <colorRule>260d33ff</colorRule>
    </variables>
 
-   <!-- Fallback = white (must be last, matches when no subset is active) -->
-   <variables>
-      <colorBg>000000ff</colorBg>
-      <colorPrimary>e8e8e8ff</colorPrimary>
-      <colorAccent>ffffffff</colorAccent>
-      <colorDim>444444ff</colorDim>
-      <colorRule>222222ff</colorRule>
-   </variables>
 
 </theme>

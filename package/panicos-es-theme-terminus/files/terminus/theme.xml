@@ -146,18 +146,6 @@ description: Monochrome terminal-style theme for handheld devices.
          <zIndex>5</zIndex>
       </image>
 
-      <!-- Game count for selected system -->
-      <text name="gamecount" extra="true">
-         <origin>1 0</origin>
-         <pos>0.97 ${systemSepBottom}</pos>
-         <size>0.5 0.07</size>
-         <text>{system.gameCount} games</text>
-         <color>${colorDim}</color>
-         <fontPath>${fontRegular}</fontPath>
-         <fontSize>0.035</fontSize>
-         <alignment>right</alignment>
-         <zIndex>20</zIndex>
-      </text>
 
    </view>
 
