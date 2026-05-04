@@ -271,8 +271,10 @@ BR2_PACKAGE_UNZIP=y                 # Install.PortMaster.sh needs unzip
 # "error adding trust anchors from file: /etc/ssl/certs/ca-certificates.crt".
 BR2_PACKAGE_CA_CERTIFICATES=y
 
-# Default ES theme — same one ROCKNIX/Knulli ship as default. Without
-# at least one theme installed, ES renders with no UI on first boot.
+# ES themes. Terminus is our own MIT-licensed monochrome terminal theme
+# (default). Art Book Next ships as an alternative but is CC-BY-NC-SA so
+# cannot be the default in distributed builds.
+BR2_PACKAGE_PANICOS_ES_THEME_TERMINUS=y
 BR2_PACKAGE_PANICOS_ES_THEME_ART_BOOK_NEXT=y
 
 # Network services (user-togglable via ES network settings menu).

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<theme>
+   <formatVersion>7</formatVersion>
+   <variables>
+      <fontRegular>./_inc/fonts/NotoSansMono-Regular.ttf</fontRegular>
+      <fontBold>./_inc/fonts/NotoSansMono-Bold.ttf</fontBold>
+   </variables>
+</theme>

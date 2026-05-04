@@ -1,0 +1,53 @@
+<!-- 4:3  640×480 -->
+<theme>
+   <formatVersion>7</formatVersion>
+
+   <!-- ============================================================
+        Layout variables (all in 0-1 normalized coords)
+        Reference resolution: 640×480
+        ============================================================ -->
+   <variables>
+      <!-- System view carousel text size and separator positions -->
+      <!-- Selected row is centered at 0.5, height = 0.18 -->
+      <systemLogoTextSize>0.075</systemLogoTextSize>   <!-- ~36px -->
+      <systemSepTop>0.41</systemSepTop>                 <!-- 0.5 - 0.09 -->
+      <systemSepBottom>0.59</systemSepBottom>            <!-- 0.5 + 0.09 -->
+
+      <!-- Gamelist header: spans top 14% -->
+      <headerY>0.07</headerY>            <!-- center of 14% band -->
+      <headerLogoX>0.04</headerLogoX>
+      <headerLogoW>0.6</headerLogoW>
+      <headerH>0.12</headerH>
+      <headerFontSize>0.072</headerFontSize>  <!-- ~34px, big -->
+      <headerSep>0.14</headerSep>
+
+      <!-- Gamelist (basic): full-width list below header -->
+      <listX>0.04</listX>
+      <listY>0.155</listY>
+      <listW>0.92</listW>
+      <listH>0.77</listH>
+      <listFontSize>0.056</listFontSize>   <!-- ~27px -->
+
+      <!-- Gamelist (detailed): left panel for list, right for art+desc -->
+      <detailListW>0.44</detailListW>
+      <detailDivX>0.49</detailDivX>
+      <detailArtX>0.745</detailArtX>
+      <detailArtY>0.155</detailArtY>
+      <detailArtW>0.46</detailArtW>
+      <detailArtH>0.4</detailArtH>
+      <detailDescX>0.51</detailDescX>
+      <detailDescY>0.56</detailDescY>
+      <detailDescW>0.46</detailDescW>
+      <detailDescH>0.36</detailDescH>
+      <detailDescFontSize>0.038</detailDescFontSize>
+   </variables>
+
+   <!-- Help bar position -->
+   <view name="system,basic,detailed,video,grid">
+      <helpsystem name="help">
+         <pos>0.04 0.955</pos>
+         <origin>0 1</origin>
+      </helpsystem>
+   </view>
+
+</theme>

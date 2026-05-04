@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<theme>
+   <formatVersion>7</formatVersion>
+
+   <!-- White: near-white text on pure black -->
+   <variables ifSubset="color:white">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>e8e8e8ff</colorPrimary>
+      <colorAccent>ffffffff</colorAccent>
+      <colorDim>555555ff</colorDim>
+      <colorRule>333333ff</colorRule>
+   </variables>
+
+   <!-- Phosphor green: classic terminal green on black -->
+   <variables ifSubset="color:green">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>39ff14ff</colorPrimary>
+      <colorAccent>66ff44ff</colorAccent>
+      <colorDim>1a5c0aff</colorDim>
+      <colorRule>0d330aff</colorRule>
+   </variables>
+
+   <!-- Amber: warm amber/orange on black -->
+   <variables ifSubset="color:amber">
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>ffb000ff</colorPrimary>
+      <colorAccent>ffcc44ff</colorAccent>
+      <colorDim>664400ff</colorDim>
+      <colorRule>331f00ff</colorRule>
+   </variables>
+
+   <!-- Default fallback (white) -->
+   <variables>
+      <colorBg>000000ff</colorBg>
+      <colorPrimary>e8e8e8ff</colorPrimary>
+      <colorAccent>ffffffff</colorAccent>
+      <colorDim>555555ff</colorDim>
+      <colorRule>333333ff</colorRule>
+   </variables>
+
+</theme>

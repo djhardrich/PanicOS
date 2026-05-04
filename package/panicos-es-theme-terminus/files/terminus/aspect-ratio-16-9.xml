@@ -1,0 +1,43 @@
+<!-- 16:9  e.g. 854×480 or 1280×720 -->
+<theme>
+   <formatVersion>7</formatVersion>
+
+   <variables>
+      <systemLogoTextSize>0.075</systemLogoTextSize>
+      <systemSepTop>0.41</systemSepTop>
+      <systemSepBottom>0.59</systemSepBottom>
+
+      <headerY>0.07</headerY>
+      <headerLogoX>0.03</headerLogoX>
+      <headerLogoW>0.5</headerLogoW>
+      <headerH>0.12</headerH>
+      <headerFontSize>0.072</headerFontSize>
+      <headerSep>0.14</headerSep>
+
+      <listX>0.03</listX>
+      <listY>0.155</listY>
+      <listW>0.94</listW>
+      <listH>0.77</listH>
+      <listFontSize>0.056</listFontSize>
+
+      <detailListW>0.38</detailListW>
+      <detailDivX>0.42</detailDivX>
+      <detailArtX>0.71</detailArtX>
+      <detailArtY>0.155</detailArtY>
+      <detailArtW>0.54</detailArtW>
+      <detailArtH>0.42</detailArtH>
+      <detailDescX>0.44</detailDescX>
+      <detailDescY>0.59</detailDescY>
+      <detailDescW>0.53</detailDescW>
+      <detailDescH>0.33</detailDescH>
+      <detailDescFontSize>0.038</detailDescFontSize>
+   </variables>
+
+   <view name="system,basic,detailed,video,grid">
+      <helpsystem name="help">
+         <pos>0.03 0.955</pos>
+         <origin>0 1</origin>
+      </helpsystem>
+   </view>
+
+</theme>

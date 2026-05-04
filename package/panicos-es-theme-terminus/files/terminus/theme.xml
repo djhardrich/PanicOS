@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+theme name:  Terminus
+author:      PanicOS contributors
+license:     MIT
+description: Monochrome terminal-style theme for handheld devices.
+             Noto Sans Mono font: SIL OFL 1.1
+-->
+<theme defaultTransition="instant">
+   <formatVersion>7</formatVersion>
+
+   <!-- ============================================================
+        Subset: Color variant
+        ============================================================ -->
+   <subset name="color" displayName="Color">
+      <include name="white" displayName="White" />
+      <include name="green" displayName="Phosphor Green" />
+      <include name="amber" displayName="Amber" />
+   </subset>
+
+   <!-- ============================================================
+        Subset: Aspect Ratio
+        ============================================================ -->
+   <subset name="aspect-ratio" displayName="Aspect Ratio">
+      <include if="${screen.width} == '640' && ${screen.height} == '480'" name="4-3-auto" displayName="Automatic" />
+      <include if="${screen.width} == '480' && ${screen.height} == '640'" name="4-3-auto" displayName="Automatic" />
+      <include if="{screen.ratio} == '16/9'" name="16-9-auto" displayName="Automatic" />
+      <include name="4-3" displayName="4:3" />
+      <include name="16-9" displayName="16:9" />
+   </subset>
+
+   <!-- ============================================================
+        Color + font variables
+        ============================================================ -->
+   <include>./colors.xml</include>
+   <include>./fonts.xml</include>
+
+   <!-- ============================================================
+        Per-aspect-ratio layout
+        ============================================================ -->
+   <include ifSubset="aspect-ratio:4-3|4-3-auto">./aspect-ratio-4-3.xml</include>
+   <include ifSubset="aspect-ratio:16-9|16-9-auto">./aspect-ratio-16-9.xml</include>
+   <!-- Default to 4:3 when nothing matched (covers 3:2, 1:1, etc.) -->
+   <include ifSubset="aspect-ratio:4-3">./aspect-ratio-4-3.xml</include>
+
+   <!-- ============================================================
+        Splash screen
+        ============================================================ -->
+   <include>./splash.xml</include>
+
+   <!-- ============================================================
+        All views: background + help bar
+        ============================================================ -->
+   <view name="system,basic,detailed,video,grid">
+
+      <image name="background" extra="true">
+         <origin>0 0</origin>
+         <pos>0 0</pos>
+         <size>1 1</size>
+         <color>${colorBg}</color>
+         <zIndex>0</zIndex>
+      </image>
+
+      <helpsystem name="help">
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.03</fontSize>
+         <iconColor>${colorDim}</iconColor>
+         <textColor>${colorDim}</textColor>
+         <backgroundColor>00000000</backgroundColor>
+      </helpsystem>
+
+   </view>
+
+   <!-- ============================================================
+        System view
+        ============================================================ -->
+   <view name="system">
+
+      <!-- Vertical carousel — no images shipped so all items render as logoText -->
+      <carousel name="systemcarousel">
+         <origin>0.5 0.5</origin>
+         <pos>0.5 0.5</pos>
+         <size>1 1</size>
+         <type>vertical_wheel</type>
+         <color>00000000</color>
+         <colorEnd>00000000</colorEnd>
+         <zIndex>10</zIndex>
+         <maxLogoCount>7</maxLogoCount>
+         <logoSize>1 0.18</logoSize>
+         <logoAlignment>left</logoAlignment>
+      </carousel>
+
+      <!-- System name text (fallback used when no logo image exists = always) -->
+      <text name="logoText">
+         <fontPath>${fontBold}</fontPath>
+         <fontSize>${systemLogoTextSize}</fontSize>
+         <color>${colorDim}</color>
+         <selectedColor>${colorPrimary}</selectedColor>
+         <alignment>left</alignment>
+         <padding>0.05 0 0 0</padding>
+      </text>
+
+      <!-- Cursor glyph left of selected system -->
+      <text name="system-cursor" extra="true">
+         <origin>0 0.5</origin>
+         <pos>0.02 0.5</pos>
+         <size>0.04 0.18</size>
+         <text>▶</text>
+         <color>${colorAccent}</color>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>${systemLogoTextSize}</fontSize>
+         <alignment>center</alignment>
+         <zIndex>20</zIndex>
+      </text>
+
+      <!-- Thin separator lines framing the selected row -->
+      <image name="sel-top" extra="true">
+         <origin>0 1</origin>
+         <pos>0 ${systemSepTop}</pos>
+         <size>1 0.002</size>
+         <color>${colorRule}</color>
+         <zIndex>5</zIndex>
+      </image>
+      <image name="sel-bottom" extra="true">
+         <origin>0 0</origin>
+         <pos>0 ${systemSepBottom}</pos>
+         <size>1 0.002</size>
+         <color>${colorRule}</color>
+         <zIndex>5</zIndex>
+      </image>
+
+      <!-- Game count for selected system -->
+      <text name="gamecount" extra="true">
+         <origin>1 0</origin>
+         <pos>0.97 ${systemSepBottom}</pos>
+         <size>0.5 0.07</size>
+         <text>{system.gameCount} games</text>
+         <color>${colorDim}</color>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.035</fontSize>
+         <alignment>right</alignment>
+         <zIndex>20</zIndex>
+      </text>
+
+   </view>
+
+   <!-- ============================================================
+        Gamelist views — shared header
+        ============================================================ -->
+   <view name="basic,detailed,video,grid">
+
+      <!-- System name header -->
+      <image name="logo">
+         <origin>0 0.5</origin>
+         <pos>${headerLogoX} ${headerY}</pos>
+         <maxSize>${headerLogoW} ${headerH}</maxSize>
+         <color>${colorPrimary}</color>
+         <zIndex>10</zIndex>
+      </image>
+      <text name="logoText">
+         <origin>0 0.5</origin>
+         <pos>${headerLogoX} ${headerY}</pos>
+         <size>${headerLogoW} ${headerH}</size>
+         <color>${colorPrimary}</color>
+         <fontPath>${fontBold}</fontPath>
+         <fontSize>${headerFontSize}</fontSize>
+         <alignment>left</alignment>
+         <zIndex>10</zIndex>
+      </text>
+
+      <!-- Separator under header -->
+      <image name="header-sep" extra="true">
+         <origin>0 0</origin>
+         <pos>0 ${headerSep}</pos>
+         <size>1 0.002</size>
+         <color>${colorRule}</color>
+         <zIndex>5</zIndex>
+      </image>
+
+   </view>
+
+   <!-- ============================================================
+        Gamelist (basic)
+        ============================================================ -->
+   <view name="basic">
+
+      <textlist name="gamelist">
+         <origin>0 0</origin>
+         <pos>${listX} ${listY}</pos>
+         <size>${listW} ${listH}</size>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>${listFontSize}</fontSize>
+         <selectorColor>${colorAccent}</selectorColor>
+         <selectorHeight>0</selectorHeight>
+         <selectedColor>${colorBg}</selectedColor>
+         <primaryColor>${colorPrimary}</primaryColor>
+         <secondaryColor>${colorDim}</secondaryColor>
+         <scrollIndicatorColor>${colorDim}</scrollIndicatorColor>
+         <alignment>left</alignment>
+         <lineSpacing>1.6</lineSpacing>
+         <zIndex>10</zIndex>
+      </textlist>
+
+   </view>
+
+   <!-- ============================================================
+        Gamelist (detailed)
+        ============================================================ -->
+   <view name="detailed">
+
+      <textlist name="gamelist">
+         <origin>0 0</origin>
+         <pos>${listX} ${listY}</pos>
+         <size>${detailListW} ${listH}</size>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>${listFontSize}</fontSize>
+         <selectorColor>${colorAccent}</selectorColor>
+         <selectorHeight>0</selectorHeight>
+         <selectedColor>${colorBg}</selectedColor>
+         <primaryColor>${colorPrimary}</primaryColor>
+         <secondaryColor>${colorDim}</secondaryColor>
+         <alignment>left</alignment>
+         <lineSpacing>1.6</lineSpacing>
+         <zIndex>10</zIndex>
+      </textlist>
+
+      <!-- Vertical divider between list and detail panel -->
+      <image name="detail-div" extra="true">
+         <origin>0 0</origin>
+         <pos>${detailDivX} ${listY}</pos>
+         <size>0.002 ${listH}</size>
+         <color>${colorRule}</color>
+         <zIndex>5</zIndex>
+      </image>
+
+      <!-- Game art -->
+      <image name="md_image" extra="true">
+         <origin>0.5 0</origin>
+         <pos>${detailArtX} ${detailArtY}</pos>
+         <maxSize>${detailArtW} ${detailArtH}</maxSize>
+         <zIndex>10</zIndex>
+      </image>
+
+      <!-- Description -->
+      <text name="md_description" extra="true">
+         <origin>0 0</origin>
+         <pos>${detailDescX} ${detailDescY}</pos>
+         <size>${detailDescW} ${detailDescH}</size>
+         <color>${colorPrimary}</color>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>${detailDescFontSize}</fontSize>
+         <lineSpacing>1.4</lineSpacing>
+         <alignment>left</alignment>
+         <zIndex>10</zIndex>
+      </text>
+
+   </view>
+
+</theme>

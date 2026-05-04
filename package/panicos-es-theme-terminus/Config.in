@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PANICOS_ES_THEME_TERMINUS
+	bool "panicos-es-theme-terminus"
+	help
+	  Terminus: PanicOS's own monochrome terminal-style
+	  EmulationStation theme. MIT licensed, bundled Noto Sans
+	  Mono (SIL OFL 1.1).  Three color variants: white, phosphor
+	  green, amber.

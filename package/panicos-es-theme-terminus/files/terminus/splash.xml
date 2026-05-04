@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<theme>
+   <formatVersion>7</formatVersion>
+
+   <view name="splash">
+
+      <image name="splash-bg" extra="true">
+         <origin>0 0</origin>
+         <pos>0 0</pos>
+         <size>1 1</size>
+         <color>${colorBg}</color>
+         <zIndex>0</zIndex>
+      </image>
+
+      <!-- "PANICOS" wordmark -->
+      <text name="splash-title" extra="true">
+         <origin>0.5 0.5</origin>
+         <pos>0.5 0.42</pos>
+         <size>0.9 0.18</size>
+         <text>PANICOS</text>
+         <color>${colorPrimary}</color>
+         <fontPath>${fontBold}</fontPath>
+         <fontSize>0.13</fontSize>
+         <alignment>center</alignment>
+         <zIndex>10</zIndex>
+      </text>
+
+      <!-- Version/tag line -->
+      <text name="splash-sub" extra="true">
+         <origin>0.5 0</origin>
+         <pos>0.5 0.56</pos>
+         <size>0.9 0.06</size>
+         <text>LOADING</text>
+         <color>${colorDim}</color>
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.038</fontSize>
+         <alignment>center</alignment>
+         <zIndex>10</zIndex>
+      </text>
+
+      <!-- Progress bar track -->
+      <image name="splash-bar-bg" extra="true">
+         <origin>0.5 0.5</origin>
+         <pos>0.5 0.72</pos>
+         <size>0.5 0.012</size>
+         <color>${colorRule}</color>
+         <zIndex>10</zIndex>
+      </image>
+
+      <!-- Progress bar fill -->
+      <image name="splash-bar" extra="true">
+         <origin>0 0.5</origin>
+         <pos>0.25 0.72</pos>
+         <size>0 0.012</size>
+         <color>${colorAccent}</color>
+         <zIndex>11</zIndex>
+      </image>
+
+   </view>
+
+</theme>
