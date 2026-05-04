@@ -61,6 +61,15 @@ description: Monochrome terminal-style theme for handheld devices.
    <include ifSubset="aspect-ratio:4-3">./aspect-ratio-4-3.xml</include>
 
    <!-- ============================================================
+        Screen-level overlay: tint the battery/network indicator
+        ============================================================ -->
+   <view name="screen">
+      <batteryIndicator name="batteryIndicator">
+         <color>${colorPrimary}</color>
+      </batteryIndicator>
+   </view>
+
+   <!-- ============================================================
         Splash screen
         ============================================================ -->
    <include>./splash.xml</include>
@@ -85,17 +94,6 @@ description: Monochrome terminal-style theme for handheld devices.
          <textColor>${colorDim}</textColor>
          <backgroundColor>00000000</backgroundColor>
       </helpsystem>
-
-      <!-- Status indicators — tint to match theme color variant -->
-      <batteryText name="system-battery-text">
-         <color>${colorPrimary}</color>
-      </batteryText>
-      <batteryIcon name="system-battery-icon">
-         <color>${colorPrimary}</color>
-      </batteryIcon>
-      <networkIcon name="system-network-icon">
-         <color>${colorPrimary}</color>
-      </networkIcon>
 
    </view>
 

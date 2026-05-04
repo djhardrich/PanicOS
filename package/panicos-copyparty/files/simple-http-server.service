@@ -10,7 +10,7 @@ ExecStart=/usr/bin/python3 /usr/bin/copyparty.pyz \
     -p 3923 \
     --name PanicOS \
     -a panicos:panicos \
-    -v /storage::A,panicos:e2dsa:e2ts \
+    -v /storage::A \
     --no-reload
 Restart=on-failure
 RestartSec=3
