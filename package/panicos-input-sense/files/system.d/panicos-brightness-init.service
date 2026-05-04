@@ -1,0 +1,18 @@
+[Unit]
+Description=Restore saved display brightness
+# Run after the backlight sysfs node is available but before the
+# user-facing session starts. Mirrors ROCKNIX autostart/006-display.
+After=basic.target
+Before=panicos-input-sense.service panicos-es.service panicos-pht.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=HOME=/storage
+ExecStart=/bin/sh -c '. /etc/profile.d/001-functions; \
+    PCT=$(get_setting display.brightness); \
+    [ -z "$PCT" ] && PCT=80; \
+    brightness set "$PCT"'
+
+[Install]
+WantedBy=multi-user.target

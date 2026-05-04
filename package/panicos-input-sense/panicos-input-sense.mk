@@ -102,6 +102,7 @@ define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
 		rocknix-automount.service \
 		rocknix-memory-manager.service \
 		save-sysconfig.service \
+		panicos-brightness-init.service \
 	; do \
 		$(INSTALL) -D -m 0644 "$(PANICOS_INPUT_SENSE_PKGDIR)/files/system.d/$$unit" \
 			"$(TARGET_DIR)/usr/lib/systemd/system/$$unit"; \
@@ -136,7 +137,7 @@ define PANICOS_INPUT_SENSE_INSTALL_INIT_SYSTEMD
 	rm -f $(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/rocknix-automount.service
 	for unit in batteryledstatus.service fancontrol.service \
 	            headphones.service rocknix-memory-manager.service \
-	            hdmi-hotplug.path; do \
+	            hdmi-hotplug.path panicos-brightness-init.service; do \
 		ln -sf "../$$unit" \
 			"$(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/$$unit"; \
 	done
