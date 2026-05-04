@@ -44,4 +44,18 @@ if ! [ -e "$TARGET/sbin/init" ]; then
     exit 1
 fi
 
+# Stamp OS_BUILD in /etc/os-release so ES system-info shows the git rev.
+# OS_BUILD is read by ES's ApiSystem::getVersion(extra=true) and exported
+# by profile.d/999-export so it's available to scripts.
+# BR2_EXTERNAL_PANICOS_PATH is set by Buildroot when running post-build scripts.
+PANICOS_ROOT="${BR2_EXTERNAL_PANICOS_PATH:-$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null)}"
+if [ -n "$PANICOS_ROOT" ]; then
+    BUILD_REV="$(git -C "$PANICOS_ROOT" describe --always --dirty 2>/dev/null || echo unknown)"
+    BUILD_DATE="$(date -u +%Y%m%d)"
+    # Remove any stale OS_BUILD line, then append the fresh one.
+    sed -i '/^OS_BUILD=/d' "$TARGET/etc/os-release"
+    echo "OS_BUILD=\"${BUILD_DATE}-${BUILD_REV}\"" >> "$TARGET/etc/os-release"
+    echo ">>> sanity-fix-target: stamped OS_BUILD=${BUILD_DATE}-${BUILD_REV}"
+fi
+
 echo ">>> sanity-fix-target: ok"

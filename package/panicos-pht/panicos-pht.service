@@ -9,6 +9,8 @@ After=basic.target sound.target network.target
 
 [Service]
 Type=simple
+Environment=SDL_AUDIODRIVER=pipewire
+Environment=XDG_RUNTIME_DIR=/var/run/0-runtime-dir
 ExecStart=/opt/pht/panictracker.sh
 # No TTYPath / StandardInput=tty here on purpose. PHT renders via KMSDRM
 # (grabs DRM master directly on /dev/dri/card0); it doesn't need TTY

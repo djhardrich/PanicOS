@@ -6,9 +6,10 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3 /usr/bin/copyparty.pyz \
-    --port 3923 \
+    -p 3923 \
     --name PanicOS \
-    -v /storage::r:c:c,e2dsa,e2ts \
+    -a panicos:panicos \
+    -v /storage::A,panicos:e2dsa:e2ts \
     --no-reload
 Restart=on-failure
 RestartSec=3

@@ -29,9 +29,10 @@ if [ -f "$GAMEDIR/assets/gamecontrollerdb.txt" ]; then
     export SDL_GAMECONTROLLERCONFIG_FILE="$GAMEDIR/assets/gamecontrollerdb.txt"
 fi
 
-# Force ALSA on PanicOS minimal — there's no PulseAudio/PipeWire here, and
-# SDL2 silently falls back to its dummy driver if it can't pick one.
-export SDL_AUDIODRIVER=alsa
+# pipewire-pulse socket lives at $XDG_RUNTIME_DIR/pulse/native.
+# Mirrors ROCKNIX's global SDL_AUDIODRIVER=pulseaudio (sway profile.d).
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/var/run/0-runtime-dir}
+export SDL_AUDIODRIVER=pipewire
 
 # Optional bundled helpers that PHT picks up via env vars. Only export the
 # ones that exist so PHT cleanly disables the matching feature when absent.

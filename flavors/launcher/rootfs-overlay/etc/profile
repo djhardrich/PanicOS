@@ -1,0 +1,34 @@
+export PATH="/usr/bin:/usr/sbin"
+
+if [ "$PS1" ]; then
+	if [ "`id -u`" -eq 0 ]; then
+		export PS1='# '
+	else
+		export PS1='$ '
+	fi
+fi
+
+export EDITOR='/bin/vi'
+
+# Source system profile.d scripts (device vars, functions, etc.)
+for i in /etc/profile.d/*.sh ; do
+	if [ -r "$i" ]; then
+		. $i
+	fi
+done
+unset i
+
+# Create storage profile.d if it does not exist yet.
+if [ ! -d "/storage/.config/profile.d" ]; then
+	mkdir -p /storage/.config/profile.d
+fi
+
+# Source storage profile.d — platform quirks write DEVICE_FUNC_KEYA_MODIFIER,
+# AUDIO_MANAGEMENT, and other device-specific vars here at first boot.
+# Mirrors ROCKNIX's busybox/config/profile.
+for i in /storage/.config/profile.d/* ; do
+	if [ -f "$i" ]; then
+		. $i
+	fi
+done
+unset i

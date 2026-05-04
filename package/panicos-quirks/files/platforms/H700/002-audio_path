@@ -8,6 +8,13 @@
 # changes.  headphone_sense checks AUDIO_MANAGEMENT: when UCM, it calls
 # `volume restore` and exits — skipping the amixer/GPIO fallback path that
 # would otherwise block on an empty DEVICE_HEADPHONE_DEV.
+#
+# Volume is managed entirely via pactl → WirePlumber → UCM PlaybackMixerElem
+# "Line Out".  WirePlumber translates the PipeWire logical volume to the ALSA
+# "Line Out Playback Volume" hardware control, which triggers ES's volume
+# overlay.  DAC Playback Volume is pinned to max (63) by the UCM EnableSequence
+# when WirePlumber activates the Speaker or Headphones device — no amixer call
+# needed here.
 cat <<EOF >/storage/.config/profile.d/002-audio_path
 AUDIO_MANAGEMENT=UCM
 EOF

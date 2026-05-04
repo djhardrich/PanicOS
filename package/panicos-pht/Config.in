@@ -8,7 +8,7 @@ config BR2_PACKAGE_PANICOS_PHT
 	help
 	  ProHandheldTracker — PortMaster-flavor SDL2 audio tracker.
 	  Bundles the prebuilt aarch64 binary, ~50MB of plugin DSPs, and
-	  a launcher tuned for handheld use (forces SDL_AUDIODRIVER=alsa,
+	  a launcher tuned for handheld use (sets SDL_AUDIODRIVER=pipewire,
 	  exports SDL_GAMECONTROLLERCONFIG from the bundled gamecontrollerdb).
 
 	  Payload comes from vendor/pht/ in the repo. Run scripts/vendor-pht.sh

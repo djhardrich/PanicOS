@@ -60,6 +60,10 @@ export ALSOFT_DRIVERS="pipewire,alsa,sdl2"
 export SDL_VIDEODRIVER=wayland
 export WAYLAND_DISPLAY=wayland-1
 export XKB_CONFIG_ROOT=/usr/share/X11/xkb
+# Mirrors ROCKNIX's 050-sway.conf: use pipewire-pulse for SDL2 audio.
+# Must be in profile.d (not only service Environment=) because
+# control.txt re-sources /etc/profile in every port's launch chain.
+export SDL_AUDIODRIVER=pipewire
 
 # XDG_RUNTIME_DIR — also set as Environment= in panicos-sway.service,
 # but PortMaster ports that go through `bash --login` chains can drop
