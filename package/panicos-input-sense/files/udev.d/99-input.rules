@@ -1,0 +1,8 @@
+### Restart input_sense whenever an input device is attached, detached,
+### or changed so that volume buttons and brightness hotkeys work across
+### all connected devices (including hotplugged controllers).
+### Verbatim from ROCKNIX: packages/sysutils/system-utils/udev.d/99-input.rules
+
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", RUN+="/usr/bin/killall input_sense"
+ACTION=="remove", SUBSYSTEM=="input", KERNEL=="event*", RUN+="/usr/bin/killall input_sense"
+ACTION=="add|change", KERNEL=="hci*", RUN+="/usr/bin/killall input_sense"

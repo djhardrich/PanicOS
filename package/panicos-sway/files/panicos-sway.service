@@ -9,6 +9,12 @@ After=basic.target sound.target network.target
 Type=simple
 Environment=HOME=/storage
 Environment=XDG_RUNTIME_DIR=/var/run/0-runtime-dir
+# SDL audio via PipeWire-pulse so WirePlumber can route streams to whatever
+# the current default sink is (USB-C headphones, Bluetooth, etc.).
+# Mirrors ROCKNIX's 050-sway.conf: export SDL_AUDIODRIVER=pulseaudio.
+# pipewire-pulse creates its socket at $XDG_RUNTIME_DIR/pulse/native via
+# unix:native in pipewire-pulse.conf, so libpulse finds it at the expected path.
+Environment=SDL_AUDIODRIVER=pulseaudio
 ExecStart=/usr/bin/panicos-sway-launch
 StandardOutput=journal
 StandardError=journal

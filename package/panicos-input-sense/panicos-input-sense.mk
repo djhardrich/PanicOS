@@ -53,6 +53,13 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 	# DEVICE_* exports never propagate.
 	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/tmpfiles.d/panicos-storage-skel.conf \
 		$(TARGET_DIR)/usr/lib/tmpfiles.d/panicos-storage-skel.conf
+	# udev rule: kill+restart input_sense whenever input devices are added,
+	# removed, or changed. input_sense's get_devices() scans at startup only;
+	# without this, volume-key and gpio-keys devices that enumerate after
+	# service start are never picked up. Verbatim from ROCKNIX:
+	#   packages/sysutils/system-utils/udev.d/99-input.rules
+	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/udev.d/99-input.rules \
+		$(TARGET_DIR)/etc/udev/rules.d/99-input.rules
 
 	# python → python3 symlink. ROCKNIX scripts (e.g. rocknix-bluetooth-agent)
 	# call /usr/bin/python; we ship python3 only. Symlink avoids patching

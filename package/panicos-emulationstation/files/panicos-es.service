@@ -22,13 +22,12 @@ Environment=SWAYSOCK=/var/run/0-runtime-dir/sway-ipc.0.sock
 # size too low?" spam under load (see Doom Engines / Wolfenstein log).
 # Native pipewire backend avoids the shim. Inherited by every port.
 Environment=ALSOFT_DRIVERS=pipewire,alsa,sdl2
-# Force SDL audio through PipeWire's ALSA shim (50-pipewire.conf +
-# 99-pipewire-default.conf redirect ALSA→PipeWire). PipeWire handles
-# sink routing transparently including USB-C headphone hotplug.
-# Using "pulseaudio" here causes SDL to fail connecting to the pulse
-# socket (PipeWire-pulse runs as a system service; socket is not at
-# the $XDG_RUNTIME_DIR/pulse/native path SDL expects) → Rockbox panic.
-Environment=SDL_AUDIODRIVER=alsa
+# SDL audio via PipeWire-pulse so WirePlumber can route streams to the
+# current default sink (USB-C headphones, Bluetooth, etc.). Matches
+# ROCKNIX's 050-sway.conf approach. pipewire-pulse creates its socket
+# at $XDG_RUNTIME_DIR/pulse/native (unix:native in pipewire-pulse.conf),
+# so libpulse finds it at the right path.
+Environment=SDL_AUDIODRIVER=pulseaudio
 # Wait up to 10 s for sway to create its Wayland socket before launching ES.
 # sway 1.11 has no sd_notify, so Type=simple on the sway unit means systemd
 # marks it "active" the instant the process forks — before the socket exists.
