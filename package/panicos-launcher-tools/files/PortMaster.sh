@@ -29,4 +29,7 @@ fi
 [ -f /etc/profile ] && . /etc/profile
 
 cd /storage/roms/ports/PortMaster
-exec ./PortMaster.sh "$@"
+./PortMaster.sh "$@"
+
+# Restart ES so any newly-installed ports appear in the Ports list.
+systemctl restart --no-block panicos-es
