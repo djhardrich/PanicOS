@@ -9,5 +9,6 @@ MARKER=/storage/.panicos-sshkeys-done
 echo ">>> panicos-sshkeys: generating openssh host keys"
 ssh-keygen -A
 
+systemctl enable sshd
 touch "$MARKER"
 echo ">>> panicos-sshkeys: done"

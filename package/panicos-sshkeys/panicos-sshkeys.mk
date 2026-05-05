@@ -32,9 +32,6 @@ define PANICOS_SSHKEYS_INSTALL_INIT_SYSTEMD
 	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/sysinit.target.wants
 	ln -sf ../panicos-sshkeys.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/sysinit.target.wants/panicos-sshkeys.service
-	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants
-	ln -sf ../sshd.service \
-		$(TARGET_DIR)/usr/lib/systemd/system/multi-user.target.wants/sshd.service
 endef
 
 $(eval $(generic-package))
