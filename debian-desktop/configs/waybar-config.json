@@ -2,10 +2,15 @@
     "layer": "top",
     "position": "top",
     "height": 24,
-    "modules-left": ["clock"],
+    "modules-left": ["custom/launcher", "clock"],
     "modules-center": [],
     "modules-right": ["network", "battery", "pulseaudio", "tray"],
 
+    "custom/launcher": {
+        "format": " Apps",
+        "on-click": "wofi --show drun --prompt 'Launch' --width 400 --height 300 --term xterm",
+        "tooltip": false
+    },
     "clock": {
         "format": "{:%H:%M}",
         "tooltip-format": "{:%Y-%m-%d %H:%M:%S}"

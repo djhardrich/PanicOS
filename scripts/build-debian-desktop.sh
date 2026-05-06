@@ -89,6 +89,12 @@ PACKAGES=(
     sudo curl wget less nano htop procps iproute2
     bash-completion xdg-user-dirs xdg-utils desktop-file-utils
 
+    # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap)
+    iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet
+
+    # Application launcher (Wayland-native, keyboard + touch friendly)
+    wofi
+
     # Hardware control
     brightnessctl
 
