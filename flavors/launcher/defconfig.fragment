@@ -355,12 +355,15 @@ BR2_PACKAGE_FLAC=y
 # giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
 BR2_PACKAGE_GIFLIB=y
 BR2_PACKAGE_LIBTIFF=y
-# Port-specific situational libs — bisecting black screen; re-add after confirmed safe.
-# BR2_PACKAGE_LIBASS=y
-# BR2_PACKAGE_LIBSOXR=y
-# BR2_PACKAGE_LCMS2=y
-# BR2_PACKAGE_SPEEX=y
-# BR2_PACKAGE_LIBBLURAY=y
+# Port-specific situational libs — safe to add; real culprit was libglvnd
+# (which overwrites mesa's EGL/GLES symlinks without ICD dispatch config).
+# libepoxy is opt-in via linking so doesn't affect mesa/ES globally.
+BR2_PACKAGE_LIBASS=y
+BR2_PACKAGE_LIBEPOXY=y
+BR2_PACKAGE_LIBSOXR=y
+BR2_PACKAGE_LCMS2=y
+BR2_PACKAGE_SPEEX=y
+BR2_PACKAGE_LIBBLURAY=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
