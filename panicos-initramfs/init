@@ -105,7 +105,9 @@ done
 flavor_count=$(echo $flavors | wc -w)
 
 if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
-    [ -f /rocknix-joypad.ko ] && insmod /rocknix-joypad.ko 2>/dev/null || true
+    for _ko in /*.ko; do
+        [ -f "$_ko" ] && insmod "$_ko" 2>/dev/null || true
+    done
     sleep 1   # let evdev nodes settle after insmod
     echo ">>> PanicOS initramfs: booting $IMAGE in 3s — press any button for menu"
     if /sbin/panicos-mbselect wait 3; then

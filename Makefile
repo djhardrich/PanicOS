@@ -282,7 +282,8 @@ _build:
 		FW_DIR="$(PANICOS_ROOT)/soc/$$SOC/$$K/rootfs-overlay/usr/lib/firmware"; \
 		HOST_DIR="$$OUT/host"; \
 		KMODS=""; \
-		for ko in "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-joypad.ko"; do \
+		for ko in "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-joypad.ko" \
+		          "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-singleadc-joypad.ko"; do \
 			[ -f "$$ko" ] && KMODS="$${KMODS:+$$KMODS:}$$ko"; \
 		done; \
 		PANICOS_INITRAMFS_FIRMWARE_DIRS="$$([ -d "$$FW_DIR" ] && echo "$$FW_DIR")" \
