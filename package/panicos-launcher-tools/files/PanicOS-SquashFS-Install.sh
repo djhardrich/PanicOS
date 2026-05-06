@@ -3,6 +3,16 @@
 # the boot partition. Presence on /boot is all that's needed — the PanicOS
 # mbselect menu picks it up automatically.
 
+# When launched from EmulationStation (no visible TTY), re-exec inside foot
+# so output is displayed. Sway auto-fullscreens any new window via kiosk config.
+# Source /etc/profile first so WAYLAND_DISPLAY/SWAYSOCK are in the environment.
+if [ ! -t 1 ]; then
+    [ -f /etc/profile ] && . /etc/profile
+    if command -v foot >/dev/null 2>&1; then
+        exec foot --app-id=panicos-tool -- "$0" "$@"
+    fi
+fi
+
 SQUASHFS_NAME="panicos-debian-desktop.squashfs"
 BOOT="/boot"
 SQUASHFS_PATH="$BOOT/$SQUASHFS_NAME"

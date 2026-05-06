@@ -96,6 +96,10 @@ BR2_PACKAGE_LIBXKBCOMMON=y
 BR2_PACKAGE_LIBINPUT=y
 BR2_PACKAGE_SWAY=y
 BR2_PACKAGE_PANICOS_SWAY=y
+# foot — minimal Wayland terminal; used by port tool scripts (e.g.
+# PanicOS-SquashFS-Install.sh) to display output when launched from ES
+# without a visible TTY. Sway auto-fullscreens it via for_window rule.
+BR2_PACKAGE_FOOT=y
 
 # Bluetooth + iwd-based wifi runtime UX. wifictl + rocknix-bluetooth
 # (vendored from third_party/rocknix) are the scripts ES menus shell
