@@ -1,0 +1,19 @@
+# Add this entry to /boot/extlinux/extlinux.conf on the SD card
+# (alongside the existing PanicOS entry).
+#
+# The squashfs is expected at /panicos-debian-desktop.squashfs on the boot
+# partition. overlayroot (installed inside the squashfs) handles the
+# writable tmpfs overlay in its initramfs hook.
+#
+# Adjust dtb path to match your device (same dtb as the PanicOS entry).
+
+LABEL debian-desktop
+  MENU LABEL Debian Sid Desktop
+  LINUX /Image
+  INITRD /debian-desktop-initrd.img
+  FDT /sun50i-h700-anbernic-rg35xx-pro.dtb
+  APPEND root=/dev/mmcblk0p1 rootfstype=squashfs rootflags=ro \
+    squashfs_file=/panicos-debian-desktop.squashfs \
+    overlayroot=tmpfs \
+    console=ttyS0,115200 console=tty1 \
+    quiet loglevel=3

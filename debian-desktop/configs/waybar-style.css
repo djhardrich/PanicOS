@@ -1,0 +1,32 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 11px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: rgba(20, 20, 30, 0.92);
+    color: #e0e0e0;
+}
+
+#clock,
+#battery,
+#network,
+#pulseaudio,
+#tray {
+    padding: 0 6px;
+    color: #e0e0e0;
+}
+
+#battery.charging { color: #26a65b; }
+#battery.warning:not(.charging) { color: #f39c12; }
+#battery.critical:not(.charging) { color: #e74c3c; }
+
+#network.disconnected { color: #e74c3c; }
+
+tooltip {
+    background: rgba(20, 20, 30, 0.95);
+    border: 1px solid #444;
+}

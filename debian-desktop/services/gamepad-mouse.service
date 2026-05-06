@@ -1,0 +1,13 @@
+[Unit]
+Description=PanicOS gamepad → mouse/OSK daemon
+After=systemd-udevd.service
+Wants=systemd-udevd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/panicos/gamepad-mouse.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

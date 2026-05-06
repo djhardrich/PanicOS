@@ -1,0 +1,31 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 24,
+    "modules-left": ["clock"],
+    "modules-center": [],
+    "modules-right": ["network", "battery", "pulseaudio", "tray"],
+
+    "clock": {
+        "format": "{:%H:%M}",
+        "tooltip-format": "{:%Y-%m-%d %H:%M:%S}"
+    },
+    "network": {
+        "format-wifi": "  {essid}",
+        "format-ethernet": " {ipaddr}",
+        "format-disconnected": "✗ offline",
+        "tooltip-format": "{ifname}: {ipaddr}"
+    },
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-icons": ["", "", "", "", ""]
+    },
+    "pulseaudio": {
+        "format": "{volume}% {icon}",
+        "format-muted": " mute",
+        "format-icons": {"default": ["", "", ""]}
+    },
+    "tray": {
+        "spacing": 6
+    }
+}
