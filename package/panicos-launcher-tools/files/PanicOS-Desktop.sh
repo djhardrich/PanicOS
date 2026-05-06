@@ -6,6 +6,7 @@
 SQUASHFS_NAME="panicos-debian-desktop.squashfs"
 BOOT="/boot"
 SQUASHFS_PATH="$BOOT/$SQUASHFS_NAME"
+STAGING="/storage/squashfs/$SQUASHFS_NAME"
 
 boot_rw() { mount -o remount,rw  "$BOOT"; }
 boot_ro() { mount -o remount,ro  "$BOOT"; }
@@ -29,10 +30,10 @@ if [ -f "$SQUASHFS_PATH" ]; then
     echo "  Done. Debian Desktop will no longer appear in the boot menu."
 else
     # Toggle ON — install from /tmp if present, otherwise show instructions
-    if [ -f "/tmp/$SQUASHFS_NAME" ]; then
-        echo "  Found /tmp/$SQUASHFS_NAME — installing to /boot..."
+    if [ -f "$STAGING" ]; then
+        echo "  Found $STAGING — installing to /boot..."
         boot_rw
-        mv "/tmp/$SQUASHFS_NAME" "$SQUASHFS_PATH"
+        mv "$STAGING" "$SQUASHFS_PATH"
         boot_ro
         echo "  Done. Reboot to see Debian Desktop in the boot menu."
     else
@@ -44,7 +45,7 @@ else
         echo ""
         echo "  Copy it to the device:"
         echo "    scp output/debian-desktop/$SQUASHFS_NAME \\"
-        echo "        root@${IP:-<device-ip>}:/tmp/"
+        echo "        root@${IP:-<device-ip>}:/storage/squashfs/"
         echo ""
         echo "  Then run this tool again to install it."
     fi

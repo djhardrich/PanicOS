@@ -73,6 +73,10 @@ fi
     [ ! -e /storage/roms/ports/PortMaster.sh ] && \
     ln -sf /usr/share/panicos-launcher/tools/PortMaster.sh /storage/roms/ports/PortMaster.sh
 
+# Staging directory for squashfs flavors (e.g. Debian desktop). Users scp
+# squashfs files here; PanicOS-Desktop.sh moves them to /boot automatically.
+mkdir -p /storage/squashfs
+
 # /roms compatibility symlink. PortMaster's inner PortMaster.sh + every
 # port launcher in the catalog hardcodes /roms/ports/<port>/ paths,
 # relying on the host CFW to symlink /roms to wherever the writable
