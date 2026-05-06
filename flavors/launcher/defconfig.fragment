@@ -363,7 +363,6 @@ BR2_PACKAGE_LIBTIFF=y
 # speex: speech codec (niche but cheap to include).
 # libbluray: Blu-ray playback lib pulled in by some media ports.
 BR2_PACKAGE_LIBASS=y
-BR2_PACKAGE_LIBEPOXY=y
 BR2_PACKAGE_LIBSOXR=y
 BR2_PACKAGE_LCMS2=y
 BR2_PACKAGE_SPEEX=y
