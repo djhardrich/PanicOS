@@ -76,6 +76,25 @@ cp "$BINARIES_DIR/rootfs.squashfs" \
 sed -i "s|^IMAGE=.*|IMAGE=${PANICOS_OUTPUT_NAME}.squashfs|" \
     "$BINARIES_DIR/panicos-active.cfg"
 
+# Create a kernel modules + firmware tarball on the boot vfat.
+# The PanicOS initramfs detects foreign squashfs flavors (e.g. Debian) that
+# lack /lib/modules/<kver> and auto-injects this tarball into their overlayfs
+# upper layer on first boot, so device drivers (wifi, joypad, etc.) work
+# without baking modules into every squashfs variant.
+KVER=$(cat "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/linux-"*/include/config/kernel.release 2>/dev/null | head -1)
+if [ -n "$KVER" ]; then
+    MODULES_SRC="${TARGET_DIR}/usr/lib/modules/$KVER"
+    FW_SRC="${TARGET_DIR}/usr/lib/firmware"
+    MODULES_TAR="$BINARIES_DIR/panicos-modules.tar.gz"
+    TAR_ARGS=()
+    [ -d "$MODULES_SRC" ] && TAR_ARGS+=(-C "$TARGET_DIR" "usr/lib/modules/$KVER")
+    [ -d "$FW_SRC"      ] && TAR_ARGS+=(-C "$TARGET_DIR" "usr/lib/firmware")
+    if [ ${#TAR_ARGS[@]} -gt 0 ]; then
+        tar -czf "$MODULES_TAR" "${TAR_ARGS[@]}"
+        echo ">>> post-image: panicos-modules.tar.gz ($KVER, $(du -sh "$MODULES_TAR" | cut -f1))"
+    fi
+fi
+
 # Ship the wifi-config template on the boot vfat so users can fill in
 # SSID/PSK on a PC after flashing without rebuilding. The template is
 # entirely commented-out by default — boot is wifi-less until edited.

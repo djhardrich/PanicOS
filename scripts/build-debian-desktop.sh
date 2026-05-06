@@ -154,6 +154,13 @@ mmdebstrap \
 
 info "Configuring rootfs..."
 
+# Bind-mount proc/sys/dev so systemctl enable and other tools work in chroot.
+mount -t proc  proc     "$ROOTFS/proc"
+mount -t sysfs sysfs    "$ROOTFS/sys"
+mount --bind   /dev     "$ROOTFS/dev"
+mount --bind   /dev/pts "$ROOTFS/dev/pts"
+trap 'umount -lf "$ROOTFS/dev/pts" "$ROOTFS/dev" "$ROOTFS/sys" "$ROOTFS/proc" 2>/dev/null || true' EXIT
+
 chroot_run() {
     chroot "$ROOTFS" /usr/bin/env \
         DEBIAN_FRONTEND=noninteractive \
@@ -280,11 +287,13 @@ if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ];
     cp -a "$LINUX_BUILD/arch/arm64/include" "$KHEADER_DEST/arch/arm64/"
     cp "$LINUX_BUILD/arch/arm64/Makefile" "$KHEADER_DEST/arch/arm64/" 2>/dev/null || true
 
-    # Scripts source (host binaries stripped; make scripts rebuilds for arm64)
+    # scripts/ source only — host x86_64 binaries stripped.
+    # Users who want to build modules on-device run:
+    #   make -C /usr/src/linux-headers-$(uname -r) scripts ARCH=arm64
     cp -a "$LINUX_BUILD/scripts" "$KHEADER_DEST/"
     find "$KHEADER_DEST/scripts" -type f -executable \
         ! -name '*.sh' ! -name '*.pl' ! -name '*.awk' ! -name 'Makefile*' \
-        -exec sh -c 'file "$1" | grep -q "ELF.*x86" && rm -f "$1"' _ {} \;
+        -exec sh -c 'file "$1" 2>/dev/null | grep -q "ELF.*x86" && rm -f "$1"' _ {} \;
 
     # tools/include (needed by some module Makefiles)
     if [ -d "$LINUX_BUILD/tools/include" ]; then
@@ -292,23 +301,20 @@ if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ];
         cp -a "$LINUX_BUILD/tools/include" "$KHEADER_DEST/tools/"
     fi
 
-    # Rebuild scripts for arm64 using the chroot's native gcc
-    info "Rebuilding kernel scripts for arm64 inside chroot..."
-    chroot_run bash -c "cd /usr/src/linux-headers-$KVER && make scripts ARCH=arm64 -j\$(nproc) 2>&1 | tail -3" || \
-        warn "make scripts failed — run 'make scripts ARCH=arm64' in /usr/src/linux-headers-$KVER manually"
-
-    # Copy full modules tree from PanicOS build so device drivers load
+    # Copy full modules tree from PanicOS build so device drivers load.
+    # Note: initramfs also injects modules at boot for any squashfs that lacks
+    # them, so this is belt-and-suspenders for the Debian squashfs itself.
     MODULES_SRC="$BOARD_OUTPUT/target/usr/lib/modules/$KVER"
     if [ -d "$MODULES_SRC" ]; then
+        mkdir -p "$ROOTFS/lib/modules"
         cp -a "$MODULES_SRC" "$ROOTFS/lib/modules/"
         chroot_run depmod -a "$KVER"
         info "Kernel modules installed from PanicOS build ($KVER)"
     else
-        # No modules yet — just create the build symlink stub
         mkdir -p "$ROOTFS/lib/modules/$KVER"
     fi
 
-    # Always wire the build symlink (may overwrite one depmod created)
+    # Wire /lib/modules/<kver>/build for out-of-tree module development
     ln -sfT "/usr/src/linux-headers-$KVER" "$ROOTFS/lib/modules/$KVER/build"
 
     # Autoload PanicOS device drivers at boot
