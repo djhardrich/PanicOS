@@ -15,7 +15,7 @@
 # shared (ROMs, music, documents, etc.).
 #
 # Requirements on build host:
-#   Arch: paru -S mmdebstrap qemu-user-static-bin
+#   Arch: paru -S mmdebstrap qemu-user-static-bin debian-archive-keyring
 #         sudo systemctl restart systemd-binfmt
 #         (arch-test not needed — script passes --skip=check/qemu)
 #   Debian: sudo apt install mmdebstrap qemu-user-static binfmt-support
@@ -93,6 +93,8 @@ info()  { echo -e "\033[1;32m>>> $*\033[0m"; }
 warn()  { echo -e "\033[1;33m    $*\033[0m"; }
 error() { echo -e "\033[1;31m!!! $*\033[0m" >&2; exit 1; }
 
+DEBIAN_KEYRING=""
+
 check_tools() {
     for t in mmdebstrap mksquashfs; do
         command -v "$t" &>/dev/null || error "Missing: $t"
@@ -105,7 +107,15 @@ check_tools() {
     [ -e /proc/sys/fs/binfmt_misc/aarch64 ] || \
     [ -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ] || \
         error "binfmt aarch64 not active — run: sudo systemctl restart systemd-binfmt"
-    info "Build tools OK (qemu: $qemu)"
+    # Debian keyring (needed on non-Debian hosts)
+    for k in \
+        /usr/share/keyrings/debian-archive-keyring.gpg \
+        /usr/share/debhelper/vendor/debian-keyring.gpg; do
+        [ -f "$k" ] && DEBIAN_KEYRING="$k" && break
+    done
+    [ -n "$DEBIAN_KEYRING" ] || \
+        error "Debian keyring not found — install debian-archive-keyring (Arch AUR)"
+    info "Build tools OK (qemu: $qemu, keyring: $DEBIAN_KEYRING)"
 }
 
 # ── build ─────────────────────────────────────────────────────────────────────
@@ -125,6 +135,7 @@ mmdebstrap \
     --include="$PKG_LIST" \
     --components="main contrib non-free non-free-firmware" \
     --skip=check/qemu \
+    --keyring="$DEBIAN_KEYRING" \
     "$SUITE" \
     "$ROOTFS" \
     "$MIRROR"
