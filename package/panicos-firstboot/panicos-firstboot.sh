@@ -8,6 +8,11 @@ set -eu
 set -x
 
 MARKER=/storage/.panicos-firstboot-done
+
+# Ensure persistent storage dirs exist on every boot — not inside the
+# one-shot block below so upgrades (existing marker) still get them.
+mkdir -p /storage/squashfs
+
 [ -f "$MARKER" ] && exit 0
 
 # Find the device backing /storage (mounted by initramfs). Read /proc/mounts

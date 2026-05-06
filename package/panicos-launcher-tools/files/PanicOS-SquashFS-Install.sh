@@ -17,13 +17,19 @@ device_ip() {
         | awk '/inet /{print $2}' | cut -d/ -f1 | head -1
 }
 
-# Draw a simple progress bar to stderr (so it doesn't corrupt stdout).
+# Portable file-size-in-bytes. busybox on this system has CONFIG_STAT=n
+# so `stat` is not available. `ls -la` field 5 is the byte count for
+# regular files; awk trims whitespace.
+file_bytes() {
+    ls -la "$1" 2>/dev/null | awk 'NR==1 {print $5+0}'
+}
+
+# Draw a simple progress bar.
 # Usage: draw_bar <pct 0-100> <done_mb> <total_mb>
 draw_bar() {
     local pct=$1 done_mb=$2 total_mb=$3
     local filled=$(( pct * BAR_WIDTH / 100 ))
     local empty_w=$(( BAR_WIDTH - filled ))
-    # Build strings from fixed-length pads — avoids a character-by-character loop
     local full_str="===================================="   # BAR_WIDTH chars
     local empty_str="                                    "  # BAR_WIDTH chars
     local bar="${full_str:0:$filled}${empty_str:0:$empty_w}"
@@ -36,8 +42,7 @@ copy_with_progress() {
     local dst_tmp="${dst}.panicos-tmp"
     local src_size src_mb
 
-    src_size=$(stat -c%s "$src" 2>/dev/null) \
-        || { printf "  ERROR: cannot stat %s\n" "$src" >&2; return 1; }
+    src_size=$(file_bytes "$src")
     src_mb=$(( src_size / 1048576 ))
 
     rm -f "$dst_tmp"
@@ -47,7 +52,7 @@ copy_with_progress() {
     printf "\n" >&2
     while kill -0 "$CP_PID" 2>/dev/null; do
         local done_bytes pct done_mb
-        done_bytes=$(stat -c%s "$dst_tmp" 2>/dev/null || echo 0)
+        done_bytes=$(file_bytes "$dst_tmp")
         pct=$(( src_size > 0 ? done_bytes * 100 / src_size : 0 ))
         done_mb=$(( done_bytes / 1048576 ))
         draw_bar "$pct" "$done_mb" "$src_mb"
@@ -85,7 +90,7 @@ if [ -f "$SQUASHFS_PATH" ]; then
     echo "  Done. Debian Desktop removed from boot menu."
 
 elif [ -f "$STAGING" ]; then
-    staging_mb=$(( $(stat -c%s "$STAGING" 2>/dev/null || echo 0) / 1048576 ))
+    staging_mb=$(( $(file_bytes "$STAGING") / 1048576 ))
     echo "  Status  : NOT INSTALLED"
     echo "  Source  : $STAGING  (${staging_mb} MB)"
     echo "  Target  : $SQUASHFS_PATH"
