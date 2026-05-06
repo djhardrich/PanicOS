@@ -38,9 +38,9 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/share/SDL-GameControllerDB
 	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/gamecontrollerdb.txt \
 		$(TARGET_DIR)/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
-	# PanicOS-Desktop.sh — on-device toggle for the Debian multiboot flavor.
-	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/PanicOS-Desktop.sh \
-		$(TARGET_DIR)/usr/share/panicos-launcher/tools/PanicOS-Desktop.sh
+	# PanicOS-SquashFS-Install.sh — on-device toggle for the Debian multiboot flavor.
+	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/PanicOS-SquashFS-Install.sh \
+		$(TARGET_DIR)/usr/share/panicos-launcher/tools/PanicOS-SquashFS-Install.sh
 	# panicos-portmaster-fixup re-applies our overrides on every ES
 	# start (mirror's ROCKNIX's start_portmaster.sh approach). Lives
 	# at /usr/sbin/.
