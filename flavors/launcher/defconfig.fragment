@@ -355,18 +355,12 @@ BR2_PACKAGE_FLAC=y
 # giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
 BR2_PACKAGE_GIFLIB=y
 BR2_PACKAGE_LIBTIFF=y
-# Port-specific situational libs — added wholesale to avoid future whack-a-mole.
-# libass: subtitle rendering in video-heavy ports.
-# libepoxy: GL extension wrapper used by GTK-based ports.
-# libsoxr: high-quality audio resampling in audio-heavy ports.
-# lcms2: color management (image editors, some SDL2 ports).
-# speex: speech codec (niche but cheap to include).
-# libbluray: Blu-ray playback lib pulled in by some media ports.
-BR2_PACKAGE_LIBASS=y
-BR2_PACKAGE_LIBSOXR=y
-BR2_PACKAGE_LCMS2=y
-BR2_PACKAGE_SPEEX=y
-BR2_PACKAGE_LIBBLURAY=y
+# Port-specific situational libs — bisecting black screen; re-add after confirmed safe.
+# BR2_PACKAGE_LIBASS=y
+# BR2_PACKAGE_LIBSOXR=y
+# BR2_PACKAGE_LCMS2=y
+# BR2_PACKAGE_SPEEX=y
+# BR2_PACKAGE_LIBBLURAY=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
