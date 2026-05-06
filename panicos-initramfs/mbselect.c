@@ -101,11 +101,13 @@ enum { ACT_NONE = -1, ACT_UP, ACT_DOWN, ACT_SELECT, ACT_CANCEL };
 
 static int classify(int code) {
     switch (code) {
-        case KEY_UP:        case BTN_DPAD_UP:                       return ACT_UP;
-        case KEY_DOWN:      case BTN_DPAD_DOWN:                     return ACT_DOWN;
-        case KEY_ENTER:     case BTN_A:        case BTN_START:      return ACT_SELECT;
-        case KEY_ESC:       case KEY_BACKSPACE:case BTN_B:
-        case BTN_SELECT:                                            return ACT_CANCEL;
+        case KEY_UP:        case BTN_DPAD_UP:                           return ACT_UP;
+        case KEY_DOWN:      case BTN_DPAD_DOWN:                         return ACT_DOWN;
+        /* Accept both BTN_A (304, south/"B" label) and BTN_B (305, east/"A" label).
+         * Anbernic H700 devices use the Nintendo layout: physical A = east = BTN_B.
+         * Accepting both avoids the device-specific mapping puzzle entirely. */
+        case KEY_ENTER:     case BTN_A: case BTN_B: case BTN_START:     return ACT_SELECT;
+        case KEY_ESC:       case KEY_BACKSPACE: case BTN_SELECT:         return ACT_CANCEL;
         default: return ACT_NONE;
     }
 }

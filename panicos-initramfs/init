@@ -111,11 +111,14 @@ if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
     sleep 1   # let evdev nodes settle after insmod
     echo ">>> PanicOS initramfs: booting $IMAGE in 3s — press any button for menu"
     if /sbin/panicos-mbselect wait 3; then
-        chosen=$(/sbin/panicos-mbselect menu "$IMAGE" $flavors)
-        if [ -n "$chosen" ] && [ -f "/boot/$chosen" ]; then
-            IMAGE="$chosen"
-            FLAVOR=
-            echo ">>> PanicOS initramfs: user selected $IMAGE"
+        # Use `if chosen=$(...)` so set -e doesn't kill init when the user
+        # presses cancel (exit 1) or mbselect times out — fall back to default.
+        if chosen=$(/sbin/panicos-mbselect menu "$IMAGE" $flavors); then
+            if [ -n "$chosen" ] && [ -f "/boot/$chosen" ]; then
+                IMAGE="$chosen"
+                FLAVOR=
+                echo ">>> PanicOS initramfs: user selected $IMAGE"
+            fi
         fi
     fi
 fi
@@ -180,6 +183,13 @@ if [ ! -d "/lower/lib/modules/$_kver" ] && \
         touch "$_sentinel" && \
         echo ">>> PanicOS: injection done (kernel $_kver)" || \
         echo ">>> PanicOS: injection failed — device drivers may be missing"
+    # Drop modules-load.d entries for out-of-tree drivers that udev has no
+    # hardware-ID match for (rocknix-joypad is not in any modalias table).
+    # systemd-modules-load.service picks these up on first boot.
+    _mld="$OVERLAY_BASE/upper/etc/modules-load.d"
+    mkdir -p "$_mld"
+    printf 'rocknix-joypad\nrocknix-singleadc-joypad\n' \
+        > "$_mld/panicos-joypad.conf" || true
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 

@@ -122,6 +122,12 @@ description: Monochrome terminal-style theme for handheld devices.
          <separatorColor>${colorRule}</separatorColor>
       </menuGroup>
 
+      <!-- Text input box (wifi password, hostname, etc.) -->
+      <menuTextEdit name="menutextedit">
+         <inactive>./_inc/images/textinput.png</inactive>
+         <active>./_inc/images/textinput-active.png</active>
+      </menuTextEdit>
+
    </view>
 
    <!-- ============================================================
