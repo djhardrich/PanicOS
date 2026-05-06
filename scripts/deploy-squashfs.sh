@@ -20,5 +20,5 @@ echo ">>> Deploying $FNAME ($SIZE) to $HOST:/boot/"
 ssh "$HOST" 'mount -o remount,rw /boot'
 scp "$SRC" "$HOST:/boot/$FNAME"
 ssh "$HOST" 'mount -o remount,ro /boot'
-echo ">>> Done. To boot into it:"
-echo "    ssh $HOST \"mount -o remount,rw /boot && echo IMAGE=$FNAME > /boot/panicos-active.cfg && mount -o remount,ro /boot\""
+echo ">>> Done. Run the PanicOS-Desktop tool on-device to activate/toggle it,"
+echo "    or: ssh $HOST \"mount -o remount,rw /boot && sed -i 's|^IMAGE=.*|IMAGE=$FNAME|' /boot/panicos-active.cfg && mount -o remount,ro /boot\""
