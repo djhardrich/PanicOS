@@ -1,24 +1,15 @@
 #!/bin/bash
-# PanicOS-Desktop.sh — toggle the Debian desktop multiboot flavor.
-#
-# Runs as a PortMaster-style tool (terminal launched by ES).
-# On first run: checks if the squashfs is on /boot; if not, prints
-# instructions for the user to scp it over, then run again.
-# On subsequent runs: toggles the squashfs between present and removed,
-# and updates panicos-active.cfg accordingly.
+# PanicOS-Desktop.sh — toggle the Debian desktop squashfs on/off the boot
+# partition. Presence on /boot is all that's needed — the PanicOS mbselect
+# menu picks it up automatically. No active.cfg editing required.
 
 SQUASHFS_NAME="panicos-debian-desktop.squashfs"
 BOOT="/boot"
-ACTIVE_CFG="$BOOT/panicos-active.cfg"
 SQUASHFS_PATH="$BOOT/$SQUASHFS_NAME"
 
-# Read current IMAGE from active.cfg
-current_image() { grep '^IMAGE=' "$ACTIVE_CFG" 2>/dev/null | cut -d= -f2-; }
+boot_rw() { mount -o remount,rw  "$BOOT"; }
+boot_ro() { mount -o remount,ro  "$BOOT"; }
 
-boot_rw()  { mount -o remount,rw  "$BOOT" 2>/dev/null; }
-boot_ro()  { mount -o remount,ro  "$BOOT" 2>/dev/null; }
-
-# Detect device IP for user-facing instructions
 device_ip() {
     ip -4 addr show scope global 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -1
 }
@@ -29,71 +20,34 @@ echo "║      PanicOS Desktop (Debian Sid)        ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
-# ── Case 1: squashfs not on /boot ─────────────────────────────────────────────
-if [ ! -f "$SQUASHFS_PATH" ]; then
-    IP=$(device_ip)
-    echo "  Debian desktop squashfs not found on boot partition."
-    echo ""
-    echo "  Build it on your PC:"
-    echo "    sudo bash scripts/build-debian-desktop.sh"
-    echo ""
-    echo "  Then copy it to the device:"
-    if [ -n "$IP" ]; then
-        echo "    scp output/debian-desktop/$SQUASHFS_NAME \\"
-        echo "        root@$IP:/tmp/"
-    else
-        echo "    scp output/debian-desktop/$SQUASHFS_NAME \\"
-        echo "        root@<device-ip>:/tmp/"
-    fi
-    echo ""
-    echo "  Once copied, run this tool again to install it."
-    echo ""
-
-    # If user already scp'd to /tmp, offer to move it now.
+if [ -f "$SQUASHFS_PATH" ]; then
+    # Toggle OFF — remove from boot partition
+    echo "  Status: INSTALLED — removing from boot partition..."
+    boot_rw
+    rm -f "$SQUASHFS_PATH"
+    boot_ro
+    echo "  Done. Debian Desktop will no longer appear in the boot menu."
+else
+    # Toggle ON — install from /tmp if present, otherwise show instructions
     if [ -f "/tmp/$SQUASHFS_NAME" ]; then
-        echo "  Found /tmp/$SQUASHFS_NAME — installing now..."
+        echo "  Found /tmp/$SQUASHFS_NAME — installing to /boot..."
         boot_rw
         mv "/tmp/$SQUASHFS_NAME" "$SQUASHFS_PATH"
         boot_ro
-        echo "  Installed. Run this tool again to activate."
-    fi
-
-    echo ""
-    read -r -t 10 -p "  Press Enter to exit..." 2>/dev/null || true
-    exit 0
-fi
-
-# ── Case 2: squashfs present — toggle active image ────────────────────────────
-CURRENT=$(current_image)
-
-if [ "$CURRENT" = "$SQUASHFS_NAME" ]; then
-    # Currently booting Debian — switch back to PanicOS launcher
-    PANICOS_SQ=$(ls "$BOOT"/panicos-rg35xx-*.squashfs 2>/dev/null | head -1)
-    PANICOS_SQ="${PANICOS_SQ##*/}"
-    echo "  Status: Debian Desktop is ACTIVE"
-    echo ""
-    if [ -n "$PANICOS_SQ" ]; then
-        boot_rw
-        sed -i "s|^IMAGE=.*|IMAGE=$PANICOS_SQ|" "$ACTIVE_CFG"
-        boot_ro
-        echo "  Switched back to PanicOS ($PANICOS_SQ)."
-        echo "  Reboot to return to the PanicOS launcher."
+        echo "  Done. Reboot to see Debian Desktop in the boot menu."
     else
-        echo "  Warning: could not find a PanicOS squashfs to switch back to."
-        echo "  Edit /boot/panicos-active.cfg manually."
+        IP=$(device_ip)
+        echo "  Status: NOT INSTALLED"
+        echo ""
+        echo "  Build the squashfs on your PC:"
+        echo "    sudo bash scripts/build-debian-desktop.sh"
+        echo ""
+        echo "  Copy it to the device:"
+        echo "    scp output/debian-desktop/$SQUASHFS_NAME \\"
+        echo "        root@${IP:-<device-ip>}:/tmp/"
+        echo ""
+        echo "  Then run this tool again to install it."
     fi
-else
-    # Currently booting PanicOS — activate Debian
-    echo "  Status: Debian Desktop is INSTALLED but not active"
-    echo ""
-    boot_rw
-    sed -i "s|^IMAGE=.*|IMAGE=$SQUASHFS_NAME|" "$ACTIVE_CFG"
-    boot_ro
-    echo "  Activated. Reboot to boot into Debian Sid desktop."
-    echo ""
-    echo "  Tip: with multiple .squashfs files on /boot, the boot"
-    echo "  menu (mbselect) lets you choose at startup — no need"
-    echo "  to run this tool just to switch."
 fi
 
 echo ""
