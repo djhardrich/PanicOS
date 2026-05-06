@@ -183,9 +183,12 @@ if [ ! -d "/lower/lib/modules/$_kver" ] && \
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
-for m in proc sys dev run boot storage lower; do
+# /lower is the overlayfs lowerdir; the kernel holds a VFS ref to it
+# internally — moving it while overlayfs is live causes EBUSY.  Leave it;
+# switch_root frees the old root tmpfs, releasing the mountpoint.
+for m in proc sys dev run boot storage; do
     mkdir -p "/sysroot/$m"
-    mount --move "/$m" "/sysroot/$m"
+    mount --move "/$m" "/sysroot/$m" || panic "mount --move /$m failed"
 done
 
-exec switch_root /sysroot /sbin/init
+exec switch_root /sysroot /sbin/init || panic "switch_root failed"

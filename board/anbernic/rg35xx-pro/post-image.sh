@@ -81,7 +81,8 @@ sed -i "s|^IMAGE=.*|IMAGE=${PANICOS_OUTPUT_NAME}.squashfs|" \
 # lack /lib/modules/<kver> and auto-injects this tarball into their overlayfs
 # upper layer on first boot, so device drivers (wifi, joypad, etc.) work
 # without baking modules into every squashfs variant.
-KVER=$(cat "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/linux-"*/include/config/kernel.release 2>/dev/null | head -1)
+KVER=$(ls "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/linux-"*/include/config/kernel.release 2>/dev/null \
+    | sort -V | tail -1 | xargs cat 2>/dev/null || true)
 if [ -n "$KVER" ]; then
     MODULES_SRC="${TARGET_DIR}/usr/lib/modules/$KVER"
     FW_SRC="${TARGET_DIR}/usr/lib/firmware"
