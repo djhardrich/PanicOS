@@ -61,24 +61,68 @@ description: Monochrome terminal-style theme for handheld devices.
    <include ifSubset="aspect-ratio:4-3">./aspect-ratio-4-3.xml</include>
 
    <!-- ============================================================
-        Settings menu style — applies to all ES menus/popups.
-        colorBg      → menu background
-        colorPrimary → normal text
-        colorAccent  → selection bar (text reads as colorBg-on-colorAccent)
-        colorDim     → secondary / help text
-        colorRule    → separators
-        NotoSansMono keeps the same typeface as the rest of the theme.
+        Settings / popup menu style.
+        ES uses <view name="menu"> with typed menuBackground / menuText /
+        etc. elements — NOT a <menuStyle> tag (that doesn't exist in this
+        fork). Element names map to ThemeData::ThemeMenu members:
+          menubg        → Background (panel fill)
+          menutitle     → Title (header bar text)
+          menufooter    → Footer (help bar text)
+          menutext      → Text (list items, selector bar)
+          menutextsmall → TextSmall + Group (section sub-labels)
+          menugrid      → Grid (item separator lines)
+          menugroup     → Group (section headers)
         ============================================================ -->
-   <menuStyle>
-      <backgroundColor>${colorBg}</backgroundColor>
-      <separatorColor>${colorRule}</separatorColor>
-      <textColor>${colorPrimary}</textColor>
-      <selectorColor>${colorAccent}</selectorColor>
-      <selectedColor>${colorBg}</selectedColor>
-      <titleColor>${colorPrimary}</titleColor>
-      <fontPath>${fontRegular}</fontPath>
-      <fontSize>0.035</fontSize>
-   </menuStyle>
+   <view name="menu">
+
+      <menuBackground name="menubg">
+         <color>${colorBg}</color>
+         <scrollbarColor>${colorDim}</scrollbarColor>
+      </menuBackground>
+
+      <menuText name="menutitle">
+         <fontPath>${fontBold}</fontPath>
+         <fontSize>0.04</fontSize>
+         <color>${colorPrimary}</color>
+      </menuText>
+
+      <menuText name="menufooter">
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.025</fontSize>
+         <color>${colorDim}</color>
+      </menuText>
+
+      <!-- List items: unselected=colorPrimary, selected=colorBg-on-colorAccent -->
+      <menuText name="menutext">
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.035</fontSize>
+         <color>${colorPrimary}</color>
+         <separatorColor>${colorRule}</separatorColor>
+         <selectedColor>${colorBg}</selectedColor>
+         <selectorColor>${colorAccent}</selectorColor>
+      </menuText>
+
+      <!-- Small labels (toggle values, slider values, group sub-text) -->
+      <menuTextSmall name="menutextsmall">
+         <fontPath>${fontRegular}</fontPath>
+         <fontSize>0.03</fontSize>
+         <color>${colorDim}</color>
+      </menuTextSmall>
+
+      <!-- Horizontal separator lines between items -->
+      <menuGrid name="menugrid">
+         <separatorColor>${colorRule}</separatorColor>
+      </menuGrid>
+
+      <!-- Section headers (e.g. "NETWORK", "AUDIO") -->
+      <menuGroup name="menugroup">
+         <fontPath>${fontBold}</fontPath>
+         <fontSize>0.03</fontSize>
+         <color>${colorAccent}</color>
+         <separatorColor>${colorRule}</separatorColor>
+      </menuGroup>
+
+   </view>
 
    <!-- ============================================================
         Screen-level overlay: battery tint, clock position, hide pad activity
