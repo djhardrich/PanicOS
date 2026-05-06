@@ -66,6 +66,7 @@ BR2_PACKAGE_LIBSAMPLERATE=y
 # Mesa3D — Panfrost driver for Mali G31 on H700, with GBM + EGL +
 # GLES + Wayland platform support (pulled in transitively when
 # BR2_PACKAGE_WAYLAND is on).
+BR2_PACKAGE_LIBGLVND=y
 BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
 BR2_PACKAGE_MESA3D_OPENGL=y

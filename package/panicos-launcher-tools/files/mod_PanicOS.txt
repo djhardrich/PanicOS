@@ -18,18 +18,46 @@
 PORT_32BIT="${PORT_32BIT:-N}"
 
 # ── westonwrap runtime patcher ──────────────────────────────────────────────
-# westonwrap.sh (from weston_pkg squashfs) hardcodes waydisp="wayland-5"
-# but sway listens on wayland-1.  When sourced by westonwrap, re-exec a
-# sed-patched copy that uses ${WAYLAND_DISPLAY:-wayland-1} instead.
-# LIBSEAT_BACKEND=builtin prevents weston from trying to connect to seatd
-# (we don't run seatd; headless weston doesn't need it).
+# Applies two patches to westonwrap.sh (from weston_pkg squashfs) at runtime
+# so we don't own the squashfs and survive westonwrap updates.
+#
+# Fix 1 — waydisp="wayland-5": hardcoded socket name; sway listens on wayland-1.
+#
+# Fix 2 — panfrost bypass: mirrors ROCKNIX's Panfrost/SD bypass. Instead of
+# starting a nested weston + crusty EGL (which can't open a GBM context on
+# the H700's split DRM topology), we skip weston entirely and run the app
+# directly on the existing sway Wayland session. System mesa (panfrost) has
+# proper Wayland EGL support; the bundled crusty_x11egl does not.
+# Injected after check_gptokeyb, before weston setup, via Python string replace.
+#
 # _PANICOS_WESTON_PATCHED guards against infinite re-exec.
 export LIBSEAT_BACKEND=builtin
 if [[ -z "$_PANICOS_WESTON_PATCHED" ]] && [[ "${BASH_SOURCE[1]:-}" == *westonwrap* ]]; then
     export _PANICOS_WESTON_PATCHED=1
     _patched="/tmp/westonwrap-panicos.sh"
     cp "${BASH_SOURCE[1]}" "$_patched"
+    chmod +x "$_patched"
     sed -i 's/waydisp="wayland-5"/waydisp="${WAYLAND_DISPLAY:-wayland-1}"/g' "$_patched"
+    python3 - "$_patched" <<'PYEOF'
+import sys
+txt = open(sys.argv[1]).read()
+bypass = r"""
+# PanicOS panfrost bypass: skip weston, connect app directly to sway
+# Mirrors ROCKNIX's Panfrost/SD bypass path in westonwrap.
+if [ -n "$WAYLAND_DISPLAY" ] && [ -S "${XDG_RUNTIME_DIR:-/var/run/0-runtime-dir}/$WAYLAND_DISPLAY" ]; then
+    echo "PanicOS: panfrost/sway detected, bypassing weston (socket: $WAYLAND_DISPLAY)"
+    export waydisp="$WAYLAND_DISPLAY"
+    export xsock="${DISPLAY:-:0}"
+    export app_command="${@:5}"
+    unset WRAPPED_LIBRARY_PATH_MALI WRAPPED_PRELOAD_MALI
+    unset WRAPPED_LIBRARY_PATH_PANFROST WRAPPED_PRELOAD_PANFROST
+    run_user_command
+    cleanup_and_exit
+fi
+"""
+txt = txt.replace("check_gptokeyb\n", "check_gptokeyb\n" + bypass, 1)
+open(sys.argv[1], 'w').write(txt)
+PYEOF
     exec bash "$_patched" "$@"
 fi
 # ────────────────────────────────────────────────────────────────────────────
