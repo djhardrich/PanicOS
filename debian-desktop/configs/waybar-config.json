@@ -8,7 +8,7 @@
 
     "custom/launcher": {
         "format": " Apps",
-        "on-click": "wofi --show drun --prompt 'Launch' --width 400 --height 300 --term xterm",
+        "on-click": "nwg-menu",
         "tooltip": false
     },
     "clock": {
