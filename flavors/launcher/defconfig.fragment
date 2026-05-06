@@ -364,6 +364,21 @@ BR2_PACKAGE_LIBSOXR=y
 BR2_PACKAGE_LCMS2=y
 BR2_PACKAGE_SPEEX=y
 BR2_PACKAGE_LIBBLURAY=y
+# SDL2_ttf: TrueType font rendering for SDL2 ports (many PortMaster ports
+# need it directly; freetype/harfbuzz already present transitively).
+BR2_PACKAGE_SDL2_TTF=y
+# libopenmpt: SDL2_mixer dlopens libopenmpt.so for tracker formats
+# (.it, .xm, .s3m, .mod); missing = silent failure on chiptune ports.
+BR2_PACKAGE_LIBOPENMPT=y
+# speexdsp: DSP/resampling companion to the speex codec; separate .so.
+BR2_PACKAGE_SPEEXDSP=y
+# libarchive: .tar/.zip/.7z extraction; some ports use it directly.
+BR2_PACKAGE_LIBARCHIVE=y
+# System ffmpeg: ports needing current libavcodec/libavformat API
+# (libavcodec.so.60+). panicos-ffmpeg4-compat covers the .so.58 compat
+# path; both can coexist because ffmpeg4-compat installs to a separate
+# prefix — see its comment above.
+BR2_PACKAGE_FFMPEG=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
