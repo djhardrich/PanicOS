@@ -15,7 +15,7 @@
 # shared (ROMs, music, documents, etc.).
 #
 # Requirements on build host:
-#   Arch: paru -S mmdebstrap qemu-user-static-bin debian-archive-keyring
+#   Arch: paru -S mmdebstrap qemu-user-static debian-archive-keyring
 #         sudo systemctl restart systemd-binfmt
 #         (arch-test not needed — script passes --skip=check/qemu)
 #   Debian: sudo apt install mmdebstrap qemu-user-static binfmt-support
@@ -102,7 +102,7 @@ check_tools() {
     # qemu-aarch64-static must exist (from qemu-user-static / qemu-user-static-bin)
     local qemu
     qemu=$(command -v qemu-aarch64-static 2>/dev/null) || \
-        error "Missing: qemu-aarch64-static — install qemu-user-static-bin (Arch AUR)"
+        error "Missing: qemu-aarch64-static — install qemu-user-static (Arch)"
     # binfmt must be active for aarch64
     [ -e /proc/sys/fs/binfmt_misc/aarch64 ] || \
     [ -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ] || \
