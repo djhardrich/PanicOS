@@ -1,0 +1,10 @@
+config BR2_PACKAGE_PANICOS_FFMPEG4_COMPAT
+	bool "panicos-ffmpeg4-compat"
+	help
+	  Provides FFmpeg 4.4.x shared libraries (libavcodec.so.58,
+	  libavformat.so.58, libavutil.so.56, libswresample.so.3,
+	  libswscale.so.5) for PortMaster ports that were pre-compiled
+	  against FFmpeg 4.x.
+
+	  Only the major-versioned .so files are installed; no headers or
+	  binaries, so there is no conflict with the system FFmpeg (6.x).

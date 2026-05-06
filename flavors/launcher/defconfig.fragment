@@ -41,6 +41,7 @@ BR2_TOOLCHAIN_BUILDROOT_CXX=y
 # WAYLAND_DISPLAY is unset (e.g. SSH debug session).
 BR2_PACKAGE_SDL2_WAYLAND=y
 BR2_PACKAGE_SDL2_KMSDRM=y
+BR2_PACKAGE_SDL2_OPENGL=y
 BR2_PACKAGE_SDL2_OPENGLES=y
 
 # Vulkan headers + loader. Mali G31 (Bifrost) supports Vulkan via Mesa's
@@ -67,6 +68,7 @@ BR2_PACKAGE_LIBSAMPLERATE=y
 # BR2_PACKAGE_WAYLAND is on).
 BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
+BR2_PACKAGE_MESA3D_OPENGL=y
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
 # Mesa 26+ panfrost (gallium + panvk) requires LLVM for the host-side
@@ -198,12 +200,18 @@ BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 # error out with "libvorbisfile.so.3: cannot open shared object file".
 BR2_PACKAGE_SDL2_TTF=y
 BR2_PACKAGE_SDL2_IMAGE=y
+BR2_PACKAGE_SDL2_MIXER=y                    # libSDL2_mixer; needed by many ports (Doom engines, etc.)
+BR2_PACKAGE_SDL2_GFX=y                      # libSDL2_gfx; antialiased drawing routines, rotozoomer
 BR2_PACKAGE_OPENAL=y
 BR2_PACKAGE_LIBVORBIS=y                     # libvorbisfile, libogg
 BR2_PACKAGE_LIBTHEORA=y                     # libtheoradec
 BR2_PACKAGE_LIBMODPLUG=y                    # SDL2_mixer Mix_LoadMUS for .mod
 BR2_PACKAGE_MPG123=y
 BR2_PACKAGE_OPUSFILE=y                      # SDL2_mixer Mix_LoadMUS for .opus
+# libcurl — ports that do HTTP requests (version checks, asset downloads,
+# leaderboards). Already needed by ca-certificates and Install.PortMaster.sh.
+# OpenSSL backend piggybacks on BR2_PACKAGE_PYTHON3_SSL's openssl dep.
+BR2_PACKAGE_LIBCURL=y
 # procps-ng — pugwash invokes pgrep via subprocess at startup to check
 # whether love.${arch} is already running; busybox ships ps but not
 # pgrep / pidof / pkill, so it crashes with FileNotFoundError. procps-ng
@@ -297,6 +305,27 @@ BR2_PACKAGE_BASH=y
 
 # Debug/monitoring tools
 BR2_PACKAGE_HTOP=y
+
+# FFmpeg 4.x compat libraries — PortMaster ports pre-compiled against FFmpeg
+# 4.x (e.g. alephone-marathon2, alephone-marathon-infinity) dlopen
+# libavcodec.so.58 / libavformat.so.58 / libavutil.so.56 etc.  Our system
+# ffmpeg is 6.1.4 (SONAME .so.60); without this package those ports fail
+# immediately with "cannot open shared object file: libavcodec.so.58".
+# Installs only the .so.MAJOR versioned files; no headers or unversioned .so
+# symlinks, so there is no conflict with BR2_PACKAGE_FFMPEG.
+BR2_PACKAGE_PANICOS_FFMPEG4_COMPAT=y
+
+# x86_64 → aarch64 binary translation (PortMaster DEVICE_HAS_X86_64).
+# binfmt_misc registration lets PortMaster execute x86_64 ELFs directly via box64.
+# systemd-binfmt reads /usr/lib/binfmt.d/*.conf at boot via systemd-binfmt.service.
+BR2_PACKAGE_SYSTEMD_BINFMT=y
+BR2_PACKAGE_PANICOS_BOX64=y
+
+# x86 (32-bit) → armhf binary translation (PortMaster DEVICE_HAS_BOX86).
+# box86 itself is an armhf binary; it runs in AArch32 mode on the H700.
+# panicos-lib32 provides the armhf glibc/libstdc++ runtime box86 depends on.
+BR2_PACKAGE_PANICOS_BOX86=y
+BR2_PACKAGE_PANICOS_LIB32=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts

@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PANICOS_BOX86
+	bool "panicos-box86"
+	depends on BR2_aarch64
+	help
+	  Box86 — x86 (32-bit) userspace emulator for ARM.
+	  Enables PortMaster to run 32-bit x86 Linux game binaries via binfmt_misc.
+	  Requires panicos-lib32 for runtime armhf shared libraries.
+	  Built as an armhf binary using the host arm-linux-gnueabihf cross-compiler.

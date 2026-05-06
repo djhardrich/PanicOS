@@ -52,6 +52,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ./autogen.sh && ./configure && make -j"$(nproc)" && make install \
     && rm -rf /tmp/genimage
 
+# armhf cross-compiler: needed to build box86 (an armhf binary running on aarch64)
+# and to supply the armhf glibc/libstdc++ sysroot for panicos-lib32.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc-arm-linux-gnueabihf \
+        g++-arm-linux-gnueabihf \
+        cmake \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 

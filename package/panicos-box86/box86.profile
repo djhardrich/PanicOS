@@ -1,0 +1,4 @@
+export BOX86_PREFER_EMULATED=0
+export BOX86_PREFER_WRAPPED=1
+export BOX86_LD_LIBRARY_PATH="/usr/share/box86/lib"
+export BOX86_LOG=0

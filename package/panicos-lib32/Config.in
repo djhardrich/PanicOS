@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PANICOS_LIB32
+	bool "panicos-lib32"
+	depends on BR2_aarch64
+	help
+	  32-bit (armhf) runtime libraries for box86.
+	  Copies glibc, libstdc++, and other fundamental armhf shared libraries
+	  from the host arm-linux-gnueabihf cross-compiler sysroot into
+	  /usr/lib32 on the target rootfs.
+	  Requires gcc-arm-linux-gnueabihf in the Docker build image.

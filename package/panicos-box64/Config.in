@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PANICOS_BOX64
+	bool "panicos-box64"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_HOST_CMAKE
+	help
+	  Box64 — x86_64 userspace emulator for aarch64.
+	  Enables PortMaster to run x86_64 Linux game binaries via binfmt_misc.

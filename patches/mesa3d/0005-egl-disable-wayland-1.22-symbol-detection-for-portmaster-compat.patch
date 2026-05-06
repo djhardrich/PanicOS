@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: PanicOS <panicos@localhost>
+Date: Tue, 05 May 2026 00:00:00 +0000
+Subject: [PATCH] meson: disable wayland 1.22 symbol detection for PortMaster compat
+
+PortMaster's westonwrap injects its own older libwayland-client.so.0 into
+LD_LIBRARY_PATH ahead of /lib64.  That older wayland predates two functions
+added in wayland 1.22:
+
+  wl_display_dispatch_queue_timeout
+  wl_display_create_queue_with_name
+
+When Mesa is built against a system wayland >= 1.22, meson detects both
+functions and sets HAVE_WL_DISPATCH_QUEUE_TIMEOUT / HAVE_WL_CREATE_QUEUE_WITH_NAME.
+This disables Mesa's own fallback implementations in loader_wayland_helper.c
+and causes libEGL.so to import the symbols as UNDEFINED from libwayland-client.so.0
+at runtime.  PortMaster's dlopen of libEGL.so.1 then fails:
+
+  undefined symbol: wl_display_dispatch_queue_timeout
+  undefined symbol: wl_display_create_queue_with_name
+
+Fix by removing both cc.has_function() probes so the symbols are never
+detected.  Mesa's internal fallbacks in loader_wayland_helper.c are
+compiled in unconditionally:
+
+  wl_display_dispatch_queue_timeout  -> ppoll-based implementation
+  wl_display_create_queue_with_name  -> wraps wl_display_create_queue (name ignored)
+
+libEGL.so no longer has undefined imports for either symbol.
+---
+ meson.build | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/meson.build b/meson.build
+--- a/meson.build
++++ b/meson.build
+@@ -2093,18 +2093,6 @@
+     dep_wayland_egl_headers = dep_wayland_egl.partial_dependency(compile_args : true)
+   endif
+   pre_args += '-DWL_HIDE_DEPRECATED'
+-  if cc.has_function(
+-      'wl_display_dispatch_queue_timeout',
+-      prefix : '#include <wayland-client.h>',
+-      dependencies: dep_wayland_client)
+-    pre_args += ['-DHAVE_WL_DISPATCH_QUEUE_TIMEOUT']
+-  endif
+-  if cc.has_function(
+-      'wl_display_create_queue_with_name',
+-      prefix : '#include <wayland-client.h>',
+-      dependencies: dep_wayland_client)
+-    pre_args += ['-DHAVE_WL_CREATE_QUEUE_WITH_NAME']
+-  endif
+   # This can be renamed just `wayland` when we require at least 1.8
+   mod_wl = import('unstable-wayland')
+ endif
