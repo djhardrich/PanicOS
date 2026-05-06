@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PANICOS_ES_THEME
+	bool "panicos-es-theme"
+	help
+	  PanicOS: PanicOS's own monochrome terminal-style
+	  EmulationStation theme. MIT licensed, bundled Noto Sans
+	  Mono (SIL OFL 1.1).  20 color variants including phosphor
+	  green, amber, cyan, DOS blue, and more.

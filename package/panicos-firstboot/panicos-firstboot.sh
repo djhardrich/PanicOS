@@ -89,7 +89,7 @@ mkdir -p /storage/squashfs
 [ -e /roms ] || ln -sf /storage/roms /roms
 
 # Seed ES default settings if the user hasn't configured ES yet.
-# ThemeSet picks Terminus (our MIT-licensed default) so ES doesn't fall
+# ThemeSet picks PanicOS (our MIT-licensed default) so ES doesn't fall
 # back to the alphabetically-first theme (Art Book Next, CC-NC).
 ES_SETTINGS=/storage/.emulationstation/es_settings.cfg
 if [ ! -f "$ES_SETTINGS" ]; then
@@ -97,7 +97,7 @@ if [ ! -f "$ES_SETTINGS" ]; then
     cat > "$ES_SETTINGS" <<'ESCFG'
 <?xml version="1.0"?>
 <config>
-    <string name="ThemeSet" value="terminus" />
+    <string name="ThemeSet" value="panicos" />
 </config>
 ESCFG
 fi

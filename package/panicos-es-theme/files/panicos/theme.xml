@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-theme name:  Terminus
+theme name:  PanicOS
 author:      PanicOS contributors
 license:     MIT
 description: Monochrome terminal-style theme for handheld devices.
@@ -59,6 +59,26 @@ description: Monochrome terminal-style theme for handheld devices.
    <include ifSubset="aspect-ratio:16-9|16-9-auto">./aspect-ratio-16-9.xml</include>
    <!-- Default to 4:3 when nothing matched (covers 3:2, 1:1, etc.) -->
    <include ifSubset="aspect-ratio:4-3">./aspect-ratio-4-3.xml</include>
+
+   <!-- ============================================================
+        Settings menu style — applies to all ES menus/popups.
+        colorBg      → menu background
+        colorPrimary → normal text
+        colorAccent  → selection bar (text reads as colorBg-on-colorAccent)
+        colorDim     → secondary / help text
+        colorRule    → separators
+        NotoSansMono keeps the same typeface as the rest of the theme.
+        ============================================================ -->
+   <menuStyle>
+      <backgroundColor>${colorBg}</backgroundColor>
+      <separatorColor>${colorRule}</separatorColor>
+      <textColor>${colorPrimary}</textColor>
+      <selectorColor>${colorAccent}</selectorColor>
+      <selectedColor>${colorBg}</selectedColor>
+      <titleColor>${colorPrimary}</titleColor>
+      <fontPath>${fontRegular}</fontPath>
+      <fontSize>0.035</fontSize>
+   </menuStyle>
 
    <!-- ============================================================
         Screen-level overlay: battery tint, clock position, hide pad activity
