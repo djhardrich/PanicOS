@@ -285,9 +285,25 @@ if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ];
     chroot_run bash -c "cd /usr/src/linux-headers-$KVER && make scripts ARCH=arm64 -j\$(nproc) 2>&1 | tail -3" || \
         warn "make scripts failed — run 'make scripts ARCH=arm64' in /usr/src/linux-headers-$KVER manually"
 
-    # Wire up /lib/modules/<kver>/build symlink
-    mkdir -p "$ROOTFS/lib/modules/$KVER"
-    ln -sf "/usr/src/linux-headers-$KVER" "$ROOTFS/lib/modules/$KVER/build"
+    # Copy full modules tree from PanicOS build so device drivers load
+    MODULES_SRC="$BOARD_OUTPUT/target/usr/lib/modules/$KVER"
+    if [ -d "$MODULES_SRC" ]; then
+        cp -a "$MODULES_SRC" "$ROOTFS/lib/modules/"
+        chroot_run depmod -a "$KVER"
+        info "Kernel modules installed from PanicOS build ($KVER)"
+    else
+        # No modules yet — just create the build symlink stub
+        mkdir -p "$ROOTFS/lib/modules/$KVER"
+    fi
+
+    # Always wire the build symlink (may overwrite one depmod created)
+    ln -sfT "/usr/src/linux-headers-$KVER" "$ROOTFS/lib/modules/$KVER/build"
+
+    # Autoload PanicOS device drivers at boot
+    cat > "$ROOTFS/etc/modules-load.d/panicos-joypad.conf" <<'MODEOF'
+# PanicOS H700 handheld gamepad driver (rocknix-joypad project)
+rocknix-singleadc-joypad
+MODEOF
 
     info "Kernel headers ready: /usr/src/linux-headers-$KVER"
 else
