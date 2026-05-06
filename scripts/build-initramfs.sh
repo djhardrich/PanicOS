@@ -15,6 +15,47 @@ OUT_DIR="$ROOT/output"
 OUT="$OUT_DIR/panicos-initramfs.cpio.gz"
 CACHE_DIR="$ROOT/.cache/initramfs"
 
+# ── Auto-detection fallbacks ─────────────────────────────────────────────────
+# The Makefile sets all three env vars explicitly; when the script is run
+# standalone (e.g. a developer iterating on init) we auto-detect so the result
+# is correct rather than silently empty.
+#
+# Firmware: collect every soc/*/variant/rootfs-overlay/usr/lib/firmware dir.
+# Since the cpio is shared across devices (same SoC family) and panel firmware
+# must be present before the squashfs mounts, include all SOC families found.
+if [ -z "${PANICOS_INITRAMFS_FIRMWARE_DIRS:-}" ]; then
+    _fw=""
+    for d in "$ROOT"/soc/*/*/rootfs-overlay/usr/lib/firmware; do
+        [ -d "$d" ] && _fw="${_fw:+$_fw:}$d"
+    done
+    [ -n "$_fw" ] && echo ">>> build-initramfs: auto-detected firmware dirs"
+    PANICOS_INITRAMFS_FIRMWARE_DIRS="${_fw}"
+fi
+
+# Cross-compiler: pick the first output/*/host with aarch64-gcc.
+if [ -z "${PANICOS_INITRAMFS_HOST_DIR:-}" ]; then
+    for d in "$ROOT"/output/*/host; do
+        if [ -x "$d/bin/aarch64-buildroot-linux-gnu-gcc" ]; then
+            echo ">>> build-initramfs: auto-detected host dir: $d"
+            PANICOS_INITRAMFS_HOST_DIR="$d"
+            break
+        fi
+    done
+fi
+
+# Joypad modules: collect from every output/*/target tree; deduplicate by
+# basename so we don't get duplicate .ko entries for the same file.
+if [ -z "${PANICOS_INITRAMFS_KMOD_PATHS:-}" ]; then
+    _kmods=""
+    for ko in "$ROOT"/output/*/target/usr/lib/modules/*/updates/rocknix-joypad.ko \
+              "$ROOT"/output/*/target/usr/lib/modules/*/updates/rocknix-singleadc-joypad.ko; do
+        [ -f "$ko" ] && _kmods="${_kmods:+$_kmods:}$ko"
+    done
+    [ -n "$_kmods" ] && echo ">>> build-initramfs: auto-detected kmod paths"
+    PANICOS_INITRAMFS_KMOD_PATHS="${_kmods}"
+fi
+# ─────────────────────────────────────────────────────────────────────────────
+
 BUSYBOX_VERSION=1.37.0
 BUSYBOX_DEB_URL="http://ftp.us.debian.org/debian/pool/main/b/busybox/busybox-static_1.37.0-10.1_arm64.deb"
 BUSYBOX_SHA256=d23c0ef6ff6d355df9f3ea34e046010a29ac1ab6d9f8a21744b7c4545669bac5

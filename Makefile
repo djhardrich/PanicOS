@@ -343,10 +343,35 @@ define _outdir
 $(OUTPUT_BASE)/$(DEVICE)-$(FLAVOR)$(if $(KERNEL),-$(KERNEL),-mainline)
 endef
 
+# initramfs-rebuild: regenerate output/panicos-initramfs.cpio.gz for DEVICE.
+# Called automatically by pkg-rebuild PACKAGE=linux; also useful standalone
+# when only panicos-initramfs/init or panicos-initramfs/skeleton changes.
+.PHONY: initramfs-rebuild
+initramfs-rebuild:
+	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@SOC="$(call _device_soc,$(DEVICE))"; \
+	K="$(KERNEL)"; \
+	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	[ -n "$$SOC" ] || { echo "initramfs-rebuild: no SOC for $(DEVICE)" >&2; exit 1; }; \
+	OUT="$(_outdir)"; \
+	FW_DIR="$(PANICOS_ROOT)/soc/$$SOC/$$K/rootfs-overlay/usr/lib/firmware"; \
+	HOST_DIR="$$OUT/host"; \
+	KMODS=""; \
+	for ko in "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-joypad.ko" \
+	          "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-singleadc-joypad.ko"; do \
+		[ -f "$$ko" ] && KMODS="$${KMODS:+$$KMODS:}$$ko"; \
+	done; \
+	PANICOS_INITRAMFS_FIRMWARE_DIRS="$$([ -d "$$FW_DIR" ] && echo "$$FW_DIR")" \
+	PANICOS_INITRAMFS_HOST_DIR="$$([ -d "$$HOST_DIR" ] && echo "$$HOST_DIR")" \
+	PANICOS_INITRAMFS_KMOD_PATHS="$$KMODS" \
+		$(PANICOS_ROOT)/scripts/build-initramfs.sh
+
 .PHONY: pkg-rebuild
 pkg-rebuild:
 	@test -n "$(PACKAGE)" || (echo "PACKAGE not set" >&2; exit 1)
 	@test -n "$(DEVICE)"  || (echo "DEVICE not set"  >&2; exit 1)
+	@[ "$(PACKAGE)" != "linux" ] || \
+		$(MAKE) initramfs-rebuild DEVICE=$(DEVICE) FLAVOR=$(FLAVOR) $(if $(KERNEL),KERNEL=$(KERNEL))
 	@OUT="$(_outdir)"; \
 	_PKG="$(PACKAGE)"; \
 	test -d "$$OUT" || (echo "no build dir at $$OUT — run a full make first" >&2; exit 1); \
