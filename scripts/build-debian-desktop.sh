@@ -34,6 +34,10 @@ ARCH=arm64
 SUITE=sid
 MIRROR="${DEBIAN_MIRROR:-http://deb.debian.org/debian}"
 
+# Buildroot output dir containing the kernel build tree.
+# Override with BOARD_OUTPUT=/path/to/output/<board> if needed.
+BOARD_OUTPUT="${BOARD_OUTPUT:-$ROOT/output/rg35xx-pro-launcher-mainline}"
+
 PACKAGES=(
     # Init + session management
     systemd systemd-sysv dbus dbus-user-session udev
@@ -56,8 +60,9 @@ PACKAGES=(
     # Text editor
     mousepad
 
-    # NetworkManager
+    # NetworkManager + Bluetooth
     network-manager network-manager-gnome
+    bluetooth blueman
 
     # Notification daemon
     mako-notifier
@@ -83,6 +88,10 @@ PACKAGES=(
     # System utilities
     sudo curl wget less nano htop procps iproute2
     bash-completion xdg-user-dirs xdg-utils desktop-file-utils
+
+    # Developer tools (out-of-tree kernel module building + general dev)
+    build-essential git kmod
+    libssl-dev flex bison bc pahole
 
     # Portal support for Wayland
     xdg-desktop-portal xdg-desktop-portal-wlr
@@ -227,6 +236,7 @@ chroot_run chown -R panicos:panicos /home/panicos
 cp "$ASSETS/configs/NetworkManager.conf" \
     "$ROOTFS/etc/NetworkManager/NetworkManager.conf"
 chroot_run systemctl enable NetworkManager
+chroot_run systemctl enable bluetooth
 
 # ── Gamepad mouse daemon ──────────────────────────────────────────────────────
 mkdir -p "$ROOTFS/usr/local/lib/panicos"
@@ -236,6 +246,54 @@ chmod +x "$ROOTFS/usr/local/lib/panicos/gamepad-mouse.py"
 cp "$ASSETS/services/gamepad-mouse.service" \
     "$ROOTFS/etc/systemd/system/gamepad-mouse.service"
 chroot_run systemctl enable gamepad-mouse
+
+# ── Kernel headers (for out-of-tree module building) ─────────────────────────
+LINUX_BUILD=$(find "$BOARD_OUTPUT/build" -maxdepth 1 -name 'linux-[0-9]*' -type d 2>/dev/null | sort -V | tail -1)
+if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ]; then
+    KVER=$(cat "$LINUX_BUILD/include/config/kernel.release")
+    KHEADER_DEST="$ROOTFS/usr/src/linux-headers-$KVER"
+    info "Installing kernel headers $KVER from $LINUX_BUILD..."
+
+    mkdir -p "$KHEADER_DEST"
+
+    # Core build files
+    cp "$LINUX_BUILD/Makefile" "$KHEADER_DEST/"
+    cp "$LINUX_BUILD/.config" "$KHEADER_DEST/"
+    [ -f "$LINUX_BUILD/Kbuild" ] && cp "$LINUX_BUILD/Kbuild" "$KHEADER_DEST/"
+    cp "$LINUX_BUILD/Module.symvers" "$KHEADER_DEST/" 2>/dev/null || true
+
+    # Headers
+    cp -a "$LINUX_BUILD/include" "$KHEADER_DEST/"
+    mkdir -p "$KHEADER_DEST/arch/arm64"
+    cp -a "$LINUX_BUILD/arch/arm64/include" "$KHEADER_DEST/arch/arm64/"
+    cp "$LINUX_BUILD/arch/arm64/Makefile" "$KHEADER_DEST/arch/arm64/" 2>/dev/null || true
+
+    # Scripts source (host binaries stripped; make scripts rebuilds for arm64)
+    cp -a "$LINUX_BUILD/scripts" "$KHEADER_DEST/"
+    find "$KHEADER_DEST/scripts" -type f -executable \
+        ! -name '*.sh' ! -name '*.pl' ! -name '*.awk' ! -name 'Makefile*' \
+        -exec sh -c 'file "$1" | grep -q "ELF.*x86" && rm -f "$1"' _ {} \;
+
+    # tools/include (needed by some module Makefiles)
+    if [ -d "$LINUX_BUILD/tools/include" ]; then
+        mkdir -p "$KHEADER_DEST/tools"
+        cp -a "$LINUX_BUILD/tools/include" "$KHEADER_DEST/tools/"
+    fi
+
+    # Rebuild scripts for arm64 using the chroot's native gcc
+    info "Rebuilding kernel scripts for arm64 inside chroot..."
+    chroot_run bash -c "cd /usr/src/linux-headers-$KVER && make scripts ARCH=arm64 -j\$(nproc) 2>&1 | tail -3" || \
+        warn "make scripts failed — run 'make scripts ARCH=arm64' in /usr/src/linux-headers-$KVER manually"
+
+    # Wire up /lib/modules/<kver>/build symlink
+    mkdir -p "$ROOTFS/lib/modules/$KVER"
+    ln -sf "/usr/src/linux-headers-$KVER" "$ROOTFS/lib/modules/$KVER/build"
+
+    info "Kernel headers ready: /usr/src/linux-headers-$KVER"
+else
+    warn "No kernel build found in $BOARD_OUTPUT/build — skipping headers"
+    warn "Set BOARD_OUTPUT=/path/to/output/<board> to include kernel headers"
+fi
 
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
