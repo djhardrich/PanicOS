@@ -357,8 +357,11 @@ initramfs-rebuild:
 	FW_DIR="$(PANICOS_ROOT)/soc/$$SOC/$$K/rootfs-overlay/usr/lib/firmware"; \
 	HOST_DIR="$$OUT/host"; \
 	KMODS=""; \
-	for ko in "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-joypad.ko" \
-	          "$$OUT/target/usr/lib/modules/"*"/updates/rocknix-singleadc-joypad.ko"; do \
+	_KVER=$$(find "$$OUT/target/usr/lib/modules/" \
+	              -maxdepth 1 -mindepth 1 -type d 2>/dev/null \
+	         | xargs -r -I{} basename {} | sort -V | tail -1); \
+	for ko in "$$OUT/target/usr/lib/modules/$${_KVER}/updates/rocknix-joypad.ko" \
+	          "$$OUT/target/usr/lib/modules/$${_KVER}/updates/rocknix-singleadc-joypad.ko"; do \
 		[ -f "$$ko" ] && KMODS="$${KMODS:+$$KMODS:}$$ko"; \
 	done; \
 	PANICOS_INITRAMFS_FIRMWARE_DIRS="$$([ -d "$$FW_DIR" ] && echo "$$FW_DIR")" \

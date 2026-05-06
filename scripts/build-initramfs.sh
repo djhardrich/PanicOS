@@ -43,15 +43,21 @@ if [ -z "${PANICOS_INITRAMFS_HOST_DIR:-}" ]; then
     done
 fi
 
-# Joypad modules: collect from every output/*/target tree; deduplicate by
-# basename so we don't get duplicate .ko entries for the same file.
+# Joypad modules: collect only for the NEWEST kernel version present across
+# all output trees.  Without this, stale 7.0.1 build dirs can overwrite the
+# correct 7.0.2 .ko (last cp wins in basename-collision mode).
 if [ -z "${PANICOS_INITRAMFS_KMOD_PATHS:-}" ]; then
+    _best_kver=$(find "$ROOT"/output/*/target/usr/lib/modules/ \
+                      -maxdepth 1 -mindepth 1 -type d 2>/dev/null \
+                 | xargs -r -I{} basename {} | sort -uV | tail -1)
     _kmods=""
-    for ko in "$ROOT"/output/*/target/usr/lib/modules/*/updates/rocknix-joypad.ko \
-              "$ROOT"/output/*/target/usr/lib/modules/*/updates/rocknix-singleadc-joypad.ko; do
-        [ -f "$ko" ] && _kmods="${_kmods:+$_kmods:}$ko"
-    done
-    [ -n "$_kmods" ] && echo ">>> build-initramfs: auto-detected kmod paths"
+    if [ -n "$_best_kver" ]; then
+        for ko in "$ROOT"/output/*/target/usr/lib/modules/"$_best_kver"/updates/rocknix-joypad.ko \
+                  "$ROOT"/output/*/target/usr/lib/modules/"$_best_kver"/updates/rocknix-singleadc-joypad.ko; do
+            [ -f "$ko" ] && _kmods="${_kmods:+$_kmods:}$ko"
+        done
+    fi
+    [ -n "$_kmods" ] && echo ">>> build-initramfs: auto-detected kmod paths (kver=$_best_kver)"
     PANICOS_INITRAMFS_KMOD_PATHS="${_kmods}"
 fi
 # ─────────────────────────────────────────────────────────────────────────────
