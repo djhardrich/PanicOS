@@ -14,7 +14,6 @@
 
 if [ -d "/usr/lib/gl4es" ]; then
   export LD_LIBRARY_PATH="/usr/lib/gl4es:${LD_LIBRARY_PATH}"
-  export LIBGL_FB="${LIBGL_FB:-1}"
 fi
 
 if [ -d "$PWD/libs.$DEVICE_ARCH" ]; then
