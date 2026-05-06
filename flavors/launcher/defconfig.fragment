@@ -303,8 +303,19 @@ BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m
 # Ports/PortMaster shell scripts assume bash (not just busybox sh).
 BR2_PACKAGE_BASH=y
 
-# Debug/monitoring tools
+# Debug/monitoring/diagnostic tools
 BR2_PACKAGE_HTOP=y
+# strace: traces syscalls — essential for diagnosing port crashes (missing
+# files, wrong socket paths, permission errors) without source code.
+BR2_PACKAGE_STRACE=y
+# file: identifies ELF arch, shared-lib vs executable, script type at a glance.
+BR2_PACKAGE_FILE=y
+# binutils on target: readelf, objdump, nm, addr2line — needed to inspect
+# bundled port ELFs for NEEDED libs, RPATH, arch mismatches.
+BR2_PACKAGE_BINUTILS_TARGET=y
+# patchelf: rewrite RPATH/interpreter on bundled port ELFs at runtime
+# (ROCKNIX ships this for the same reason).
+BR2_PACKAGE_PATCHELF=y
 
 # FFmpeg 4.x compat libraries — PortMaster ports pre-compiled against FFmpeg
 # 4.x (e.g. alephone-marathon2, alephone-marathon-infinity) dlopen
@@ -327,9 +338,22 @@ BR2_PACKAGE_PANICOS_BOX64=y
 BR2_PACKAGE_PANICOS_BOX86=y
 BR2_PACKAGE_PANICOS_LIB32=y
 
-# zstd shared library — several PortMaster ports (e.g. grafx2-sdl2) link
-# against libzstd.so.1 at runtime. Without it they crash before main().
+# PortMaster runtime library coverage — libs commonly needed by ports but
+# absent from our rootfs (identified by cross-referencing ROCKNIX's package
+# list against what's actually on-device via strings/find).
+#
+# zstd: several ports (e.g. grafx2-sdl2) link libzstd.so.1 at runtime.
 BR2_PACKAGE_ZSTD=y
+# GStreamer: PortMaster GUI explicitly depends on gst-plugins-base for media
+# playback; video-cutscene ports also need it.
+BR2_PACKAGE_GSTREAMER1=y
+BR2_PACKAGE_GST1_PLUGINS_BASE=y
+# FLAC: SDL2_mixer dlopens libFLAC.so.8 for FLAC music tracks; missing =
+# silent audio failure in any port with FLAC music.
+BR2_PACKAGE_FLAC=y
+# giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
+BR2_PACKAGE_GIFLIB=y
+BR2_PACKAGE_LIBTIFF=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
