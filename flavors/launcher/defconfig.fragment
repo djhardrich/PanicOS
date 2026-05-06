@@ -372,6 +372,11 @@ BR2_PACKAGE_LIBBLURAY=y
 # SDL2_ttf: TrueType font rendering for SDL2 ports (many PortMaster ports
 # need it directly; freetype/harfbuzz already present transitively).
 BR2_PACKAGE_SDL2_TTF=y
+# System fonts — needed by GLC (OpenGL character renderer) and any port
+# that falls back to fontconfig for font discovery. Without these, ports
+# using GLC (e.g. chromium_bsu) render no text at all.
+BR2_PACKAGE_DEJAVU=y
+BR2_PACKAGE_LIBERATION=y
 # libopenmpt: SDL2_mixer dlopens libopenmpt.so for tracker formats
 # (.it, .xm, .s3m, .mod); missing = silent failure on chiptune ports.
 BR2_PACKAGE_LIBOPENMPT=y
