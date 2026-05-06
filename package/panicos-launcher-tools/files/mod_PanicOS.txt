@@ -17,6 +17,23 @@
 
 PORT_32BIT="${PORT_32BIT:-N}"
 
+# ── westonwrap runtime patcher ──────────────────────────────────────────────
+# westonwrap.sh (from weston_pkg squashfs) hardcodes waydisp="wayland-5"
+# but sway listens on wayland-1.  When sourced by westonwrap, re-exec a
+# sed-patched copy that uses ${WAYLAND_DISPLAY:-wayland-1} instead.
+# LIBSEAT_BACKEND=builtin prevents weston from trying to connect to seatd
+# (we don't run seatd; headless weston doesn't need it).
+# _PANICOS_WESTON_PATCHED guards against infinite re-exec.
+export LIBSEAT_BACKEND=builtin
+if [[ -z "$_PANICOS_WESTON_PATCHED" ]] && [[ "${BASH_SOURCE[1]:-}" == *westonwrap* ]]; then
+    export _PANICOS_WESTON_PATCHED=1
+    _patched="/tmp/westonwrap-panicos.sh"
+    cp "${BASH_SOURCE[1]}" "$_patched"
+    sed -i 's/waydisp="wayland-5"/waydisp="${WAYLAND_DISPLAY:-wayland-1}"/g' "$_patched"
+    exec bash "$_patched" "$@"
+fi
+# ────────────────────────────────────────────────────────────────────────────
+
 # Mesa3D driver path — aarch64 only, no /usr/lib32 (PanicOS doesn't
 # ship 32-bit compat libs).
 export LIBGL_DRIVERS_PATH=/usr/lib/dri

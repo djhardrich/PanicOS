@@ -327,6 +327,10 @@ BR2_PACKAGE_PANICOS_BOX64=y
 BR2_PACKAGE_PANICOS_BOX86=y
 BR2_PACKAGE_PANICOS_LIB32=y
 
+# zstd shared library — several PortMaster ports (e.g. grafx2-sdl2) link
+# against libzstd.so.1 at runtime. Without it they crash before main().
+BR2_PACKAGE_ZSTD=y
+
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts
 # call `/usr/bin/sh -lc "..."` and rely on real bash semantics. Doing

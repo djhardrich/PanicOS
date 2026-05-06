@@ -22,6 +22,11 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	# PortMaster.zip so PortMaster.sh sources it on launch.
 	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/mod_PanicOS.txt \
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/mod_PanicOS.txt
+	# libgl_PanicOS.txt — overrides libgl_default.txt's LIBGL_FB=4 (GBM).
+	# We skip gl4es entirely and let ports use system mesa3d (panfrost +
+	# Wayland EGL) which actually works on the H700's split DRM topology.
+	$(INSTALL) -m 0644 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/libgl_PanicOS.txt \
+		$(TARGET_DIR)/usr/share/panicos-launcher/tools/libgl_PanicOS.txt
 	# SDL_GameControllerDB entry for our hardware. Vendored from ROCKNIX's
 	# apps/gamecontrollerdb so PortMaster + ports get the right A/B/X/Y
 	# mapping for the H700 Gamepad (and other handheld pads ROCKNIX

@@ -25,6 +25,9 @@ PMDIR=/storage/roms/ports/PortMaster
 MOD=/usr/share/panicos-launcher/tools/mod_PanicOS.txt
 [ -f "$MOD" ] && cp -f "$MOD" "$PMDIR/mod_PanicOS.txt"
 
+LIBGL=/usr/share/panicos-launcher/tools/libgl_PanicOS.txt
+[ -f "$LIBGL" ] && cp -f "$LIBGL" "$PMDIR/libgl_PanicOS.txt"
+
 GCDB=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
 [ -f "$GCDB" ] && ln -sf "$GCDB" "$PMDIR/gamecontrollerdb.txt"
 
