@@ -17,6 +17,7 @@
 # Requirements on build host:
 #   Arch: paru -S mmdebstrap qemu-user-static-bin
 #         sudo systemctl restart systemd-binfmt
+#         (arch-test not needed — script passes --skip=check/qemu)
 #   Debian: sudo apt install mmdebstrap qemu-user-static binfmt-support
 #           sudo systemctl restart systemd-binfmt
 
@@ -123,6 +124,7 @@ mmdebstrap \
     --variant=minbase \
     --include="$PKG_LIST" \
     --components="main contrib non-free non-free-firmware" \
+    --skip=check/qemu \
     "$SUITE" \
     "$ROOTFS" \
     "$MIRROR"
