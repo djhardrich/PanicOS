@@ -61,7 +61,8 @@ PACKAGES=(
     mousepad
 
     # NetworkManager + Bluetooth
-    network-manager network-manager-gnome
+    # network-manager-tui: nmtui was split from network-manager in NM 1.56
+    network-manager network-manager-tui network-manager-gnome
     bluetooth blueman
 
     # Notification daemon
@@ -88,6 +89,7 @@ PACKAGES=(
     # System utilities
     sudo curl wget less nano htop procps iproute2
     bash-completion xdg-user-dirs xdg-utils desktop-file-utils
+    plocate
 
     # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap)
     iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet
