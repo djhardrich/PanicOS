@@ -89,6 +89,9 @@ PACKAGES=(
     sudo curl wget less nano htop procps iproute2
     bash-completion xdg-user-dirs xdg-utils desktop-file-utils
 
+    # Hardware control
+    brightnessctl
+
     # Developer tools (out-of-tree kernel module building + general dev)
     build-essential git kmod
     libssl-dev flex bison bc pahole
@@ -238,6 +241,15 @@ cp "$ASSETS/configs/NetworkManager.conf" \
 chroot_run systemctl enable NetworkManager
 chroot_run systemctl enable bluetooth
 
+# ── logind: don't immediately poweroff on KEY_POWER ──────────────────────────
+mkdir -p "$ROOTFS/etc/systemd/logind.conf.d"
+cat > "$ROOTFS/etc/systemd/logind.conf.d/panicos.conf" <<'EOF'
+[Login]
+HandlePowerKey=ignore
+HandleLidSwitch=ignore
+HandleLidSwitchDocked=ignore
+EOF
+
 # ── Gamepad mouse daemon ──────────────────────────────────────────────────────
 mkdir -p "$ROOTFS/usr/local/lib/panicos"
 cp "$ASSETS/services/gamepad-mouse.py" \
@@ -304,6 +316,14 @@ if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ];
 # PanicOS H700 handheld gamepad driver (rocknix-joypad project)
 rocknix-singleadc-joypad
 MODEOF
+
+    # Copy firmware blobs from PanicOS build (wifi, BT, panel init, etc.)
+    FW_SRC="$BOARD_OUTPUT/target/usr/lib/firmware"
+    if [ -d "$FW_SRC" ]; then
+        mkdir -p "$ROOTFS/usr/lib/firmware"
+        cp -a "$FW_SRC/." "$ROOTFS/usr/lib/firmware/"
+        info "Firmware blobs installed from PanicOS build"
+    fi
 
     info "Kernel headers ready: /usr/src/linux-headers-$KVER"
 else
