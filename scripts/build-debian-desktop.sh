@@ -60,7 +60,7 @@ PACKAGES=(
     network-manager network-manager-gnome
 
     # Notification daemon
-    mako
+    mako-notifier
 
     # Fonts
     fonts-dejavu-core fonts-liberation
