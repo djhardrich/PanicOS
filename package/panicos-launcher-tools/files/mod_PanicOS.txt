@@ -39,7 +39,7 @@ if [[ -z "$_PANICOS_WESTON_PATCHED" ]] && [[ "${BASH_SOURCE[1]:-}" == *westonwra
     chmod +x "$_patched"
     sed -i 's/waydisp="wayland-5"/waydisp="${WAYLAND_DISPLAY:-wayland-1}"/g' "$_patched"
     python3 - "$_patched" <<'PYEOF'
-import sys
+import sys, re
 txt = open(sys.argv[1]).read()
 bypass = r"""
 # PanicOS panfrost bypass: skip weston, connect app directly to sway
@@ -55,7 +55,11 @@ if [ -n "$WAYLAND_DISPLAY" ] && [ -S "${XDG_RUNTIME_DIR:-/var/run/0-runtime-dir}
     cleanup_and_exit
 fi
 """
-txt = txt.replace("check_gptokeyb\n", "check_gptokeyb\n" + bypass, 1)
+# Match the standalone (unindented) call only — westonwrap has an indented
+# occurrence inside run_user_command() that must not receive the injection.
+txt = re.sub(r'^check_gptokeyb$',
+             'check_gptokeyb\n' + bypass.rstrip(),
+             txt, count=1, flags=re.MULTILINE)
 open(sys.argv[1], 'w').write(txt)
 PYEOF
     exec bash "$_patched" "$@"

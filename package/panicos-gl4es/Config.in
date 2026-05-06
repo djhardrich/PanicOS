@@ -1,0 +1,12 @@
+config BR2_PACKAGE_PANICOS_GL4ES
+	bool "panicos-gl4es"
+	depends on BR2_PACKAGE_MESA3D_OPENGL_EGL
+	depends on BR2_PACKAGE_SDL2
+	help
+	  Build gl4es (ptitSeb) as a system library installed to /usr/lib/gl4es/.
+	  Provides OpenGL 1.x/2.x API translation to OpenGL ES for legacy ports
+	  whose fixed-function pipeline calls panfrost mesa does not expose.
+
+	  libgl_PanicOS.txt prepends /usr/lib/gl4es to LD_LIBRARY_PATH when
+	  the directory exists, replacing port-bundled gl4es 1.1.7 with this
+	  properly-built version (GLES 3 backend, SDL2 context, Wayland-clean).

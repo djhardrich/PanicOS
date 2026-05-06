@@ -1,12 +1,21 @@
 #!/bin/bash
 #
-# PanicOS — use system mesa3d (panfrost + Wayland EGL) instead of bundled gl4es.
-# Our mesa3d ships full OpenGL + EGL with Wayland compositor support in /usr/lib.
-# We intentionally skip the gl4es LD_LIBRARY_PATH block from libgl_default.txt;
-# ports that bundle gl4es 1.1.7 get system mesa3d instead, which actually works
-# on the H700's split DRM topology (card0=panfrost, card1=sun4i-drm display).
+# PanicOS GL library selection for PortMaster ports.
+#
+# If system gl4es is installed (/usr/lib/gl4es), prepend it so it overrides
+# any port-bundled gl4es 1.1.7. System gl4es is built with DEFAULT_ES=3 and
+# NOX11=1, giving it a proper SDL2/GLES3 backend on panfrost.
+#
+# LIBGL_FB=1 selects the SDL2 framebuffer backend inside gl4es (avoids GBM
+# context creation, which fails on H700's split DRM topology where card0=
+# panfrost has no display connectors).
 #
 # Port-specific non-GL libraries in ./libs.$DEVICE_ARCH or ./libs are still loaded.
+
+if [ -d "/usr/lib/gl4es" ]; then
+  export LD_LIBRARY_PATH="/usr/lib/gl4es:${LD_LIBRARY_PATH}"
+  export LIBGL_FB="${LIBGL_FB:-1}"
+fi
 
 if [ -d "$PWD/libs.$DEVICE_ARCH" ]; then
   export LD_LIBRARY_PATH="$PWD/libs.$DEVICE_ARCH:$LD_LIBRARY_PATH"

@@ -28,5 +28,6 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-ffmpeg4-compat/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-box64/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-box86/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-lib32/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-gl4es/Config.in"
 
 endmenu
