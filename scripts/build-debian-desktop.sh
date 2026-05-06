@@ -355,6 +355,10 @@ rm -rf "$ROOTFS/var/cache/apt/archives"/*.deb \
        "$ROOTFS/var/log"/* \
        "$ROOTFS/tmp"/*
 
+# Unmount bind mounts before mksquashfs — otherwise /proc /sys /dev
+# get included as real files in the squashfs.
+umount -lf "$ROOTFS/dev/pts" "$ROOTFS/dev" "$ROOTFS/sys" "$ROOTFS/proc" 2>/dev/null || true
+
 # ── Build squashfs ────────────────────────────────────────────────────────────
 info "Building squashfs (zstd compression, this takes a few minutes)..."
 mksquashfs "$ROOTFS" "$SQUASHFS_OUT" \
