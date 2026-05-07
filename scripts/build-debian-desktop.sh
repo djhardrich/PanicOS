@@ -281,6 +281,7 @@ chroot_run systemctl enable gamepad-mouse
 mkdir -p "$ROOTFS/etc/udev/rules.d"
 cat > "$ROOTFS/etc/udev/rules.d/99-panicos-uinput.rules" <<'UDEV'
 SUBSYSTEM=="input", ATTRS{name}=="PanicOS Gamepad Mouse", TAG+="seat", TAG+="uaccess"
+SUBSYSTEM=="input", ATTRS{name}=="PanicOS Gamepad Keys", TAG+="seat", TAG+="uaccess"
 UDEV
 
 # ── Kernel headers (for out-of-tree module building) ─────────────────────────
