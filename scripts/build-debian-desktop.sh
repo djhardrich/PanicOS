@@ -62,7 +62,8 @@ PACKAGES=(
 
     # NetworkManager + Bluetooth
     # network-manager-tui: nmtui was split from network-manager in NM 1.56
-    network-manager network-manager-tui network-manager-gnome
+    # wpasupplicant: only a Recommends of NM, not pulled in by minbase — required for WiFi
+    network-manager network-manager-tui network-manager-gnome wpasupplicant
     bluetooth blueman
 
     # Notification daemon
