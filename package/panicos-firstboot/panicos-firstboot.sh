@@ -13,6 +13,17 @@ MARKER=/storage/.panicos-firstboot-done
 # one-shot block below so upgrades (existing marker) still get them.
 mkdir -p /storage/squashfs
 
+# ROCKNIX dual-boot compatibility: ROCKNIX's automount script bind-mounts
+# /storage/games-internal/roms over /storage/roms to support merged-storage
+# (single/dual-card setups). Without this symlink, automount creates an empty
+# games-internal/roms dir and bind-mounts it over our populated /storage/roms,
+# hiding all ports and causing games (pico8, etc.) to crash on launch.
+# Making games-internal/roms a symlink to roms means the bind-mount resolves
+# to a self-bind (valid, no-op content-wise) and the roms stay visible.
+mkdir -p /storage/games-internal
+[ -e /storage/games-internal/roms ] || \
+    ln -sf /storage/roms /storage/games-internal/roms
+
 [ -f "$MARKER" ] && exit 0
 
 # Find the device backing /storage (mounted by initramfs). Read /proc/mounts
