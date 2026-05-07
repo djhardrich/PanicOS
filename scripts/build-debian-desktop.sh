@@ -276,6 +276,13 @@ cp "$ASSETS/services/gamepad-mouse.service" \
     "$ROOTFS/etc/systemd/system/gamepad-mouse.service"
 chroot_run systemctl enable gamepad-mouse
 
+# udev rule: tag the virtual mouse with seat+uaccess so logind assigns it to
+# the compositor's seat.  Without this, Wayfire never opens the uinput device.
+mkdir -p "$ROOTFS/etc/udev/rules.d"
+cat > "$ROOTFS/etc/udev/rules.d/99-panicos-uinput.rules" <<'UDEV'
+SUBSYSTEM=="input", ATTRS{name}=="PanicOS Gamepad Mouse", TAG+="seat", TAG+="uaccess"
+UDEV
+
 # ── Kernel headers (for out-of-tree module building) ─────────────────────────
 LINUX_BUILD=$(find "$BOARD_OUTPUT/build" -maxdepth 1 -name 'linux-[0-9]*' -type d 2>/dev/null | sort -V | tail -1)
 if [ -n "$LINUX_BUILD" ] && [ -f "$LINUX_BUILD/include/config/kernel.release" ]; then
