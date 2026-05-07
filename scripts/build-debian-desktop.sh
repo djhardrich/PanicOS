@@ -94,10 +94,9 @@ PACKAGES=(
     # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap)
     iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet
 
-    # Application launcher — XFCE/LXDE-style hierarchical menu grouped by
-    # .desktop category (Internet, Accessories, Multimedia, etc.).
-    # nwg-menu integrates with waybar as a clickable Apps button.
-    nwg-menu
+    # Application launcher — rofi (Wayland-native) + j4-dmenu-desktop
+    # (feeds .desktop entries grouped by category: Internet, Accessories…)
+    rofi j4-dmenu-desktop
 
     # Hardware control
     brightnessctl

@@ -8,7 +8,7 @@
 
     "custom/launcher": {
         "format": " Apps",
-        "on-click": "nwg-menu",
+        "on-click": "j4-dmenu-desktop --dmenu='rofi -dmenu -i -p Apps' --term=foot",
         "tooltip": false
     },
     "clock": {
