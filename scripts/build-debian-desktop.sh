@@ -91,8 +91,8 @@ PACKAGES=(
     bash-completion xdg-user-dirs xdg-utils desktop-file-utils
     plocate
 
-    # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap)
-    iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet
+    # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap, iwlist)
+    iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet wireless-tools
 
     # Application launcher — rofi (Wayland-native) + j4-dmenu-desktop
     # (feeds .desktop entries grouped by category: Internet, Accessories…)
