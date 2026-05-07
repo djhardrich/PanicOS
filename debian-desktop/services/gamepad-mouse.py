@@ -24,11 +24,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 log = logging.getLogger('gamepad-mouse')
 
 # ── tunables ────────────────────────────────────────────────────────────────
-STICK_DEADZONE   = 4000    # ABS_X/ABS_Y raw units (range is typically ±32767)
-STICK_MAX        = 32767
 MOUSE_SPEED      = 20      # max pixels/tick at full deflection
 POLL_INTERVAL    = 0.008   # 125 Hz
-R2_THRESHOLD     = 16000   # ABS_RZ above this = right click held
+# STICK_MAX and STICK_DEADZONE are derived from the device's AbsInfo at runtime
+# so they work regardless of driver axis range (e.g. H700 uses ±1800, not ±32767)
 # ────────────────────────────────────────────────────────────────────────────
 
 def find_gamepad():
@@ -80,6 +79,15 @@ async def run():
             log.warning('No gamepad found, retrying in 2s...')
             await asyncio.sleep(2)
 
+    # Derive axis range from the device so deadzone works regardless of driver
+    abs_dict = dict(gamepad.capabilities()[ecodes.EV_ABS])
+    abs_info = abs_dict[ecodes.ABS_X]
+    stick_max = abs_info.max
+    # Deadzone: 3x the hardware flat zone, at least 5% of max range
+    stick_deadzone = max(abs_info.flat * 3, stick_max // 20)
+    r2_threshold = stick_max // 2
+    log.info(f'Stick range ±{stick_max}, deadzone {stick_deadzone}, R2 threshold {r2_threshold}')
+
     mouse = create_virtual_mouse()
     gamepad.grab()
 
@@ -98,7 +106,7 @@ async def run():
                 elif ev.code == ecodes.ABS_Y:
                     ay = ev.value
                 elif ev.code == ecodes.ABS_RZ:
-                    new_r2 = ev.value > R2_THRESHOLD
+                    new_r2 = ev.value > r2_threshold
                     if new_r2 != r2_held:
                         r2_held = new_r2
                         mouse.write(ecodes.EV_KEY, ecodes.BTN_RIGHT,
@@ -118,8 +126,8 @@ async def run():
 
     async def move_loop():
         while True:
-            dx = stick_to_delta(ax, STICK_DEADZONE, STICK_MAX, MOUSE_SPEED)
-            dy = stick_to_delta(ay, STICK_DEADZONE, STICK_MAX, MOUSE_SPEED)
+            dx = stick_to_delta(ax, stick_deadzone, stick_max, MOUSE_SPEED)
+            dy = stick_to_delta(ay, stick_deadzone, stick_max, MOUSE_SPEED)
             if dx or dy:
                 if dx:
                     mouse.write(ecodes.EV_REL, ecodes.REL_X, dx)
