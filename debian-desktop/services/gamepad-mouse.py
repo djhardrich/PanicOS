@@ -54,14 +54,13 @@ def create_virtual_mouse():
     return UInput(cap, name='PanicOS Gamepad Mouse', version=0x1)
 
 def wvkbd_toggle():
-    """Send SIGUSR1 to wvkbd to toggle visibility."""
+    """Send SIGUSR1 to wvkbd to toggle visibility.
+    wvkbd is started hidden by Wayfire autostart (needs Wayland session env);
+    this daemon only signals it — never spawns it from the root service.
+    """
     try:
-        result = subprocess.run(['pkill', '-USR1', '-x', 'wvkbd-mobintl'],
-                                capture_output=True)
-        if result.returncode != 0:
-            # Not running — start it
-            subprocess.Popen(['wvkbd-mobintl', '--landscape', '-L', '160'],
-                             start_new_session=True)
+        subprocess.run(['pkill', '-USR1', '-x', 'wvkbd-mobintl'],
+                       capture_output=True)
     except Exception as e:
         log.warning(f'wvkbd toggle failed: {e}')
 
