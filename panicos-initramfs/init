@@ -1,26 +1,37 @@
 #!/bin/sh
-# PanicOS initramfs — find boot + storage partitions on whichever block
-# device our SD card / eMMC ended up as, loop-mount the selected squashfs
-# (which lives on the boot vfat alongside the kernel — Knulli/ROCKNIX
-# style), set up an overlayfs whose upper+work directories live on the
-# storage ext4 partition, and switch_root into the merged tree.
+# PanicOS initramfs — find boot + storage partitions, loop-mount the selected
+# squashfs, then set up TWO overlayfs layers before switch_root:
 #
-# Net effect: rootfs presents as fully writable from userspace, but only
-# changes (deltas) get written; the base squashfs stays pristine. PC
-# users see the boot vfat → can drop new squashfs flavors / edit active.cfg.
+#   1. Rootfs overlay  — squashfs as lower, per-flavor upper on the ext4.
+#                        Each squashfs boots into its own pristine-but-writable
+#                        rootfs; changes are captured per-flavor.
 #
-# Detection strategy (no hardcoded mmcblkN/sdN):
-#   - Boot partition    = vfat with /panicos-active.cfg at the root.
-#                          Squashfs flavor(s) live on this partition too.
-#   - Storage partition = ext4, the *other* writable partition. Holds user
-#                          data and .panicos-overlay/{upper,work}.
+#   2. Storage overlay — empty shared/ dir as lower, per-flavor upper on the
+#                        ext4.  Each squashfs sees its own isolated /storage;
+#                        ROCKNIX's games-internal/.cache/iwd/etc. and PanicOS's
+#                        .emulationstation/.config/ cannot bleed into each other.
+#
+# The raw ext4 is exposed at /storage-base in the running OS so admin tools
+# (PanicOS-SquashFS-Install.sh, migration scripts) can inspect or seed the
+# shared/ area without going through any overlay.
+#
+# Directory layout inside the ext4 (all under .panicos-overlay/):
+#   .panicos-overlay/shared/            — storage overlay lower (read-only base)
+#   .panicos-overlay/<flavor>/upper/    — rootfs overlay upper
+#   .panicos-overlay/<flavor>/work/     — rootfs overlay work
+#   .panicos-overlay/<flavor>/storage/  — storage overlay upper
+#   .panicos-overlay/<flavor>/swork/    — storage overlay work
+#
+# Detection:
+#   Boot partition    = vfat with /panicos-active.cfg at the root.
+#   Storage partition = ext4, the other writable partition.
 
 set -e
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export PATH
 
-mkdir -p /proc /sys /dev /run /boot /storage /sysroot
+mkdir -p /proc /sys /dev /run /boot /storage-base /storage /sysroot
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t devtmpfs devtmpfs /dev
@@ -33,8 +44,7 @@ panic() {
     reboot -f
 }
 
-# Wait for the kernel to enumerate ALL partitions on whichever mmc we
-# booted from. Stop as soon as we see a stable count two ticks in a row.
+# Wait for the kernel to enumerate ALL partitions. Stop when count is stable.
 prev_count=-1
 i=0
 while [ $i -lt 50 ]; do
@@ -69,7 +79,7 @@ find_storage() {
         [ -b "$dev" ] || continue
         [ "$dev" = "$boot_dev" ] && continue
         echo "    trying $dev"
-        if mount -t ext4 "$dev" /storage 2>/dev/null; then
+        if mount -t ext4 "$dev" /storage-base 2>/dev/null; then
             echo ">>> PanicOS initramfs: storage partition = $dev"
             return 0
         else
@@ -87,17 +97,7 @@ FLAVOR=
 . /boot/panicos-active.cfg
 [ -n "$IMAGE" ] || panic "IMAGE not set in /boot/panicos-active.cfg"
 
-# ---- Multiboot menu ------------------------------------------------------
-# If multiple .squashfs flavors exist on the boot vfat AND we have the
-# mbselect helper, give the user a 3-second window to interrupt and pick a
-# different one. Without an interrupt or with only one flavor present, fall
-# through to the default IMAGE that active.cfg pointed at.
-#
-# Gamepad input requires the rocknix-joypad driver which is out-of-tree —
-# it ships in the initramfs at /rocknix-joypad.ko (build-initramfs.sh
-# bundles it). Insmod is best-effort; mbselect falls back to whatever
-# evdev devices already exist (gpio-keys volume buttons, USB keyboard,
-# etc.) if the joypad module is missing or fails to load.
+# ---- Multiboot menu ----------------------------------------------------------
 flavors=""
 for sq in /boot/*.squashfs; do
     [ -e "$sq" ] && flavors="$flavors ${sq##*/}"
@@ -108,11 +108,9 @@ if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
     for _ko in /*.ko; do
         [ -f "$_ko" ] && insmod "$_ko" 2>/dev/null || true
     done
-    sleep 1   # let evdev nodes settle after insmod
+    sleep 1
     echo ">>> PanicOS initramfs: booting $IMAGE in 3s — press any button for menu"
     if /sbin/panicos-mbselect wait 3; then
-        # Use `if chosen=$(...)` so set -e doesn't kill init when the user
-        # presses cancel (exit 1) or mbselect times out — fall back to default.
         if chosen=$(/sbin/panicos-mbselect menu "$IMAGE" $flavors); then
             if [ -n "$chosen" ] && [ -f "/boot/$chosen" ]; then
                 IMAGE="$chosen"
@@ -122,16 +120,11 @@ if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
         fi
     fi
 fi
-# -------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-# Per-flavor overlay namespace: each squashfs gets its own
-# /storage/.panicos-overlay/<flavor>/{upper,work}. Switching flavors keeps
-# each one's deltas separate (Debian-vs-Arch /etc would be chaos otherwise).
-# User data on /storage outside .panicos-overlay/ is shared across flavors.
-#
-# Default FLAVOR derives from the IMAGE filename minus .squashfs — simple,
-# unambiguous, no parsing of device-prefix needed. Override by setting
-# FLAVOR= in panicos-active.cfg if you want two squashfses to share state.
+# FLAVOR derives from the IMAGE filename (strip .squashfs). Each squashfs gets
+# completely isolated rootfs AND storage overlays. Override via panicos-active.cfg
+# to share state between two squashfs files.
 if [ -z "$FLAVOR" ]; then
     FLAVOR="${IMAGE%.squashfs}"
 fi
@@ -139,7 +132,7 @@ echo ">>> PanicOS initramfs: booting $IMAGE (flavor=$FLAVOR)"
 
 [ -f "/boot/$IMAGE" ] || panic "/boot/$IMAGE not found on boot partition"
 
-# Loop-mount the selected squashfs at /lower (the overlayfs lower layer).
+# Loop-mount the squashfs (read-only lower layer for the rootfs overlay).
 mkdir -p /lower
 LOOPDEV=$(losetup -f)
 losetup -r "$LOOPDEV" "/boot/$IMAGE" \
@@ -147,56 +140,75 @@ losetup -r "$LOOPDEV" "/boot/$IMAGE" \
 mount -o ro -t squashfs "$LOOPDEV" /lower \
     || panic "mount of squashfs failed"
 
-# Find + mount the storage ext4 partition (rw). If absent we fall back to
-# tmpfs upper so the system still boots, just non-persistent.
+# Mount the storage ext4. Fall back to tmpfs (non-persistent) if not found.
 if find_storage "$BOOT_DEV"; then
     :
 else
     echo ">>> PanicOS initramfs: no storage partition found; using tmpfs (non-persistent)"
-    mount -t tmpfs tmpfs /storage
+    mount -t tmpfs tmpfs /storage-base
 fi
 
-OVERLAY_BASE=/storage/.panicos-overlay/$FLAVOR
-mkdir -p "$OVERLAY_BASE/upper" "$OVERLAY_BASE/work"
+# ── Overlay directory layout ──────────────────────────────────────────────────
+OV_BASE=/storage-base/.panicos-overlay/$FLAVOR
+OV_SHARED=/storage-base/.panicos-overlay/shared
 
-mount -t overlay panicos-overlay \
-    -o lowerdir=/lower,upperdir="$OVERLAY_BASE/upper",workdir="$OVERLAY_BASE/work" \
+# Rootfs overlay dirs (upper/work kept at old names for backward compat with
+# existing devices that already have an upper/ populated with module injections,
+# ES configs, etc.)
+mkdir -p "$OV_BASE/upper"   "$OV_BASE/work"
+
+# Storage overlay dirs (new; created empty on first boot of this flavor).
+mkdir -p "$OV_BASE/storage" "$OV_BASE/swork"
+
+# Shared storage lower — empty by default; anything placed here by admin tools
+# becomes a read-only base visible to ALL flavors' /storage views.
+mkdir -p "$OV_SHARED"
+
+# ── Rootfs overlayfs ─────────────────────────────────────────────────────────
+mount -t overlay panicos-rootfs \
+    -o lowerdir=/lower,upperdir="$OV_BASE/upper",workdir="$OV_BASE/work" \
     /sysroot \
-    || panic "overlayfs mount failed"
+    || panic "rootfs overlayfs mount failed"
 
-# ── Module / firmware injection for foreign squashfs (e.g. Debian) ───────────
-# If the squashfs has no /lib/modules/<kver> (i.e. it wasn't built with our
-# kernel modules baked in), inject them now via the overlay upper so the
-# running system sees them without modifying the squashfs itself.
-# A version-stamped sentinel in the overlay upper prevents repeated injection
-# on subsequent boots; a kernel upgrade (new kver) automatically re-injects.
+# ── Storage overlayfs ────────────────────────────────────────────────────────
+# lower  = shared/  (on the ext4, NOT a parent of upper — siblings under
+#          .panicos-overlay/, satisfying the overlayfs no-ancestor constraint)
+# upper  = per-flavor storage/  (all writes from /storage land here, isolated)
+# merged = /storage  (what the running OS sees as /storage)
+mount -t overlay panicos-storage \
+    -o lowerdir="$OV_SHARED",upperdir="$OV_BASE/storage",workdir="$OV_BASE/swork" \
+    /storage \
+    || panic "storage overlayfs mount failed"
+
+# ── Module / firmware injection for foreign squashfs (e.g. ROCKNIX, Debian) ──
+# If the squashfs lacks /lib/modules/<kver> for our running kernel, inject from
+# the boot partition's panicos-modules.tar.gz into the rootfs overlay upper.
+# Sentinel prevents re-injection on every boot; new kver busts it automatically.
 _kver=$(uname -r)
-_sentinel="$OVERLAY_BASE/upper/.panicos-modules-$_kver"
+_sentinel="$OV_BASE/upper/.panicos-modules-$_kver"
 _modules_tar="/boot/panicos-modules.tar.gz"
 if [ ! -d "/lower/lib/modules/$_kver" ] && \
    [ ! -d "/lower/usr/lib/modules/$_kver" ] && \
    [ -f "$_modules_tar" ] && \
    [ ! -f "$_sentinel" ]; then
     echo ">>> PanicOS: injecting kernel modules+firmware into $FLAVOR overlay..."
-    mkdir -p "$OVERLAY_BASE/upper"
-    tar -xzf "$_modules_tar" -C "$OVERLAY_BASE/upper" 2>/dev/null && \
+    tar -xzf "$_modules_tar" -C "$OV_BASE/upper" 2>/dev/null && \
         touch "$_sentinel" && \
         echo ">>> PanicOS: injection done (kernel $_kver)" || \
         echo ">>> PanicOS: injection failed — device drivers may be missing"
-    # Drop modules-load.d entries for out-of-tree drivers that udev has no
-    # hardware-ID match for (rocknix-joypad is not in any modalias table).
-    # systemd-modules-load.service picks these up on first boot.
-    _mld="$OVERLAY_BASE/upper/etc/modules-load.d"
+    _mld="$OV_BASE/upper/etc/modules-load.d"
     mkdir -p "$_mld"
     printf 'rocknix-joypad\nrocknix-singleadc-joypad\n' \
         > "$_mld/panicos-joypad.conf" || true
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
-# /lower is the overlayfs lowerdir; the kernel holds a VFS ref to it
-# internally — moving it while overlayfs is live causes EBUSY.  Leave it;
-# switch_root frees the old root tmpfs, releasing the mountpoint.
-for m in proc sys dev run boot storage; do
+# Move all initramfs mounts into sysroot before switch_root.
+# /lower is the squashfs lowerdir — kernel holds a VFS ref, EBUSY to move it;
+# leave it, switch_root's tmpfs teardown releases it.
+# /storage-base (raw ext4) is exposed so running-OS tools can inspect/seed the
+# shared/ area or run storage migration without going through an overlay.
+for m in proc sys dev run boot storage-base storage; do
     mkdir -p "/sysroot/$m"
     mount --move "/$m" "/sysroot/$m" || panic "mount --move /$m failed"
 done
