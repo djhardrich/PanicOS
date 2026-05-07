@@ -150,19 +150,18 @@ fi
 
 # ── Overlay directory layout ──────────────────────────────────────────────────
 OV_BASE=/storage-base/.panicos-overlay/$FLAVOR
-OV_SHARED=/storage-base/.panicos-overlay/shared
 
 # Rootfs overlay dirs (upper/work kept at old names for backward compat with
 # existing devices that already have an upper/ populated with module injections,
 # ES configs, etc.)
-mkdir -p "$OV_BASE/upper"   "$OV_BASE/work"
+mkdir -p "$OV_BASE/upper" "$OV_BASE/work"
 
-# Storage overlay dirs (new; created empty on first boot of this flavor).
-mkdir -p "$OV_BASE/storage" "$OV_BASE/swork"
-
-# Shared storage lower — empty by default; anything placed here by admin tools
-# becomes a read-only base visible to ALL flavors' /storage views.
-mkdir -p "$OV_SHARED"
+# Per-flavor storage dir — bind-mounted to /storage so it stays on ext4.
+# A plain overlayfs here would make /storage an overlayfs itself, which
+# breaks any guest OS (e.g. ROCKNIX) that mounts its own overlays with
+# upperdir/workdir under /storage (kernel rejects overlayfs-on-overlayfs
+# without allow_nesting, which this kernel does not support).
+mkdir -p "$OV_BASE/storage"
 
 # ── Rootfs overlayfs ─────────────────────────────────────────────────────────
 mount -t overlay panicos-rootfs \
@@ -170,15 +169,12 @@ mount -t overlay panicos-rootfs \
     /sysroot \
     || panic "rootfs overlayfs mount failed"
 
-# ── Storage overlayfs ────────────────────────────────────────────────────────
-# lower  = shared/  (on the ext4, NOT a parent of upper — siblings under
-#          .panicos-overlay/, satisfying the overlayfs no-ancestor constraint)
-# upper  = per-flavor storage/  (all writes from /storage land here, isolated)
-# merged = /storage  (what the running OS sees as /storage)
-mount -t overlay panicos-storage \
-    -o lowerdir="$OV_SHARED",upperdir="$OV_BASE/storage",workdir="$OV_BASE/swork" \
-    /storage \
-    || panic "storage overlayfs mount failed"
+# ── Storage bind mount ───────────────────────────────────────────────────────
+# Bind-mount the per-flavor directory directly so /storage is ext4-backed.
+# Each flavor sees its own isolated directory; guest OSes can mount their
+# own overlays with upper/workdir under /storage without issue.
+mount --bind "$OV_BASE/storage" /storage \
+    || panic "storage bind mount failed"
 
 # ── Module / firmware injection for foreign squashfs (e.g. ROCKNIX, Debian) ──
 # If the squashfs lacks /lib/modules/<kver> for our running kernel, inject from
