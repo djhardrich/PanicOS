@@ -36,10 +36,10 @@ def find_gamepad():
         try:
             dev = InputDevice(path)
             cap = dev.capabilities()
-            # Must have left-stick axes and gamepad buttons
-            if (ecodes.EV_ABS in cap and ecodes.EV_KEY in cap and
-                    ecodes.ABS_X in cap[ecodes.EV_ABS] and
-                    ecodes.BTN_SOUTH in cap[ecodes.EV_KEY]):
+            # EV_ABS values are (code, AbsInfo) tuples — extract codes before checking.
+            abs_codes = {code for code, _ in cap.get(ecodes.EV_ABS, [])}
+            key_codes = set(cap.get(ecodes.EV_KEY, []))
+            if (ecodes.ABS_X in abs_codes and ecodes.BTN_SOUTH in key_codes):
                 log.info(f'Found gamepad: {dev.name} at {path}')
                 return dev
         except Exception:
