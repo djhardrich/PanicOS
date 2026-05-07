@@ -151,6 +151,14 @@ mkdir -p "$ROOTFS" "$OUTPUT"
 PKG_LIST="$(IFS=,; echo "${PACKAGES[*]}")"
 
 info "Bootstrapping Debian $SUITE arm64 rootfs (this takes ~15 min)..."
+# apt-cacher-ng on localhost:3142 dramatically speeds up repeated builds.
+# Install with: sudo pacman -S apt-cacher-ng && sudo systemctl start apt-cacher-ng
+EFFECTIVE_MIRROR="$MIRROR"
+if curl -sf --max-time 1 http://localhost:3142/acng-report.html >/dev/null 2>&1; then
+    info "apt-cacher-ng detected — routing downloads through local cache"
+    EFFECTIVE_MIRROR="http://localhost:3142/debian"
+fi
+
 mmdebstrap \
     --arch="$ARCH" \
     --variant=minbase \
@@ -158,9 +166,11 @@ mmdebstrap \
     --components="main contrib non-free non-free-firmware" \
     --skip=check/qemu \
     --keyring="$DEBIAN_KEYRING" \
+    --aptopt='Acquire::Queue-Mode "access"' \
+    --aptopt='Acquire::Languages "none"' \
     "$SUITE" \
     "$ROOTFS" \
-    "$MIRROR"
+    "$EFFECTIVE_MIRROR"
 
 info "Configuring rootfs..."
 
