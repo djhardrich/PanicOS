@@ -42,8 +42,8 @@ PACKAGES=(
     # Init + session management
     systemd systemd-sysv dbus dbus-user-session udev
 
-    # Login / session
-    sddm
+    # Login / session (qtvirtualkeyboard-plugin enables OSK on the login screen)
+    sddm qtvirtualkeyboard-plugin
 
     # Wayland compositor + panel + wallpaper
     wayfire waybar swaybg
@@ -95,9 +95,8 @@ PACKAGES=(
     # Network tools (ping, traceroute, dig, ifconfig, netstat, ss, nmap, iwlist)
     iputils-ping net-tools dnsutils traceroute nmap inetutils-telnet wireless-tools
 
-    # Application launcher — rofi (Wayland-native) + j4-dmenu-desktop
-    # (feeds .desktop entries grouped by category: Internet, Accessories…)
-    rofi j4-dmenu-desktop
+    # Application launcher
+    rofi
 
     # Hardware control
     brightnessctl
