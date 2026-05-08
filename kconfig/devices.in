@@ -6,6 +6,8 @@ source "$BR2_EXTERNAL_PANICOS_PATH/board/panicos/harness-smoke/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro-lpddr3/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg353p/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rk3326-a/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rk3326-b/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/Config.in"
 
 endchoice
@@ -16,4 +18,6 @@ config PANICOS_DEVICE_NAME
 	default "rg35xx-pro" if PANICOS_DEVICE_RG35XX_PRO
 	default "rg35xx-pro-lpddr3" if PANICOS_DEVICE_RG35XX_PRO_LPDDR3
 	default "rg353p" if PANICOS_DEVICE_RG353P
+	default "rk3326-a" if PANICOS_DEVICE_RK3326_A
+	default "rk3326-b" if PANICOS_DEVICE_RK3326_B
 	default "trimui-brick" if PANICOS_DEVICE_TRIMUI_BRICK

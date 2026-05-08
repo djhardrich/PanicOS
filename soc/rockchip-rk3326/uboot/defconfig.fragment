@@ -1,0 +1,28 @@
+# Rockchip RK3326 U-Boot configuration (mainline U-Boot v2025.10).
+#
+# rkbin assembly for RK3326:
+#   BL31:      bin/rk33/rk3326_bl31_v1.34.elf
+#   DDR TPL:   bin/rk33/rk3326_ddr_333MHz_v2.11.bin
+#   Miniloader: bin/rk33/rk3326_miniloader_v1.40.bin  (used by rkhelper)
+#
+# Buildroot's BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y path runs:
+#   make BL31=<bl31> ROCKCHIP_TPL=<ddr> u-boot-rockchip.bin
+# The rk3326-handheld_defconfig (added via uboot/patches/) enables SPL+ATF
+# which allows binman to assemble u-boot-rockchip.bin.
+#
+# Note: BR2_TARGET_UBOOT_BOARDNAME is set per-board in board/*/defconfig.fragment
+# since rk3326-a uses a different U-Boot source (legacy hardkernel fork).
+
+BR2_PACKAGE_ROCKCHIP_RKBIN=y
+BR2_PACKAGE_ROCKCHIP_RKBIN_BL31_FILENAME="bin/rk33/rk3326_bl31_v1.34.elf"
+BR2_PACKAGE_ROCKCHIP_RKBIN_TPL_FILENAME="bin/rk33/rk3326_ddr_333MHz_v2.11.bin"
+
+BR2_TARGET_UBOOT=y
+BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION=y
+BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2025.10"
+BR2_TARGET_UBOOT_CUSTOM_TARBALL=y
+BR2_TARGET_UBOOT_CUSTOM_TARBALL_LOCATION="https://github.com/u-boot/u-boot/archive/refs/tags/v2025.10.tar.gz"
+BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3326/uboot/patches"
+BR2_TARGET_UBOOT_FORMAT_BIN=y
+BR2_TARGET_UBOOT_USE_BINMAN=y

@@ -1,0 +1,13 @@
+config PANICOS_SOC_ROCKCHIP_RK3326
+	bool "Rockchip RK3326 / PX30"
+	help
+	  Rockchip RK3326 (quad-core Cortex-A35, AKA PX30). Used by a wide
+	  range of retro-handheld devices: Anbernic RG351M/V, OGA/OGS/OGO,
+	  Powkiddy RGB10/RGB10X, GameForce Chi, MagicX XU10, and others.
+	  Two U-Boot variants are supported:
+	    rk3326-a — legacy hardkernel fork (OGA/OGS/RG351 family)
+	    rk3326-b — mainline U-Boot v2025.10 (RGB10X/XU-Mini-M/EEClone)
+
+if PANICOS_SOC_ROCKCHIP_RK3326
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3326/mainline/Config.in"
+endif

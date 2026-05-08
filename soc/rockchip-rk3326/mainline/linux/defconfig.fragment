@@ -1,0 +1,22 @@
+# Linux kernel — Rockchip RK3326 mainline flavor.
+# Kernel 6.12 LTS + ROCKNIX patches.
+
+BR2_KERNEL_HEADERS_6_12=y
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="6.12.79"
+
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3326/mainline/linux/patches"
+
+BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3326/mainline/linux/linux.config.fragment $(O)/panicos-extras.config.fragment"
+
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+BR2_LINUX_KERNEL_CUSTOM_DTS_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3326/mainline/linux/dts"
+
+# Full device set for rk3326-a and rk3326-b variants.
+# .dtsi files are included automatically by .dts files — do NOT list them here.
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3326-odroid-go2 rockchip/rk3326-odroid-go2-v11 rockchip/rk3326-odroid-go3 rockchip/rk3326-anbernic-rg351m rockchip/rk3326-anbernic-rg351v rockchip/rk3326-gameforce-chi rockchip/rk3326-powkiddy-rgb10 rockchip/rk3326-powkiddy-rgb10x rockchip/rk3326-powkiddy-rgb20s rockchip/rk3326-gameconsole-r33s rockchip/rk3326-gameconsole-r36s rockchip/rk3326-gameconsole-eeclone rockchip/rk3326-magicx-xu10 rockchip/rk3326-magicx-xu-mini-m rockchip/rk3326-batlexp-g350"
+
+BR2_LINUX_KERNEL_GZIP=y

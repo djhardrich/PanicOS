@@ -1,0 +1,11 @@
+BR2_aarch64=y
+BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+BR2_TARGET_GENERIC_HOSTNAME="panicos-rk3326-a"
+BR2_TARGET_GENERIC_ISSUE="PanicOS — RK3326-a"
+
+# Mainline U-Boot with rk3326-handheld_defconfig (added via uboot/patches/).
+# Both a and b variants use the same binary; only boot.scr differs.
+BR2_TARGET_UBOOT_BOARDNAME="rk3326-handheld"
+
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rk3326-a/post-image.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rk3326-a/genimage.cfg.in"

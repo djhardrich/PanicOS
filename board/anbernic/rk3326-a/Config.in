@@ -1,0 +1,11 @@
+config PANICOS_DEVICE_RK3326_A
+	bool "anbernic/rk3326-a (Rockchip RK3326 — legacy variant)"
+	select PANICOS_SOC_ROCKCHIP_RK3326
+	help
+	  RK3326 devices originally shipped with hardkernel U-Boot (a-variant):
+	    OGA, OGS (ODROID-GO Super), RG351M, RG351V, GameConsole R33S,
+	    MagicX XU10, GameForce Chi.
+	  Uses mainline U-Boot v2025.10 (which fully supports these SoCs by now)
+	  with a_boot.scr for ADC-based DTB selection at runtime.
+
+	  Kernel: Linux 6.12 LTS + ROCKNIX patches.

@@ -1,0 +1,42 @@
+schema_version: 2
+imports:
+  - name: rocknix-rk3326-mainline
+    submodule: third_party/rocknix
+    sha: 03fd8cb07cdbc7f5daa2f2d323f7c7e341e4c6de
+    files:
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/000-rk3326-dts.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/000-rk3326-dts.patch
+        src_sha256: e2291cbdee791d11a7db473d5c7116a7ee6e8baac1fbc7b79e177ad640e213c1
+        dest_sha256: e2291cbdee791d11a7db473d5c7116a7ee6e8baac1fbc7b79e177ad640e213c1
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/001-panel-updates.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/001-panel-updates.patch
+        src_sha256: 58b1f9a73ebfa36e249c4dc527a8f57c5f4cfcd14dcf594cd70875c61ecc6825
+        dest_sha256: 58b1f9a73ebfa36e249c4dc527a8f57c5f4cfcd14dcf594cd70875c61ecc6825
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/004-input-drivers.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/004-input-drivers.patch
+        src_sha256: 27d2c92560ac22652763f587214a920641ff9bc7e185acc21b4f1058b26c3dc5
+        dest_sha256: 27d2c92560ac22652763f587214a920641ff9bc7e185acc21b4f1058b26c3dc5
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/005-unigue-gpio-guid.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/005-unigue-gpio-guid.patch
+        src_sha256: cf1610c31d3a9c5dd9b753bf95f48fac4d1896c3126d3a02ae191f7140162926
+        dest_sha256: cf1610c31d3a9c5dd9b753bf95f48fac4d1896c3126d3a02ae191f7140162926
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/007-ogs-panel-timings.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/007-ogs-panel-timings.patch
+        src_sha256: ee5944640097a73063acf519e8c3e6ec85b44d99f41829343401a951cbc0b818
+        dest_sha256: ee5944640097a73063acf519e8c3e6ec85b44d99f41829343401a951cbc0b818
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/008-esp-8089-wifi.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/008-esp-8089-wifi.patch
+        src_sha256: dce86ce097c903e20bc8d56eee887b1aa8a465627794d589e5332487e2587b3d
+        dest_sha256: dce86ce097c903e20bc8d56eee887b1aa8a465627794d589e5332487e2587b3d
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/020-elida-refresh-rates.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/020-elida-refresh-rates.patch
+        src_sha256: db63effaebce7155790e9a30ae93f711e624fac76470f70a6873fda0217dbb5a
+        dest_sha256: db63effaebce7155790e9a30ae93f711e624fac76470f70a6873fda0217dbb5a
+      - dest: soc/rockchip-rk3326/mainline/linux/patches/022-usb-role-switch.patch
+        src: projects/ROCKNIX/devices/RK3326/patches/linux/022-usb-role-switch.patch
+        src_sha256: f22ff902b22f636dc179e279d9f203ea8a49f349aebf50e1c3633644aef1a536
+        dest_sha256: f22ff902b22f636dc179e279d9f203ea8a49f349aebf50e1c3633644aef1a536
+      - dest: soc/rockchip-rk3326/mainline/linux/linux.config.fragment
+        src: projects/ROCKNIX/devices/RK3326/linux/linux.aarch64.conf
+        src_sha256: 41dc6dfaf40ab3c468707771d767068e1a928dffee05e527f590f12827077fe6
+        dest_sha256: 41dc6dfaf40ab3c468707771d767068e1a928dffee05e527f590f12827077fe6

@@ -142,6 +142,14 @@ rg35xx-pro-lpddr3:
 rg353p:
 	$(MAKE) _build DEVICE=rg353p FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
 
+.PHONY: rk3326-a
+rk3326-a:
+	$(MAKE) _build DEVICE=rk3326-a FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
+
+.PHONY: rk3326-b
+rk3326-b:
+	$(MAKE) _build DEVICE=rk3326-b FLAVOR=$(FLAVOR) KERNEL=$(KERNEL)
+
 .PHONY: trimui-brick
 trimui-brick:
 	$(MAKE) _build DEVICE=trimui-brick FLAVOR=$(FLAVOR) KERNEL=vendor

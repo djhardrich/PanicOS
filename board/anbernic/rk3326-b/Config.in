@@ -1,0 +1,9 @@
+config PANICOS_DEVICE_RK3326_B
+	bool "anbernic/rk3326-b (Rockchip RK3326 — mainline variant)"
+	select PANICOS_SOC_ROCKCHIP_RK3326
+	help
+	  RK3326 devices using mainline U-Boot v2025.10 (b-variant):
+	    Powkiddy RGB10X, MagicX XU-Mini-M, EEClone (GameConsole EEClone).
+	  ADC-based DTB selection at runtime via b_boot.scr.
+
+	  Kernel: Linux 6.12 LTS + ROCKNIX patches.

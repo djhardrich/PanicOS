@@ -7,6 +7,7 @@ config PANICOS_SOC_NONE
 
 source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-h700/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/soc/allwinner-a133/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3326/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3566/Config.in"
 
 endchoice
