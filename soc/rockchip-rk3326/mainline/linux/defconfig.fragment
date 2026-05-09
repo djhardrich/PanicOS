@@ -21,5 +21,6 @@ BR2_LINUX_KERNEL_INTREE_DTS_NAME="rockchip/rk3326-odroid-go2 rockchip/rk3326-odr
 
 BR2_LINUX_KERNEL_GZIP=y
 
-# Pass -@ to dtc so all DTBs include __symbols__ node, required for overlay support.
-BR2_LINUX_KERNEL_MAKE_OPTS="DTC_FLAGS=-@"
+# Build DTBs with -@ so __symbols__ is emitted (required for FDTOVERLAYS).
+# Buildroot's linux.mk gates "LINUX_MAKE_ENV += DTC_FLAGS=-@" on this symbol.
+BR2_LINUX_KERNEL_DTB_OVERLAY_SUPPORT=y
