@@ -1,0 +1,14 @@
+# Package selections for all rk3326 mainline-kernel devices.
+
+# ROCKNIX out-of-tree gamepad driver. Builds both rocknix-joypad.ko (matched
+# by DT compatible "rocknix-joypad", e.g. r33s/eeclone/r36s/g350/rgb20s) and
+# rocknix-singleadc-joypad.ko (single ADC mux'd between sticks/triggers,
+# common on dual-stick variants). udev autoloads whichever the DT declares.
+# Without this, /dev/input/event* never appears for buttons + sticks.
+BR2_PACKAGE_ROCKNIX_JOYPAD=y
+
+# configfs-based runtime DT overlay loader. Required by ROCKNIX's panel/
+# joypad/audio detection scripts that apply hot-plug-time overlays from
+# /sys/kernel/config/device-tree/. Used in particular for SD-card portability
+# across handhelds with different ADC layouts.
+BR2_PACKAGE_DTBOCFG=y

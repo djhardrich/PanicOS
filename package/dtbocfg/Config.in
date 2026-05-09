@@ -1,0 +1,14 @@
+config BR2_PACKAGE_DTBOCFG
+	bool "dtbocfg (configfs interface for runtime DT overlays)"
+	depends on BR2_LINUX_KERNEL
+	help
+	  Out-of-tree kernel module exposing /sys/kernel/config/device-tree/
+	  for loading and unloading device-tree overlays at runtime, without
+	  rebuilding the base DTB or rebooting.
+
+	  Used by ROCKNIX's panel/joypad/audio detection scripts to apply
+	  hot-plug-time overlays (e.g. when SD card is moved between handhelds
+	  with different ADC layouts). Required on rk3326 handhelds that ship
+	  ROCKNIX-style mipi-panel.dtbo.
+
+	  https://github.com/ikwzm/dtbocfg
