@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000003 Mon Sep 17 00:00:00 2001
+From: PanicOS <panicos@example.com>
+Date: Thu, 01 Jan 2026 00:00:00 +0000
+Subject: [PATCH] rockchip: add rk3326-odroid-go2-emmc.dtsi for handheld eMMC boot
+
+CONFIG_DEVICE_TREE_INCLUDES in rk3326-handheld_defconfig references
+rk3326-odroid-go2-emmc.dtsi for SPL boot-order and eMMC init. This
+file is not present in the upstream dts/upstream/src/arm64/rockchip/
+tree. Add it verbatim from ROCKNIX.
+---
+ dts/upstream/src/arm64/rockchip/rk3326-odroid-go2-emmc.dtsi | 29 +++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 dts/upstream/src/arm64/rockchip/rk3326-odroid-go2-emmc.dtsi
+
+diff --git a/dts/upstream/src/arm64/rockchip/rk3326-odroid-go2-emmc.dtsi b/dts/upstream/src/arm64/rockchip/rk3326-odroid-go2-emmc.dtsi
+new file mode 100644
+--- /dev/null
++++ b/dts/upstream/src/arm64/rockchip/rk3326-odroid-go2-emmc.dtsi
+@@ -0,0 +1,29 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/* this should apply on top of rk3326-odroid-go2-u-boot.dtsi */
++/ {
++	chosen {
++		u-boot,spl-boot-order = &sdmmc, &emmc;
++	};
++
++	aliases {
++		mmc0 = &emmc;
++		mmc1 = &sdmmc;
++		mmc2 = &sdio;
++	};
++};
++
++&emmc {
++	bootph-all;
++
++	/* mmc to sram can't do dma, prevent aborts transferring TF-A parts */
++	u-boot,spl-fifo-mode;
++	status = "okay";
++};
++
++&sdio {
++	bootph-all;
++
++	/* mmc to sram can't do dma, prevent aborts transferring TF-A parts */
++	u-boot,spl-fifo-mode;
++	status = "okay";
++};

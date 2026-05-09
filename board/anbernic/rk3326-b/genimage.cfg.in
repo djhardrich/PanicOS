@@ -1,18 +1,20 @@
 # RK3326-b disk image. Two-partition design.
-#   p1  boot vfat    (~6GB) — kernel Image, dtbs/, boot.scr, extlinux/,
-#                              *.squashfs flavors, panicos-active.cfg.
+#   p1  boot vfat    (~6GB) — kernel Image, rk3326-*.dtb (at root), boot.scr,
+#                              extlinux/, *.squashfs flavors, panicos-active.cfg.
 #   p2  storage ext4 (rest) — user data + .panicos-overlay/ (firstboot grows).
 #
 # u-boot-rockchip.bin (idbloader + u-boot.itb via binman) is written at 32K
 # offset — outside the partition table, before the GPT header.
+#
+# DTBs live at the FAT root (FDTDIR / in extlinux.conf, matching ROCKNIX).
+# The DTB list below is injected by post-image.sh via envsubst.
 
 image boot.vfat {
 	vfat {
 		extraargs = "-F 32 -n PANICOS"
 		files = {
 			"Image",
-			"dtbs",
-			"boot.scr",
+${PANICOS_DTB_FILES}			"boot.scr",
 			"extlinux",
 			"panicos-active.cfg",
 			"panicos-wifi.cfg",

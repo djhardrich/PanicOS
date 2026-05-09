@@ -3,7 +3,7 @@
 # Devices: Powkiddy RGB10X, MagicX XU-Mini-M, GameConsole EEClone.
 #
 # Boot flow: U-Boot → boot.scr (ADC-based DTB select) → extlinux/ → kernel.
-# All DTBs are placed in dtbs/ on the FAT; extlinux.conf uses FDTDIR /dtbs/
+# DTBs live at the FAT root; extlinux.conf uses FDTDIR / (matching ROCKNIX)
 # so U-Boot resolves the DTB using the $fdtfile env set by boot.scr.
 
 set -euo pipefail
@@ -38,8 +38,8 @@ fi
 MKIMAGE=""
 for candidate in \
     "${HOST_DIR:-}/bin/mkimage" \
-    "$(find "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}" -name mkimage -path "*/uboot-custom/*" 2>/dev/null | head -1)"; do
-    if [ -x "$candidate" ]; then
+    "$(find "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}" -type f -name mkimage -path "*/uboot-custom/*" 2>/dev/null | head -1)"; do
+    if [ -x "$candidate" ] && [ -f "$candidate" ]; then
         MKIMAGE="$candidate"
         break
     fi
@@ -53,17 +53,24 @@ fi
 "$MKIMAGE" -T script -d "$BOOT_INI" "$BINARIES_DIR/boot.scr"
 echo ">>> compiled b_boot.ini → boot.scr"
 
-# Place all RK3326 DTBs in dtbs/ (no rockchip/ prefix — FDTDIR /dtbs/).
-mkdir -p "$BINARIES_DIR/dtbs"
-cp "$BINARIES_DIR"/rk3326-*.dtb "$BINARIES_DIR/dtbs/" 2>/dev/null || true
-echo ">>> copied $(ls "$BINARIES_DIR/dtbs/" | wc -l) DTBs to dtbs/"
+# Build the DTB file list for genimage (DTBs sit at FAT root, FDTDIR /).
+# Kernel places rk3326-*.dtb directly in BINARIES_DIR; enumerate them now
+# so envsubst can inject the list into genimage.cfg.in.
+PANICOS_DTB_FILES=""
+for _dtb in "$BINARIES_DIR"/rk3326-*.dtb; do
+    [ -f "$_dtb" ] || continue
+    PANICOS_DTB_FILES="${PANICOS_DTB_FILES}			\"$(basename "$_dtb")\","$'\n'
+done
+export PANICOS_DTB_FILES
+echo ">>> found $(echo "$PANICOS_DTB_FILES" | grep -c '"') DTBs for FAT root"
 
-# extlinux.conf: FDTDIR /dtbs/ lets U-Boot resolve $fdtfile set by boot.scr.
+# extlinux.conf: FDTDIR / matches ROCKNIX layout (DTBs at FAT root).
 mkdir -p "$BINARIES_DIR/extlinux"
 cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
 LABEL PanicOS
   LINUX /Image
-  FDTDIR /dtbs/
+  FDTDIR /
+  FDTOVERLAYS /overlays/mipi-panel.dtbo
   APPEND console=ttyS2,1500000 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300
 EOF
 

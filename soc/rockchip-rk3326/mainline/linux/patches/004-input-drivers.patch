@@ -4855,7 +4855,12 @@ index 000000000000..a52981eee9fb
 +	struct joypad *joypad = platform_get_drvdata(pdev);
 +
 +	mutex_lock(&joypad->lock);
-+	pwm_set_period(joypad->pwm, simple_strtoul(buf, NULL, 21));
++	{
++		struct pwm_state _state;
++		pwm_get_state(joypad->pwm, &_state);
++		_state.period = simple_strtoul(buf, NULL, 10);
++		pwm_apply_might_sleep(joypad->pwm, &_state);
++	}
 +	mutex_unlock(&joypad->lock);
 +
 +	return count;

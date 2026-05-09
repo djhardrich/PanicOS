@@ -321,6 +321,17 @@ BR2_PACKAGE_BINUTILS_TARGET=y
 # patchelf: rewrite RPATH/interpreter on bundled port ELFs at runtime
 # (ROCKNIX ships this for the same reason).
 BR2_PACKAGE_PATCHELF=y
+# gdb on target: full debugger + gdbserver for remote attach. Lets you
+# catch SIGSEGV in ports at the source level rather than just decoding
+# stack frames from crash logs after the fact.
+BR2_PACKAGE_GDB=y
+BR2_PACKAGE_GDB_DEBUGGER=y
+BR2_PACKAGE_GDB_SERVER=y
+# gprofng (host-side only in Buildroot): enables gprofng in the host
+# binutils build so you can profile cross-compiled binaries from the
+# build host. There is no target-package equivalent in this Buildroot
+# version; on-device profiling uses gdb or perf instead.
+BR2_BINUTILS_GPROFNG=y
 
 # FFmpeg 4.x compat libraries — PortMaster ports pre-compiled against FFmpeg
 # 4.x (e.g. alephone-marathon2, alephone-marathon-infinity) dlopen
