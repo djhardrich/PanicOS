@@ -6,5 +6,10 @@ BR2_TARGET_GENERIC_ISSUE="PanicOS — RK3326-b"
 # Mainline U-Boot with rk3326-handheld_defconfig (added via uboot/patches/).
 BR2_TARGET_UBOOT_BOARDNAME="rk3326-handheld"
 
+# Lima — Mesa gallium driver for Mali-400 (Utgard) on RK3326.
+# Panfrost (launcher defconfig) targets Mali-G31 (H700); Lima is the
+# correct driver here. No LLVM dependency unlike Panfrost.
+BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_LIMA=y
+
 BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rk3326-b/post-image.sh"
 BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/board/anbernic/rk3326-b/genimage.cfg.in"
