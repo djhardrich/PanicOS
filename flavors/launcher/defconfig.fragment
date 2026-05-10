@@ -333,6 +333,11 @@ BR2_PACKAGE_GDB_SERVER=y
 # version; on-device profiling uses gdb or perf instead.
 BR2_BINUTILS_GPROFNG=y
 
+# perf (target): kernel's tools/perf — sampling profiler with hardware
+# counter support. Built from the kernel source tree, so enabling this
+# triggers a kernel rebuild on first turn-on.
+BR2_PACKAGE_LINUX_TOOLS_PERF=y
+
 # FFmpeg 4.x compat libraries — PortMaster ports pre-compiled against FFmpeg
 # 4.x (e.g. alephone-marathon2, alephone-marathon-infinity) dlopen
 # libavcodec.so.58 / libavformat.so.58 / libavutil.so.56 etc.  Our system
