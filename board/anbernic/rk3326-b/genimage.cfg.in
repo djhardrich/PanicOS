@@ -1,10 +1,11 @@
-# RK3326-b disk image. Two-partition design.
+# RK3326-b disk image. MBR (DOS) partition table — RK3326 U-Boot requires MBR.
 #   p1  boot vfat    (~6GB) — kernel Image, rk3326-*.dtb (at root), boot.scr,
 #                              extlinux/, *.squashfs flavors, panicos-active.cfg.
 #   p2  storage ext4 (rest) — user data + .panicos-overlay/ (firstboot grows).
 #
-# u-boot-rockchip.bin (idbloader + u-boot.itb via binman) is written at 32K
-# offset — outside the partition table, before the GPT header.
+# uboot.bin (ROCKNIX-style rkhelper assembly: idbloader + uboot.img + trust.img)
+# is written at 32K offset — before partition 1 starts at 16M. See
+# soc/rockchip-rk3326/uboot/build-uboot-rockchip.sh for the why-not-binman.
 #
 # DTBs live at the FAT root (FDTDIR / in extlinux.conf, matching ROCKNIX).
 # The DTB list below is injected by post-image.sh via envsubst.
@@ -33,25 +34,25 @@ image storage.ext4 {
 
 image ${PANICOS_OUTPUT_NAME}.img {
 	hdimage {
-		partition-table-type = "gpt"
+		partition-table-type = "mbr"
 		align = "1M"
 	}
 
 	partition u-boot {
 		in-partition-table = "no"
-		image = "u-boot-rockchip.bin"
+		image = "uboot.bin"
 		offset = 32K
 	}
 
 	partition boot {
-		partition-type-uuid = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+		partition-type = "0xc"
 		bootable = "true"
 		image = "boot.vfat"
 		offset = 16M
 	}
 
 	partition storage {
-		partition-type-uuid = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+		partition-type = "0x83"
 		image = "storage.ext4"
 	}
 }

@@ -23,16 +23,11 @@ read_kconfig() {
 
 echo ">>> post-image: assembling RK3326-a disk image"
 
-# Verify u-boot-rockchip.bin
-if [ ! -f "$BINARIES_DIR/u-boot-rockchip.bin" ]; then
-    UBOOT_BUILD_DIR="${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/uboot-custom"
-    if [ -f "$UBOOT_BUILD_DIR/u-boot-rockchip.bin" ]; then
-        cp "$UBOOT_BUILD_DIR/u-boot-rockchip.bin" "$BINARIES_DIR/"
-    else
-        echo "error: u-boot-rockchip.bin not found" >&2
-        exit 1
-    fi
-fi
+# Assemble uboot.bin via the ROCKNIX-style rkhelper flow. Mainline binman
+# u-boot-rockchip.bin does not boot on real RK3326 handhelds.
+: "${BUILD_DIR:?BUILD_DIR not set by Buildroot}"
+BUILD_DIR="$BUILD_DIR" BINARIES_DIR="$BINARIES_DIR" \
+    "$BR2_EXTERNAL_PANICOS_PATH/soc/rockchip-rk3326/uboot/build-uboot-rockchip.sh"
 
 # Compile a_boot.ini → boot.scr.
 MKIMAGE=""

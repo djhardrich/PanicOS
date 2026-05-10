@@ -1,14 +1,20 @@
 # Rockchip RK3326 U-Boot configuration (mainline U-Boot v2025.10).
 #
-# rkbin assembly for RK3326:
-#   BL31:      bin/rk33/rk3326_bl31_v1.34.elf
-#   DDR TPL:   bin/rk33/rk3326_ddr_333MHz_v2.11.bin
-#   Miniloader: bin/rk33/rk3326_miniloader_v1.40.bin  (used by rkhelper)
+# We do NOT use mainline binman to produce u-boot-rockchip.bin. The binman
+# layout for RK3326 in mainline U-Boot does not boot on real RK3326 handhelds
+# (BootROM rejects it; device powers off without a power LED).
 #
-# Buildroot's BR2_TARGET_UBOOT_NEEDS_ROCKCHIP_RKBIN=y path runs:
-#   make BL31=<bl31> ROCKCHIP_TPL=<ddr> u-boot-rockchip.bin
-# The rk3326-handheld_defconfig (added via uboot/patches/) enables SPL+ATF
-# which allows binman to assemble u-boot-rockchip.bin.
+# Instead we mirror ROCKNIX's proven build flow:
+#   1. Buildroot builds u-boot-dtb.bin (just U-Boot proper + embedded DT).
+#   2. soc/rockchip-rk3326/uboot/build-uboot-rockchip.sh assembles a Rockchip
+#      combined image (idbloader.img + uboot.img + trust.img → uboot.bin)
+#      using rkbin's miniloader, BL31, and DDR blob plus rkbin's loaderimage
+#      and trust_merger tools. Same layout as ROCKNIX's vanilla image.
+#
+# rkbin assembly inputs (all under build/rockchip-rkbin-*/):
+#   BL31:       bin/rk33/rk3326_bl31_v1.34.elf
+#   DDR blob:   bin/rk33/rk3326_ddr_333MHz_v2.11.bin
+#   Miniloader: bin/rk33/rk3326_miniloader_v1.40.bin
 #
 # Note: BR2_TARGET_UBOOT_BOARDNAME is set per-board in board/*/defconfig.fragment
 # since rk3326-a uses a different U-Boot source (legacy hardkernel fork).
@@ -24,5 +30,4 @@ BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2025.10"
 BR2_TARGET_UBOOT_CUSTOM_TARBALL=y
 BR2_TARGET_UBOOT_CUSTOM_TARBALL_LOCATION="https://github.com/u-boot/u-boot/archive/refs/tags/v2025.10.tar.gz"
 BR2_TARGET_UBOOT_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/rockchip-rk3326/uboot/patches"
-BR2_TARGET_UBOOT_FORMAT_BIN=y
-BR2_TARGET_UBOOT_USE_BINMAN=y
+BR2_TARGET_UBOOT_FORMAT_DTB_BIN=y
