@@ -1,0 +1,34 @@
+perf pmu-events: avoid ARG_MAX overflow in prune_orphans
+
+ORPHAN_FILES is the cross-product of pmu-events JSON files for every arch
+the kernel ships (riscv subvariants alone produce thousands of paths).
+The pristine recipe
+
+    $(Q)$(call echo-cmd,rm)echo "$^" | xargs rm -f
+
+forces make to expand $^ into a single shell command line which exceeds
+ARG_MAX, causing
+
+    /bin/sh: Argument list too long
+    pmu-events/Build:218: prune_orphans Error 127
+
+when BR2_PACKAGE_LINUX_TOOLS_PERF=y on a typical arm64 build (e.g.
+PanicOS launcher flavor on linux 7.0.x).
+
+Use GNU make's $(file >) builtin to write the list to disk without
+involving the shell, then xargs reads it back. The temp file lives in
+the perf output dir alongside the rest of the pmu-events build artefacts.
+
+diff --git a/tools/perf/pmu-events/Build b/tools/perf/pmu-events/Build
+--- a/tools/perf/pmu-events/Build
++++ b/tools/perf/pmu-events/Build
+@@ -214,8 +214,8 @@ quiet_cmd_rm  = RM      $^
+
+ prune_orphans: $(ORPHAN_FILES)
+-	# The list of files can be long. Use xargs to prevent issues.
+-	$(Q)$(call echo-cmd,rm)echo "$^" | xargs rm -f
++	$(file >$(OUTPUT)pmu-events/.orphan-list,$^)
++	$(Q)tr ' ' '\n' < $(OUTPUT)pmu-events/.orphan-list | xargs -r rm -f
+
+ JEVENTS_DEPS += prune_orphans
+ endif
