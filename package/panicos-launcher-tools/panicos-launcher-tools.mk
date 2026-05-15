@@ -41,6 +41,10 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	# PanicOS-SquashFS-Install.sh — on-device toggle for the Debian multiboot flavor.
 	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/PanicOS-SquashFS-Install.sh \
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/PanicOS-SquashFS-Install.sh
+	# Rescan-HDMI-Audio.sh — manual re-detect for sinks like Xreal Air glasses
+	# that don't advertise audio in EDID until the user enables it physically.
+	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/Rescan-HDMI-Audio.sh \
+		$(TARGET_DIR)/usr/share/panicos-launcher/tools/Rescan-HDMI-Audio.sh
 	# panicos-portmaster-fixup re-applies our overrides on every ES
 	# start (mirror's ROCKNIX's start_portmaster.sh approach). Lives
 	# at /usr/sbin/.
