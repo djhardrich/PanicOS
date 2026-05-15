@@ -13,7 +13,11 @@ do
   HDMI_STATE=$(<${HDMI})
   case "${HDMI_STATE}" in
     connected)
-      DEFAULT_SINK=$(pactl list short sinks | awk '/hdmi/ {print $2; exit}')
+      # Match both ROCKNIX-style sink names (lowercase "hdmi") and the
+      # Allwinner AHUB BSP sink (alsa_output...ahub1_mach...). Case-
+      # insensitive — newer PipeWire uses upper-case "HDMI" in the
+      # card name and matches it into the sink description.
+      DEFAULT_SINK=$(pactl list short sinks | awk 'tolower($0) ~ /hdmi|ahub1_mach/ {print $2; exit}')
       CURRENT_STATE="${HDMI_STATE}"
       break
       ;;
@@ -26,8 +30,8 @@ done
 
 if [ -z "${DEFAULT_SINK}" ]
 then
-  DEFAULT_ID=$(pactl list short cards | awk '! /hdmi/ {print $1; exit}')
-  DEFAULT_SINK=$(pactl list short sinks | awk '! /hdmi/ {print $2; exit}')
+  DEFAULT_ID=$(pactl list short cards | awk 'tolower($0) !~ /hdmi|ahub1_mach/ {print $1; exit}')
+  DEFAULT_SINK=$(pactl list short sinks | awk 'tolower($0) !~ /hdmi|ahub1_mach/ {print $2; exit}')
 
   if [ ! -z "${DEFAULT_SINK}" ]
   then
