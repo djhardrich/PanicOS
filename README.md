@@ -74,7 +74,7 @@ accept the cold-build time (ccache helps).
 Mainline-kernel builds run with `CONFIG_PREEMPT_RT=y` (mainlined in 6.12;
 we're on 7.0.1 so it's a Kconfig-only switch). Adds priority inheritance +
 threaded IRQ handlers; safe for non-RT workloads, dramatically improves
-audio/controller-poll latency for the `pht` flavor.
+audio/controller-poll latency for latency-sensitive kiosk apps.
 
 ## Logging in
 
@@ -147,7 +147,8 @@ from the flavor's `defconfig.fragment`. Same for SSH (`BR2_PACKAGE_DROPBEAR=y`,
 A "flavor" is a userspace squashfs that the initramfs loop-mounts as the
 root filesystem. The kernel + bootloader + initramfs are device-specific
 and stay the same; the flavor is what makes the device feel like a
-different OS (busybox console vs. Debian desktop vs. PHT autostart kiosk).
+different OS (busybox console vs. Debian desktop vs. EmulationStation
+launcher).
 
 The boot vfat partition can hold **multiple `.squashfs` files at once**.
 A small text file `panicos-active.cfg` on the same partition picks which
@@ -183,13 +184,13 @@ state.
 Pass `FLAVOR=<name>` on the make command line:
 
 ```sh
-make rg35xx-pro FLAVOR=pht       # ProHandheldTracker autostart kiosk
+make rg35xx-pro FLAVOR=launcher  # EmulationStation + PortMaster kiosk
 make rg353p FLAVOR=minimal       # default, can omit FLAVOR=
 ```
 
 Each flavor lives at `flavors/<name>/{Config.in,defconfig.fragment}`.
 Adding a new one is a 2-file pattern — see `flavors/minimal/` and
-`flavors/pht/` as references.
+`flavors/launcher/` as references.
 
 ### `launcher` flavor (PortMaster + Rockbox + Doom Engines)
 
@@ -256,11 +257,11 @@ our generated `config.cfg` at build time in
 `panicos-portmaster-preload.mk`, mirroring what PortMaster's runtime
 does to themes/*.cfg.
 
-#### SDL audio crashes in PHT and RockBox ("Audio target not available")
+#### SDL audio crashes in RockBox ("Audio target not available")
 
-Symptom: PHT and RockBox both exited immediately with `Error: sdl audio /
-Audio target 'pulseaudio' not available`, even after SDL2 was built with
-`--enable-pulseaudio`.
+Symptom: RockBox (and other SDL2-pulseaudio apps) exited immediately
+with `Error: sdl audio / Audio target 'pulseaudio' not available`,
+even after SDL2 was built with `--enable-pulseaudio`.
 
 Root cause: SDL2 loads PulseAudio at runtime via `dlopen("libpulse.so.0")`.
 `libpulse.so.0` has `RUNPATH=/usr/lib/pulseaudio` to find
@@ -274,38 +275,11 @@ mirrored in `profile.d/sway-fullscreen.sh` so it survives PortMaster's
 driver; `libpipewire-0.3.so.0` lives in `/usr/lib/` directly so dlopen finds
 it without any RUNPATH indirection.
 
-### `pht` flavor (ProHandheldTracker)
+### Kiosk-flavor checklist (KMSDRM apps: EmulationStation, …)
 
-Boots straight into [ProHandheldTracker](https://prohandheldtracker.com/)
-under `chrt -f 50` so the audio thread gets RT scheduling on the
-PREEMPT_RT kernel. PHT renders via KMSDRM (grabs DRM master directly on
-`/dev/dri/card0`) — see the kiosk-flavor checklist below for what makes
-that work.
-
-Prerequisite: the PHT payload (binary + 50MB plugins + assets) is too big
-to commit to git. Vendor a snapshot from your local
-`~/prohandheldtracker-build/dist/stage/pht/` once before building:
-
-```sh
-./scripts/vendor-pht.sh                    # uses default ~ path
-./scripts/vendor-pht.sh --src /other/path  # override
-```
-
-Then:
-
-```sh
-make rg35xx-pro FLAVOR=pht
-```
-
-SSH still works in the pht flavor (we kept all the subsystem-A
-networking/SSH bring-up). Drop into a shell from your laptop if you need
-to poke around or read logs while PHT is running on the panel.
-
-### Kiosk-flavor checklist (KMSDRM apps: PHT, EmulationStation, …)
-
-Anything that grabs the panel via KMSDRM (PHT, ES, future kiosks) needs
-the same two pieces of plumbing. Both pht and launcher hit the same
-class of bug when one was missing — symptoms are misleading ("No
+Anything that grabs the panel via KMSDRM (ES, future kiosks) needs
+the same two pieces of plumbing. The launcher flavor hit this
+class of bug when either was missing — symptoms are misleading ("No
 available video device", or `ExecStart` never firing, or app stdout
 painted on top of the splash) so this is worth getting right up front.
 
@@ -342,10 +316,9 @@ StandardError=journal
 # (no TTYPath, no Conflicts=getty@tty1)
 ```
 
-`flavors/pht/` and `flavors/launcher/` both follow this pattern;
-`package/panicos-pht/panicos-pht.service` and
-`package/panicos-emulationstation/files/panicos-es.service` are the
-canonical service-file references.
+`flavors/launcher/` follows this pattern;
+`package/panicos-emulationstation/files/panicos-es.service` is the
+canonical service-file reference.
 
 ### Building a real-distro squashfs (Debian / Ubuntu)
 
