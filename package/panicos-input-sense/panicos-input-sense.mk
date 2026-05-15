@@ -65,6 +65,13 @@ define PANICOS_INPUT_SENSE_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/etc/udev/rules.d/99-input.rules
 	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/udev.d/80-usbgadget.rules \
 		$(TARGET_DIR)/etc/udev/rules.d/80-usbgadget.rules
+	# HDMI hotplug rule: fires /usr/bin/hdmi_sense on DRM card add|change so
+	# /run/hdmi-status.last updates and hdmi-hotplug.path triggers
+	# hdmi-hotplug.service. Allwinner-only match (ID_PATH=platform-display-engine);
+	# no-op on Rockchip platforms whose parent is display-subsystem. Verbatim:
+	#   packages/sysutils/system-utils/udev.d/99-hdmi.rules
+	$(INSTALL) -D -m 0644 $(PANICOS_INPUT_SENSE_PKGDIR)/files/udev.d/99-hdmi.rules \
+		$(TARGET_DIR)/etc/udev/rules.d/99-hdmi.rules
 
 	# python → python3 symlink. ROCKNIX scripts (e.g. rocknix-bluetooth-agent)
 	# call /usr/bin/python; we ship python3 only. Symlink avoids patching

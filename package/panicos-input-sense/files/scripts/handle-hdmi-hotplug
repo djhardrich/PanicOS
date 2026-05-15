@@ -3,7 +3,11 @@
 # Copyright (C) 2025 ROCKNIX (https://github.com/ROCKNIX)
 
 . /etc/profile
-if ! pgrep -x emulationstation > /dev/null; then
+# pgrep -x on procps-ng refuses patterns >15 chars (kernel comm limit) and
+# returns no matches for "emulationstation" (17 chars). Use pidof, which
+# matches full /proc/PID/exe basename and works regardless. Without this,
+# the script silently exits 0 every hotplug event and never switches outputs.
+if ! pidof emulationstation > /dev/null 2>&1; then
   exit 0
 fi
 
