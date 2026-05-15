@@ -1,0 +1,49 @@
+From: PanicOS <noreply@panicos>
+Date: 2026-05-15
+Subject: [PATCH] drm/bridge: dw-hdmi: force HDMI mode in FC_INVIDCONF when
+ audio is enabled
+
+The Synopsys dw-hdmi controller has an HDMI/DVI mode bit in
+FC_INVIDCONF.  When the bit is cleared (DVI mode), the controller
+explicitly drops all audio packets at the frame composer level — no
+audio reaches the sink regardless of how the AHUB / I2S audio path is
+configured upstream.
+
+dw_hdmi_setup() sets this bit based on `sink_is_hdmi`, which is
+populated from EDID via drm_detect_hdmi_monitor(). When EDID cannot be
+read (e.g. on Allwinner H616/H700 where AHUB binding corrupts the
+internal DDC i2c master), `sink_is_hdmi` stays false and the
+controller is left in DVI mode forever.
+
+Since any caller of dw_hdmi_audio_enable() is explicitly requesting
+audio over HDMI, the assumption "this is an HDMI sink" is safe — a
+genuine DVI sink would not be triggering this code path. Force the
+HDMI mode bit here so audio packets actually flow.
+
+Verified live 2026-05-15 on Anbernic RG35XX Pro (Allwinner H700,
+sun8i-dw-hdmi): without this, FC_INVIDCONF stays at 0x10 (DVI mode +
+bit 4 some other flag) and no audio reaches a real HDMI monitor with
+working speakers. With it, audio plays correctly.
+
+Signed-off-by: PanicOS
+
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.c
+@@ -901,6 +901,17 @@ void dw_hdmi_audio_enable(struct dw_hdmi *hdmi)
+ 	hdmi->audio_enable = true;
+ 	if (hdmi->enable_audio)
+ 		hdmi->enable_audio(hdmi);
++	/*
++	 * Force HDMI mode (vs DVI) so audio packets are actually emitted.
++	 * dw_hdmi_setup() sets this bit based on sink_is_hdmi which comes
++	 * from EDID; on platforms where EDID reads fail (Allwinner H616/H700
++	 * + AHUB BSP), the controller is left in DVI mode and silently drops
++	 * audio. An audio enable request implies an HDMI sink, so forcing
++	 * HDMI mode here is safe.
++	 */
++	hdmi_modb(hdmi, HDMI_FC_INVIDCONF_DVI_MODEZ_HDMI_MODE,
++		  HDMI_FC_INVIDCONF_DVI_MODEZ_MASK,
++		  HDMI_FC_INVIDCONF);
+ 	spin_unlock_irqrestore(&hdmi->audio_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(dw_hdmi_audio_enable);

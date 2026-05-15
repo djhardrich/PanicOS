@@ -15,3 +15,21 @@
 &joypad {
 	amux-count = <4>;
 };
+
+/*
+ * HDMI audio via Allwinner AHUB → dw-hdmi-i2s-audio. AHUB nodes are
+ * added to sun50i-h616.dtsi by Armbian patches 0224-0701 / 0225-0702
+ * with status="disabled"; this enables them for RG35XX Pro. Mirrors
+ * what 0701 does for sun50i-h616-orangepi-zero.dtsi.
+ */
+&ahub_dam_plat {
+	status = "okay";
+};
+
+&ahub1_plat {
+	status = "okay";
+};
+
+&ahub1_mach {
+	status = "okay";
+};

@@ -1,0 +1,71 @@
+From: PanicOS <noreply@panicos>
+Date: 2026-05-15
+Subject: [PATCH] sound: soc: sunxi_v2: configure HDMI routing for AHUB
+
+The Armbian sunxi_v2 AHUB driver (imported via 0224-0701) writes the
+per-TDM tx_route correctly but never programs the registers that
+actually connect the AHUB output to the HDMI controller's audio input
+on Allwinner H616/H700.
+
+The original Allwinner BSP (orangepi-xunlong/linux-orangepi
+orange-pi-4.9-sun50iw9) does three additional things when the TDM in
+use is the HDMI one (tdm_num == 1 == SUNXI_AHUB_HDMI_ID):
+
+  1. Enable ALL 4 SDO output lanes (SDO0..SDO3) on that TDM, not just
+     the single SDO selected by tx_pin. The HDMI audio block samples
+     multiple lanes for layout / HBR support.
+  2. Write 1 << HDMI_SRC_SEL (= 0x10) to SUNXI_AHUB_CTL so the HDMI
+     clock is sourced from the AHUB rather than from an external pin.
+  3. Write 0x10 to I2S_OUT_CHMAP0(tdm, 0) — the BSP-specific channel
+     slot map used for HDMI audio.
+
+Without these, the AHUB happily transmits valid I2S on TDM1 SDO0 but
+none of it reaches the dw-hdmi audio block.
+
+Sources (BSP):
+  sound/soc/sunxi/sunxi_ahub.c:557   (HDMI_SRC_SEL)
+  sound/soc/sunxi/sunxi_ahub_daudio.c:76-90 (SDO0..3 enable for HDMI)
+  sound/soc/sunxi/sunxi_ahub_daudio.c:485-489 (CH0MAP0 = 0x10)
+
+Signed-off-by: PanicOS
+
+--- a/sound/soc/sunxi_v2/snd_sunxi_ahub.c
++++ b/sound/soc/sunxi_v2/snd_sunxi_ahub.c
+@@ -640,6 +640,8 @@ static void sunxi_ahub_dai_tx_route(struct sunxi_ahub_info *ahub_info,
+ {
+        struct regmap *regmap = NULL;
+        unsigned int tdm_num, tx_pin;
++       /* SUNXI_AHUB_HDMI_ID: TDM index internally wired to dw-hdmi audio. */
++       const unsigned int SUNXI_AHUB_HDMI_ID = 1;
+        unsigned int apb_num;
+
+        SND_LOG_DEBUG(HLOG, "%s\n", enable ? "on" : "off");
+@@ -668,6 +670,28 @@ tx_route_enable:
+        /* enable tx drq */
+        regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TX_IRQ_CTL(apb_num),
+                           0x1 << APBIF_TX_DRQ, 0x1 << APBIF_TX_DRQ);
++
++       /*
++        * BSP-style HDMI hub setup. Allwinner H616/H700 internally wires the
++        * AHUB's TDM #1 to the dw-hdmi audio input block, but the connection
++        * is only enabled when:
++        *  (a) all 4 SDO lanes are enabled (not just tx_pin), AND
++        *  (b) SUNXI_AHUB_CTL bit HDMI_SRC_SEL selects AHUB as HDMI clk source.
++        * The vendor BSP also writes CH0MAP0 = 0x10 (channel-slot mapping
++        * for HDMI). Verified live on RG35XX Pro 2026-05-15: audio data does
++        * not reach the dw-hdmi block without these three writes.
++        */
++       if (tdm_num == SUNXI_AHUB_HDMI_ID) {
++               regmap_update_bits(regmap, SUNXI_AHUB_I2S_CTL(tdm_num),
++                                  0xF << I2S_CTL_SDO0_EN,
++                                  0xF << I2S_CTL_SDO0_EN);
++               regmap_update_bits(regmap, SUNXI_AHUB_CTL,
++                                  0x1 << HDMI_SRC_SEL,
++                                  0x1 << HDMI_SRC_SEL);
++               regmap_write(regmap,
++                            SUNXI_AHUB_I2S_OUT_CHMAP0(tdm_num, 0),
++                            0x10);
++       }
+        return;
+
+ tx_route_disable:
