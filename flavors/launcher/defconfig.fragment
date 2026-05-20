@@ -376,10 +376,10 @@ BR2_PACKAGE_FLAC=y
 # giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
 BR2_PACKAGE_GIFLIB=y
 BR2_PACKAGE_LIBTIFF=y
-# libglu — OpenGL Utility Library (GLU). Required by ports that call gluPerspective,
-# gluLookAt, tessellation, etc.  Depends on HAS_LIBGL which is now satisfied by
-# panicos-gl4es (our GLES shim; no X11/GLX needed).
-BR2_PACKAGE_LIBGLU=y
+# panicos-libglu — GLU utility library (gluPerspective, gluLookAt, tessellation, etc.).
+# Uses our panicos-gl4es as the libGL provider; bypasses the buildroot libgl virtual
+# package (which needs X11/GLX) by depending on panicos-gl4es directly.
+BR2_PACKAGE_PANICOS_LIBGLU=y
 # Port-specific situational libs — safe to add; real culprit was libglvnd
 # (which overwrites mesa's EGL/GLES symlinks without ICD dispatch config).
 # libepoxy is opt-in via linking so doesn't affect mesa/ES globally.

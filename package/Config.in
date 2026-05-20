@@ -29,5 +29,6 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-box64/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-box86/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-lib32/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-gl4es/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-libglu/Config.in"
 
 endmenu

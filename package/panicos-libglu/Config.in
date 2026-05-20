@@ -1,0 +1,13 @@
+config BR2_PACKAGE_PANICOS_LIBGLU
+	bool "panicos-libglu"
+	depends on BR2_PACKAGE_PANICOS_GL4ES
+	help
+	  OpenGL Utility Library (GLU) built against panicos-gl4es.
+
+	  Provides libGLU.so.1 with gluPerspective, gluLookAt, tessellation,
+	  NURBS, and other GLU functions.  Required by PortMaster ports that
+	  call GLU APIs directly.
+
+	  Uses panicos-gl4es as the libGL provider via a gl.pc installed to
+	  the staging tree by panicos-gl4es.  Bypasses buildroot's libgl
+	  virtual package (which requires X11/GLX).

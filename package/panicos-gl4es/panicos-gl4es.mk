@@ -3,12 +3,13 @@
 # panicos-gl4es
 #
 # OpenGL 1.x/2.x → OpenGL ES translation layer for legacy ports.
-# Installed to /usr/lib/ (system-wide) and mirrored to /usr/lib/gl4es/
-# via symlinks for the LD_LIBRARY_PATH override in libgl_PanicOS.txt.
-# Also installed to staging so libglu can link against libGL at build time.
+# Installed to /usr/lib/ (system-wide) so PortMaster's gl_check
+# finds /usr/lib/libGL.so.1, and mirrored to /usr/lib/gl4es/ via
+# symlinks for the LD_LIBRARY_PATH override in libgl_PanicOS.txt.
 #
-# We are a Wayland-only device (no X11/GLX), so mesa3d never sets
-# BR2_PACKAGE_HAS_LIBGL; Config.in selects it here instead.
+# Staging install provides libGL.so, GL headers, and a gl.pc so that
+# panicos-libglu's meson build can find OpenGL via pkg-config without
+# using buildroot's libgl virtual package (which requires X11/GLX).
 #
 # Build options:
 #   DEFAULT_ES=3  — use GLES 3.x backend (panfrost supports GLES 3.2)
@@ -21,6 +22,7 @@ PANICOS_GL4ES_SITE = $(call github,ptitSeb,gl4es,$(PANICOS_GL4ES_VERSION))
 PANICOS_GL4ES_LICENSE = MIT
 PANICOS_GL4ES_LICENSE_FILES = LICENSE
 PANICOS_GL4ES_DEPENDENCIES = mesa3d sdl2
+PANICOS_GL4ES_INSTALL_STAGING = YES
 
 PANICOS_GL4ES_CONF_OPTS = \
 	-DDEFAULT_ES=3 \
@@ -28,10 +30,21 @@ PANICOS_GL4ES_CONF_OPTS = \
 	-DSTATICLIB=OFF
 
 define PANICOS_GL4ES_INSTALL_STAGING_CMDS
-	# libglu and any other build-time consumer need libGL.so in staging.
+	# libGL.so — panicos-libglu (and any other staging consumer) links against it.
 	find $(@D) -name 'libGL.so.1' ! -path '*/CMakeFiles/*' | \
 		head -1 | xargs -I{} $(INSTALL) -m 755 {} $(STAGING_DIR)/usr/lib/libGL.so.1
 	ln -sf libGL.so.1 $(STAGING_DIR)/usr/lib/libGL.so
+	# GL headers from the gl4es source tree (include/GL/gl.h, glext.h).
+	# Mesa3d on a GLES-only build (no GLX) doesn't install these; libglu
+	# needs <GL/gl.h> at compile time.
+	mkdir -p $(STAGING_DIR)/usr/include/GL
+	$(INSTALL) -m 644 $(@D)/include/GL/gl.h $(STAGING_DIR)/usr/include/GL/gl.h
+	$(INSTALL) -m 644 $(@D)/include/GL/glext.h $(STAGING_DIR)/usr/include/GL/glext.h
+	# gl.pc — panicos-libglu's meson build uses `dependency('gl')` which
+	# resolves via pkg-config; provide a minimal .pc pointing to our libGL.
+	mkdir -p $(STAGING_DIR)/usr/lib/pkgconfig
+	printf 'prefix=/usr\nexec_prefix=$${prefix}\nlibdir=$${exec_prefix}/lib\nincludedir=$${prefix}/include\n\nName: gl\nDescription: OpenGL (gl4es)\nVersion: $(PANICOS_GL4ES_VERSION)\nLibs: -L$${libdir} -lGL\nCflags: -I$${includedir}\n' \
+		> $(STAGING_DIR)/usr/lib/pkgconfig/gl.pc
 endef
 
 define PANICOS_GL4ES_INSTALL_TARGET_CMDS
