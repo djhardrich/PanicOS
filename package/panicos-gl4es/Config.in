@@ -2,11 +2,16 @@ config BR2_PACKAGE_PANICOS_GL4ES
 	bool "panicos-gl4es"
 	depends on BR2_PACKAGE_MESA3D_OPENGL_EGL
 	depends on BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_HAS_LIBGL
 	help
-	  Build gl4es (ptitSeb) as a system library installed to /usr/lib/gl4es/.
+	  Build gl4es (ptitSeb) as a system library.  Installs libGL.so.1 to
+	  /usr/lib/ (system-wide) and a copy to /usr/lib/gl4es/ for the
+	  LD_LIBRARY_PATH override in libgl_PanicOS.txt.  Also installs to
+	  the staging tree so libglu and other build-time consumers can link.
+
 	  Provides OpenGL 1.x/2.x API translation to OpenGL ES for legacy ports
 	  whose fixed-function pipeline calls panfrost mesa does not expose.
 
-	  libgl_PanicOS.txt prepends /usr/lib/gl4es to LD_LIBRARY_PATH when
-	  the directory exists, replacing port-bundled gl4es 1.1.7 with this
-	  properly-built version (GLES 3 backend, SDL2 context, Wayland-clean).
+	  Selects BR2_PACKAGE_HAS_LIBGL so that libglu (which depends on it)
+	  can be enabled without requiring X11/GLX.  We are a Wayland-only
+	  device and mesa3d only sets HAS_LIBGL via the GLX path.

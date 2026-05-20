@@ -69,7 +69,8 @@ BR2_PACKAGE_LIBSAMPLERATE=y
 BR2_PACKAGE_PANICOS_GL4ES=y
 BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GBM=y
-BR2_PACKAGE_MESA3D_OPENGL=y
+# MESA3D_OPENGL (bare) no longer exists in Mesa 26 — dropped. HAS_LIBGL is
+# now satisfied by panicos-gl4es (see its Config.in). OPENGL_EGL stays.
 BR2_PACKAGE_MESA3D_OPENGL_EGL=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
 # Mesa 26+ panfrost (gallium + panvk) requires LLVM for the host-side
@@ -375,6 +376,10 @@ BR2_PACKAGE_FLAC=y
 # giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
 BR2_PACKAGE_GIFLIB=y
 BR2_PACKAGE_LIBTIFF=y
+# libglu — OpenGL Utility Library (GLU). Required by ports that call gluPerspective,
+# gluLookAt, tessellation, etc.  Depends on HAS_LIBGL which is now satisfied by
+# panicos-gl4es (our GLES shim; no X11/GLX needed).
+BR2_PACKAGE_LIBGLU=y
 # Port-specific situational libs — safe to add; real culprit was libglvnd
 # (which overwrites mesa's EGL/GLES symlinks without ICD dispatch config).
 # libepoxy is opt-in via linking so doesn't affect mesa/ES globally.
