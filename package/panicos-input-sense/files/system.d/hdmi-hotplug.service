@@ -1,5 +1,11 @@
 [Unit]
 Description=Handle HDMI hotplug
+# A single HDMI plug/unplug generates many rapid DRM change events.
+# Allow up to 20 starts per 30s; don't permanently fail — just throttle.
+StartLimitIntervalSec=30
+StartLimitBurst=20
+StartLimitAction=none
+
 [Service]
 ExecStartPre=/bin/sleep 1
 ExecStart=/usr/bin/handle-hdmi-hotplug
