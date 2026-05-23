@@ -272,6 +272,10 @@ _build:
 		sed -i \
 		's|SAMBA4_PYTHON = PYTHON="$$(HOST_DIR)/bin/python3"|SAMBA4_PYTHON = PYTHON="/usr/bin/python3" # samba4_syspython_applied|' \
 		"$(BUILDROOT)/package/samba4/samba4.mk"
+	@# RTW88 downstream driver: bump to latest HEAD (a56bcd2). Idempotent.
+	@sed -i \
+		's/PKG_VERSION="d2258b4de21aeabf7ef85ec0cada1f3cff9bcbe0"/PKG_VERSION="a56bcd26e770257612a0803249cbd4095fc6feca"/' \
+		"$(PANICOS_ROOT)/third_party/rocknix/projects/ROCKNIX/packages/linux-drivers/RTW88/package.mk"
 	@# Audit kernel config: fail fast if required CONFIG_ symbols have dropped out.
 	@SOC="$(call _device_soc,$(DEVICE))"; \
 	K="$(KERNEL)"; \
