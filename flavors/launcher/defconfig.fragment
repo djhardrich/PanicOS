@@ -144,6 +144,12 @@ BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NETWORK=y # PANU/NAP/GN (BT tethering/PAN)
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NFC=y     # NFC pairing
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SAP=y     # SIM Access Profile
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SIXAXIS=y # Sony DualShock/PS controller support
+# sbc — Sub-Band Codec library. Mandatory for PipeWire's bluez5 SPA plugin:
+# pipewire.mk gating at line 110 requires bluez5_utils + SBC + libglib2 all=y
+# before it will pass -Dbluez5=enabled to meson. Without SBC, libspa-bluez5
+# is never built, PipeWire registers no A2DP endpoints with bluetoothd, and
+# every BT audio connect attempt fails with "Protocol not available".
+BR2_PACKAGE_SBC=y
 # python3 + python-dbussy for the BT pairing agent (rocknix-bluetooth-agent
 # is a Python script that imports dbussy + ravel; both ship in our local
 # python-dbussy package, vendored at the same SHA ROCKNIX uses).
@@ -201,6 +207,15 @@ BR2_PACKAGE_PULSEAUDIO=y
 BR2_PACKAGE_PIPEWIRE=y
 BR2_PACKAGE_PIPEWIRE_ALSA=y                # ALSA → pipewire shim
 BR2_PACKAGE_PIPEWIRE_JACK=y                # JACK → pipewire shim
+# GStreamer plugin for PipeWire: enables the spa-gstreamer SPA plugin so
+# PipeWire can source/sink via GStreamer pipelines. We already ship
+# gstreamer1 + gst1-plugins-base (PortMaster GUI needs them); this just
+# wires PipeWire's meson build to find them. Zero extra image cost.
+BR2_PACKAGE_PIPEWIRE_GSTREAMER=y
+# libsndfile — enables pw-cat/pw-play/pw-record utilities. Useful for
+# on-device audio diagnostics (play a WAV directly through PipeWire,
+# record to verify mic routing). Small (~200KB).
+BR2_PACKAGE_LIBSNDFILE=y
 # Lua needed by wireplumber's session-policy scripts.
 BR2_PACKAGE_LUA=y
 BR2_PACKAGE_LUA_5_4=y
