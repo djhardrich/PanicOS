@@ -1,0 +1,15 @@
+[Unit]
+Description=RTL8821CS Bluetooth UART re-probe workaround
+# hci_uart's serdev probe races the rfkill GPIO at boot and silently defers;
+# hci0 never appears without a module reload. Run after bluetooth.service so
+# bluetoothd picks up hci0 immediately via its existing HCI netlink socket.
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '[ -d /sys/class/bluetooth/hci0 ] && exit 0; modprobe -r btrtl hci_uart 2>/dev/null; modprobe hci_uart'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

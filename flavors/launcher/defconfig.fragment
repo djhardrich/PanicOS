@@ -133,6 +133,7 @@ BR2_PACKAGE_IW=y
 BR2_PACKAGE_BLUEZ5_UTILS=y
 BR2_PACKAGE_BLUEZ5_UTILS_CLIENT=y          # bluetoothctl
 BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HID=y     # classic HID (HIDP) + BLE HID (HOG/HOGP)
 # python3 + python-dbussy for the BT pairing agent (rocknix-bluetooth-agent
 # is a Python script that imports dbussy + ravel; both ship in our local
 # python-dbussy package, vendored at the same SHA ROCKNIX uses).
@@ -310,6 +311,7 @@ BR2_PACKAGE_WIREGUARD_TOOLS=y       # kernel module already CONFIG_WIREGUARD=m
 BR2_PACKAGE_BASH=y
 
 # Debug/monitoring/diagnostic tools
+BR2_PACKAGE_NANO=y
 BR2_PACKAGE_HTOP=y
 # strace: traces syscalls — essential for diagnosing port crashes (missing
 # files, wrong socket paths, permission errors) without source code.
