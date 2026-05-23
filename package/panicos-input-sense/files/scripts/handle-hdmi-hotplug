@@ -16,6 +16,16 @@ DSI_OUTPUT=$(wlr-randr | awk '/^DSI-[0-9]/ {print $1}')
 
 HDMI_STATE=$(cat /run/hdmi-status.last 2>/dev/null)
 
+# Returns 0 if the named wlr-randr output is currently enabled.
+output_enabled() {
+    wlr-randr 2>/dev/null | awk -v o="$1" '
+        $1 == o { f=1 }
+        f && /Enabled: yes/ { exit 0 }
+        f && /^[^ ]/ && $1 != o { exit 1 }
+        END { exit 1 }
+    '
+}
+
 case "${HDMI_STATE}" in
   connected)
 
@@ -27,12 +37,19 @@ case "${HDMI_STATE}" in
         fi
     fi
     if [ -n "${HDMI_OUTPUT}" ]; then
-      wlr-randr --output "${HDMI_OUTPUT}" --preferred --on
+      # Idempotency: if HDMI is already the active output, nothing to do.
+      # This prevents an ES-restart loop when the service fires repeatedly.
+      output_enabled "${HDMI_OUTPUT}" && exit 0
+      # --preferred requires EDID; fall back for adapters (e.g. HDMI-to-VGA)
+      # that expose modes without a preferred EDID entry.
+      wlr-randr --output "${HDMI_OUTPUT}" --preferred --on 2>/dev/null || \
+        wlr-randr --output "${HDMI_OUTPUT}" --mode 1024x768 --on 2>/dev/null || \
+        wlr-randr --output "${HDMI_OUTPUT}" --mode 800x600 --on
+      if [ -n "${DSI_OUTPUT}" ]; then
+        wlr-randr --output "${DSI_OUTPUT}" --off
+      fi
+      killall emulationstation || true
     fi
-    if [ -n "${DSI_OUTPUT}" ]; then
-      wlr-randr --output "${DSI_OUTPUT}" --off
-    fi
-    killall emulationstation
     ;;
   disconnected)
 
@@ -44,9 +61,10 @@ case "${HDMI_STATE}" in
         fi
     fi
     if [ -n "${DSI_OUTPUT}" ]; then
+      # Idempotency: if DSI is already the active output, nothing to do.
+      output_enabled "${DSI_OUTPUT}" && exit 0
       wlr-randr --output "${DSI_OUTPUT}" --preferred --on
+      killall emulationstation || true
     fi
-    killall emulationstation
     ;;
 esac
-

@@ -1,8 +1,6 @@
 [Unit]
 Description=Monitor HDMI status
-StartLimitIntervalSec=30
-StartLimitBurst=20
-StartLimitAction=none
+StartLimitIntervalSec=0
 
 [Path]
 PathModified=/run/hdmi-status.last
