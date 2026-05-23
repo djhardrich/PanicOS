@@ -132,8 +132,18 @@ BR2_PACKAGE_UTIL_LINUX_RFKILL=y
 BR2_PACKAGE_IW=y
 BR2_PACKAGE_BLUEZ5_UTILS=y
 BR2_PACKAGE_BLUEZ5_UTILS_CLIENT=y          # bluetoothctl
-BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt etc.
+BR2_PACKAGE_BLUEZ5_UTILS_MONITOR=y         # btmon packet sniffer
+BR2_PACKAGE_BLUEZ5_UTILS_TOOLS=y           # btmgmt, btattach, l2ping etc.
+BR2_PACKAGE_BLUEZ5_UTILS_DEPRECATED=y      # hciconfig, hcitool, hcidump, rfcomm, sdptool
+BR2_PACKAGE_BLUEZ5_UTILS_OBEX=y            # OBEX file transfer (needs C++)
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_AUDIO=y   # A2DP + AVRCP (BT headphones/speakers)
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HEALTH=y  # HDP health profiles
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_HID=y     # classic HID (HIDP) + BLE HID (HOG/HOGP)
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_MIDI=y    # BT MIDI via ALSA sequencer
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NETWORK=y # PANU/NAP/GN (BT tethering/PAN)
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NFC=y     # NFC pairing
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SAP=y     # SIM Access Profile
+BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SIXAXIS=y # Sony DualShock/PS controller support
 # python3 + python-dbussy for the BT pairing agent (rocknix-bluetooth-agent
 # is a Python script that imports dbussy + ravel; both ship in our local
 # python-dbussy package, vendored at the same SHA ROCKNIX uses).
