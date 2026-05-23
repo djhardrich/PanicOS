@@ -5,7 +5,10 @@
 
 # Global variables
 STORAGE_PATH="/storage"
-CACHE_PATH="${STORAGE_PATH}/.cache"
+# BlueZ writes pairing data to /var/lib/bluetooth (persistent via rootfs
+# overlay). ROCKNIX symlinks this to /storage/.cache/bluetooth; PanicOS
+# uses an overlay so the data lands directly in /var/lib/bluetooth.
+CACHE_PATH="/var/lib"
 BACKUP_DIR="${STORAGE_PATH}/roms/backups"
 BACKUP_FILE="${BACKUP_DIR}/bluetooth.tar"
 BT_DEVICE_FILE="/run/bt_device"

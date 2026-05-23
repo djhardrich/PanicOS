@@ -234,12 +234,15 @@ async def connect_device(path, address, properties, forceConnect, filter):
     shortDevName = getShortDevName(properties)
     connected = prop2str(properties["Connected"])
 
-    if "Icon" not in properties:
-        logging.info(f"Skipping device {devName} (no type)")
+    # Icon is only needed for type-based "input" filter; don't skip
+    # MAC-targeted requests just because Icon hasn't been resolved yet.
+    icon_str = prop2str(properties["Icon"]) if "Icon" in properties else ""
+    if filter == "input" and not icon_str:
+        logging.info(f"Skipping device {devName} (no type, needed for 'input' filter)")
         return
 
     if not (filter == prop2str(properties["Address"]) or
-            (filter == "input" and prop2str(properties["Icon"]).startswith("input"))):
+            (filter == "input" and icon_str.startswith("input"))):
         logging.info(f"Skipping device {devName} (not {filter})")
         return
 
@@ -277,7 +280,31 @@ async def check_discovery_control():
                 await handle_stop_discovery()
     except Exception as e:
         logging.error(f"Error in check_discovery_control: {e}")
+
+    # Proactively pair a device written to bt_device file. D-Bus events
+    # only fire when BlueZ updates device properties (e.g. RSSI); if the
+    # user selects a device between events, nothing triggers connect_device.
+    # Poll every 0.5 s so we act on bt_device within half a second.
+    await check_device_request()
+
     return True
+
+async def check_device_request():
+    global gdevices
+    wanted = getBluetoothWantedAddr()
+    if not wanted or wanted == "input":
+        return
+    for path, properties in list(gdevices.items()):
+        if "Address" not in properties:
+            continue
+        if prop2str(properties["Address"]) != wanted:
+            continue
+        # Skip if already fully connected and trusted
+        if (prop2str(properties.get("Connected", "false")) == "true" and
+                prop2str(properties.get("Trusted", "false")) == "true"):
+            return
+        await connect_device(path, wanted, properties, True, wanted)
+        return
 
 async def handle_start_discovery():
     global gdiscovering, gadapter, glisting_mode, glisting_devs, gdevices
