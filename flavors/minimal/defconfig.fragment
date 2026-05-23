@@ -27,3 +27,5 @@ BR2_PACKAGE_UTIL_LINUX_LSBLK=y
 
 # Boot splash via fbv on /dev/fb0; auto-killed when getty@tty1 starts.
 BR2_PACKAGE_PANICOS_SPLASH=y
+
+BR2_PACKAGE_NANO=y

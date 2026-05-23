@@ -57,6 +57,14 @@ BR2_PACKAGE_PANICOS_PHT_AUTOSTART=y
 # chrt lives in util-linux schedutils. PHT needs it for RT scheduling.
 BR2_PACKAGE_UTIL_LINUX_SCHEDUTILS=y
 
+# pulseaudio (library only, no daemon). SDL2's autoconf gates
+# --enable-pulseaudio on BR2_PACKAGE_PULSEAUDIO; without this SDL2 is
+# built with --disable-pulseaudio, losing the PA/PipeWire-pulse backend.
+# DAEMON=n so pulseaudio.service is not installed and doesn't conflict
+# with direct ALSA access — same rationale as the launcher flavor.
+BR2_PACKAGE_PULSEAUDIO=y
+# BR2_PACKAGE_PULSEAUDIO_DAEMON is not set
+
 # alsa-utils — amixer / alsactl / aplay / arecord. Diagnostic baseline:
 # without these, you can't check whether a card is muted, list controls,
 # play a test wav, or restore a saved mixer state on boot. PHT talks
@@ -72,3 +80,5 @@ BR2_PACKAGE_ALSA_UTILS_APLAY=y
 # pipewire it benefits from the FixedBootSequence flipping
 # `DAC Playback Switch=on`).
 BR2_PACKAGE_ALSA_UTILS_ALSAUCM=y
+
+BR2_PACKAGE_NANO=y
