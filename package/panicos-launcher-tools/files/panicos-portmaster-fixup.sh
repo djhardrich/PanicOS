@@ -29,7 +29,36 @@ LIBGL=/usr/share/panicos-launcher/tools/libgl_PanicOS.txt
 [ -f "$LIBGL" ] && cp -f "$LIBGL" "$PMDIR/libgl_PanicOS.txt"
 
 GCDB=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
-[ -f "$GCDB" ] && ln -sf "$GCDB" "$PMDIR/gamecontrollerdb.txt"
+PM_ZIP=/usr/share/panicos-launcher/portmaster-preload/PortMaster.zip
+PM_GCDB_ORIG=/storage/.config/panicos/portmaster-gcdb-orig.txt
+PM_GCDB_MERGED=/storage/.config/panicos/gamecontrollerdb.txt
+
+mkdir -p /storage/.config/panicos
+
+# Cache the original big PortMaster db (6000+ entries for BT controller coverage).
+# If the PortMaster runtime file is a plain file (fresh install / self-update),
+# save it now before we symlink over it.  Otherwise fall back to the preload zip.
+if [ -f "$PMDIR/gamecontrollerdb.txt" ] && [ ! -L "$PMDIR/gamecontrollerdb.txt" ]; then
+    cp "$PMDIR/gamecontrollerdb.txt" "$PM_GCDB_ORIG"
+elif [ ! -f "$PM_GCDB_ORIG" ] && [ -f "$PM_ZIP" ]; then
+    unzip -p "$PM_ZIP" PortMaster/gamecontrollerdb.txt > "$PM_GCDB_ORIG" 2>/dev/null || rm -f "$PM_GCDB_ORIG"
+fi
+
+# Build merged db: big db first (BT controller coverage), our custom entries
+# appended last so they win for any duplicate GUIDs (SDL uses last-match).
+# sdl_controllerconfig must stay empty in mod_PanicOS.txt — never put this
+# 472K content in an env var or ports will crash with E2BIG on every exec.
+if [ -s "$PM_GCDB_ORIG" ] && [ -f "$GCDB" ]; then
+    cat "$PM_GCDB_ORIG" "$GCDB" > "$PM_GCDB_MERGED"
+elif [ -f "$GCDB" ]; then
+    cp "$GCDB" "$PM_GCDB_MERGED"
+fi
+
+if [ -f "$PM_GCDB_MERGED" ]; then
+    ln -sf "$PM_GCDB_MERGED" "$PMDIR/gamecontrollerdb.txt"
+elif [ -f "$GCDB" ]; then
+    ln -sf "$GCDB" "$PMDIR/gamecontrollerdb.txt"
+fi
 
 chmod -R +x "$PMDIR" 2>/dev/null || true
 

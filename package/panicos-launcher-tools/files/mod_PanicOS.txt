@@ -104,8 +104,15 @@ pm_platform_helper() {
 # on every subsequent exec. SDL reads the full db via the FILE path at
 # runtime, so external controllers (USB/BT) still get correct mappings.
 get_controls() {
-    if [ -f /usr/share/SDL-GameControllerDB/gamecontrollerdb.txt ]; then
-        export SDL_GAMECONTROLLERCONFIG_FILE="/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt"
+    # Prefer the merged db (big PortMaster db + our Nintendo-layout BT overrides)
+    # built by panicos-portmaster-fixup.sh.  Fall back to the small system db if
+    # the merged file hasn't been created yet (PortMaster not installed).
+    local gcdb=/storage/.config/panicos/gamecontrollerdb.txt
+    [ ! -f "$gcdb" ] && gcdb=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
+    if [ -f "$gcdb" ]; then
+        export SDL_GAMECONTROLLERCONFIG_FILE="$gcdb"
     fi
+    # sdl_controllerconfig MUST stay empty — port scripts re-export it as
+    # SDL_GAMECONTROLLERCONFIG (env var).  472KB in env → E2BIG crash on exec.
     sdl_controllerconfig=""
 }
