@@ -486,7 +486,9 @@ index 000000000000..111111111111
 +               //      return -EINVAL;
 +               //}
 +
-+               if (clk_set_rate(clk_info->clk_pll, freq_in)) {
++               /* clk_pll_audio only supports 24.576/22.5792 MHz base rates.
++                * freq_in is 4x the base (pll-fs=4 in DTS) — divide back down. */
++               if (clk_set_rate(clk_info->clk_pll, freq_in / 4)) {
 +                       SND_LOG_ERR(HLOG, "freq : %u pllx4 clk unsupport\n", freq_in);
 +                       return -EINVAL;
 +               }
