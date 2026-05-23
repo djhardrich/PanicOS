@@ -8,7 +8,7 @@ Wants=bluetooth.service
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c '[ -d /sys/class/bluetooth/hci0 ] && exit 0; modprobe -r btrtl hci_uart 2>/dev/null; modprobe hci_uart'
+ExecStart=/bin/sh -c '[ -d /sys/class/bluetooth/hci0 ] && exit 0; modprobe -r hci_uart btrtl 2>/dev/null; modprobe hci_uart'
 RemainAfterExit=yes
 
 [Install]
