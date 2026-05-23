@@ -31,6 +31,7 @@ LIBGL=/usr/share/panicos-launcher/tools/libgl_PanicOS.txt
 GCDB=/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt
 PM_ZIP=/usr/share/panicos-launcher/portmaster-preload/PortMaster.zip
 PM_GCDB_ORIG=/storage/.config/panicos/portmaster-gcdb-orig.txt
+PM_GCDB_REMAP=/storage/.config/panicos/portmaster-gcdb-remap.txt
 PM_GCDB_MERGED=/storage/.config/panicos/gamecontrollerdb.txt
 
 mkdir -p /storage/.config/panicos
@@ -44,11 +45,64 @@ elif [ ! -f "$PM_GCDB_ORIG" ] && [ -f "$PM_ZIP" ]; then
     unzip -p "$PM_ZIP" PortMaster/gamecontrollerdb.txt > "$PM_GCDB_ORIG" 2>/dev/null || rm -f "$PM_GCDB_ORIG"
 fi
 
-# Build merged db: big db first (BT controller coverage), our custom entries
-# appended last so they win for any duplicate GUIDs (SDL uses last-match).
+# Remap the big PortMaster db to Nintendo button convention for BT Linux entries.
+# The community db uses Xbox convention (SDL a=south/b0, x=west/b2, y=north/b3).
+# H700 needs Nintendo convention (SDL a=east/b1, x=north/b3, y=west/b2).
+# Rule: for any BT Linux entry (GUID 05000000…) with a:b0 (south=confirm):
+#   - swap a↔b button numbers
+#   - swap x↔y button numbers only if x_num < y_num (i.e. x is west, Xbox style)
+# Entries already in Nintendo convention (a:b1) are left untouched.
+# On failure, fall back to the unmodified orig — GCDB overrides still win
+# for the specific controllers listed there.
+if [ -s "$PM_GCDB_ORIG" ]; then
+    python3 - "$PM_GCDB_ORIG" "$PM_GCDB_REMAP" <<'PYEOF' || cp "$PM_GCDB_ORIG" "$PM_GCDB_REMAP"
+import sys, re
+
+def swap_fields(s, key1, key2):
+    """Swap the button numbers of two SDL db fields (e.g. 'a' and 'b')."""
+    m1 = re.search(r',' + key1 + r':(b\d+),', s)
+    m2 = re.search(r',' + key2 + r':(b\d+),', s)
+    if not m1 or not m2:
+        return s
+    v1, v2 = m1.group(1), m2.group(1)
+    s = s.replace(f',{key1}:{v1},', f',{key1}:~SW~,', 1)
+    s = s.replace(f',{key2}:{v2},', f',{key2}:{v1},', 1)
+    s = s.replace(f',{key1}:~SW~,', f',{key1}:{v2},', 1)
+    return s
+
+def remap(line):
+    s = line.rstrip('\n')
+    if not s or s.startswith('#'):
+        return line
+    if not s.startswith('05'):          # BT GUIDs only
+        return line
+    if 'platform:Linux' not in s:       # Linux entries only
+        return line
+    if ',a:b0,' not in s:              # Xbox-convention check (south=confirm)
+        return line
+    s = swap_fields(s, 'a', 'b')       # a↔b: east face becomes SDL a
+    # x↔y only if x_num < y_num (Xbox: x=west=lower-num, y=north=higher-num)
+    xm = re.search(r',x:(b(\d+)),', s)
+    ym = re.search(r',y:(b(\d+)),', s)
+    if xm and ym and int(xm.group(2)) < int(ym.group(2)):
+        s = swap_fields(s, 'x', 'y')
+    return s + ('\n' if line.endswith('\n') else '')
+
+with open(sys.argv[1]) as f:
+    lines = f.readlines()
+with open(sys.argv[2], 'w') as f:
+    for l in lines:
+        f.write(remap(l))
+PYEOF
+fi
+
+# Build merged db: remapped big db first, our custom ROCKNIX/H700 entries
+# appended last (SDL last-match-wins — our entries override any duplicates).
 # sdl_controllerconfig must stay empty in mod_PanicOS.txt — never put this
-# 472K content in an env var or ports will crash with E2BIG on every exec.
-if [ -s "$PM_GCDB_ORIG" ] && [ -f "$GCDB" ]; then
+# content in an env var or ports will crash with E2BIG on every exec.
+if [ -s "$PM_GCDB_REMAP" ] && [ -f "$GCDB" ]; then
+    cat "$PM_GCDB_REMAP" "$GCDB" > "$PM_GCDB_MERGED"
+elif [ -s "$PM_GCDB_ORIG" ] && [ -f "$GCDB" ]; then
     cat "$PM_GCDB_ORIG" "$GCDB" > "$PM_GCDB_MERGED"
 elif [ -f "$GCDB" ]; then
     cp "$GCDB" "$PM_GCDB_MERGED"
