@@ -47,6 +47,12 @@
 050000005e040000130b000007050000,Xbox Series X Controller,platform:Linux,a:b1,b:b0,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,misc1:b15,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b4,y:b3,
 050000005e040000130b000011050000,Xbox Series X Controller,platform:Linux,a:b1,b:b0,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,misc1:b15,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b4,y:b3,
 050000005e040000200b000013050000,Xbox Wireless Controller,platform:Linux,a:b1,b:b0,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b4,y:b3,
+# Nintendo Switch Pro Controller / 8BitDo in Switch mode BT (hid-nintendo driver)
+# Both GUIDs have a:b0,b:b1 (Xbox convention) — swap a↔b.
+# 01000000 variant also has x:b2,y:b3 — swap x↔y too.
+# 01800000 is the hid-nintendo driver path (modern kernels, 8BitDo Switch mode).
+050000007e0500000920000001000000,Nintendo Switch Pro Controller,platform:Linux,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,misc1:b4,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b2,
+050000007e0500000920000001800000,Nintendo Switch Pro Controller,platform:Linux,a:b1,b:b0,back:b9,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b11,leftshoulder:b5,leftstick:b12,lefttrigger:b7,leftx:a0,lefty:a1,misc1:b4,rightshoulder:b6,rightstick:b13,righttrigger:b8,rightx:a2,righty:a3,start:b10,x:b3,y:b2,
 # PS3/PS4/PS5 BT — some modes already have x:b3,y:b2; only a↔b needed
 050000004c0500006802000000800000,PS3 Controller,platform:Linux,a:b1,b:b0,back:b8,dpdown:b14,dpleft:b15,dpright:b16,dpup:b13,guide:b10,leftshoulder:b4,leftstick:b11,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b12,righttrigger:a5,rightx:a3,righty:a4,start:b9,x:b3,y:b2,
 050000004c0500006802000000810000,PS3 Controller,platform:Linux,a:b1,b:b0,back:b8,dpdown:b14,dpleft:b15,dpright:b16,dpup:b13,guide:b10,leftshoulder:b4,leftstick:b11,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b12,righttrigger:a5,rightx:a3,righty:a4,start:b9,x:b3,y:b2,
