@@ -20,14 +20,16 @@ set -e
 echo "=== Rescan HDMI audio ==="
 echo
 
-# 1. Force DRM connector off → detect so dw-hdmi re-reads EDID.
+# 1. Ask DRM to re-probe the connector so dw-hdmi re-reads EDID.
+# Writing "detect" alone clears any force state and runs the connector's
+# detect callback (EDID re-read + sink_is_hdmi/has_audio refresh).
+# Don't write "off" — that physically disables the HDMI output and the
+# Wayland compositor can fail to bring it back on the way through.
 echo ">>> forcing HDMI connector re-detect"
 for status in /sys/class/drm/card*/card*-HDMI-A-[0-9]/status; do
 	[ -w "$status" ] || continue
 	conn=$(basename "$(dirname "$status")")
 	echo "  $conn: was $(cat "$status")"
-	echo off > "$status" 2>/dev/null || true
-	sleep 0.3
 	echo detect > "$status" 2>/dev/null || true
 done
 sleep 1
