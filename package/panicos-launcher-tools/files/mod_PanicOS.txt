@@ -95,16 +95,17 @@ pm_platform_helper() {
 #
 # ROCKNIX replaces get_controls with one that runs their mapper.txt to
 # synthesize the db from EmulationStation config. We don't have ES, so
-# we just stuff our system-wide gamecontrollerdb into /tmp directly.
+# we point SDL_GAMECONTROLLERCONFIG_FILE at the system db directly.
 # Sourced AFTER control.txt and BEFORE the wrapper calls get_controls,
 # so this definition wins.
+#
+# sdl_controllerconfig must NOT hold the full db: port scripts export it
+# as SDL_GAMECONTROLLERCONFIG (env var), and 472KB in env causes E2BIG
+# on every subsequent exec. SDL reads the full db via the FILE path at
+# runtime, so external controllers (USB/BT) still get correct mappings.
 get_controls() {
-    export SDL_GAMECONTROLLERCONFIG_FILE="/tmp/gamecontrollerdb.txt"
     if [ -f /usr/share/SDL-GameControllerDB/gamecontrollerdb.txt ]; then
-        cp -f /usr/share/SDL-GameControllerDB/gamecontrollerdb.txt \
-              "${SDL_GAMECONTROLLERCONFIG_FILE}"
-    else
-        : > "${SDL_GAMECONTROLLERCONFIG_FILE}"
+        export SDL_GAMECONTROLLERCONFIG_FILE="/usr/share/SDL-GameControllerDB/gamecontrollerdb.txt"
     fi
-    sdl_controllerconfig="$(< "${SDL_GAMECONTROLLERCONFIG_FILE}")"
+    sdl_controllerconfig=""
 }
