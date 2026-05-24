@@ -76,6 +76,23 @@ display_off() {
   fi
 }
 
+lid_display_off() {
+  ${DEBUG} && log $0 "Lid display-off: zeroing backlight"
+  for dev in /sys/class/backlight/*/brightness; do
+    echo 0 > "${dev}"
+  done
+  touch "${LID_DISPLAY_OFF_FLAG_FILE}"
+}
+
+lid_display_on() {
+  ${DEBUG} && log $0 "Lid display-off: restoring brightness"
+  rm -f "${LID_DISPLAY_OFF_FLAG_FILE}"
+  local PCT
+  PCT=$(get_setting display.brightness)
+  [[ -z "${PCT}" ]] && PCT=80
+  brightness set "${PCT}"
+}
+
 display_on() {
   if [[ "${ENABLE_DPMS}" == "1" ]]; then
     # DPMS enabled, use it to turn on the display
@@ -347,12 +364,17 @@ ENABLE_CORE_PARKING="$(get_setting system.suspend.park_cores)"
 ENABLE_DPMS="$(get_setting system.suspend.dpms)"
 [[ "${ENABLE_DPMS}" = "" ]] && ENABLE_DPMS="1"
 
+# Lid sleep mode: "fake" (default) = full fake-suspend; "displayoff" = backlight only
+LID_SLEEP_MODE="$(get_setting system.lid.sleep.mode)"
+[[ -z "${LID_SLEEP_MODE}" ]] && LID_SLEEP_MODE="fake"
+
 # flag files
 PID=$$
 DELAY_FLAG_FILE_PATTERN="/var/run/shutdown-delay.flag"
 DELAY_FLAG_FILE="${DELAY_FLAG_FILE_PATTERN}.${PID}"
 POWER_SUSPEND_ACTIVE_FLAG_FILE="/var/run/power-fake-suspend-active.flag"
 LID_CLOSED_FLAG_FILE="/var/run/lid-closed.flag"
+LID_DISPLAY_OFF_FLAG_FILE="/var/run/lid-display-off.flag"
 
 # Process to kill
 TO_KILL="rocknix-fake-suspend"
@@ -416,6 +438,13 @@ elif [[ "${SOURCE}" = "lid" && "${ACTION}" = "close" ]]; then
   if [[ -f "${POWER_SUSPEND_ACTIVE_FLAG_FILE}" ]]; then
     # In a 'suspend' state from power button, do nothing
     ${DEBUG} && log $0 "Power suspend active - no action"
+  elif [[ "${LID_SLEEP_MODE}" = "displayoff" ]]; then
+    if [[ $HDMI_CONNECTED -eq 0 ]]; then
+      ${DEBUG} && log $0 "HDMI connected, not blanking display"
+    else
+      ${DEBUG} && log $0 "Display-off mode: zeroing backlight"
+      lid_display_off
+    fi
   else
     if [[ $HDMI_CONNECTED -eq 0 ]]; then
       ${DEBUG} && log $0 "HDMI connected, not suspending"
@@ -428,9 +457,14 @@ elif [[ "${SOURCE}" = "lid" && "${ACTION}" = "close" ]]; then
 elif [[ "${SOURCE}" = "lid" && "${ACTION}" = "open" ]]; then
   rm -f "${LID_CLOSED_FLAG_FILE}"
 
-  # Always resume on lid open - regardless of suspend source
-  ${DEBUG} && log $0 "Lid opened - resuming"
-  resume
+  if [[ -f "${LID_DISPLAY_OFF_FLAG_FILE}" ]]; then
+    ${DEBUG} && log $0 "Lid opened - restoring display brightness"
+    lid_display_on
+  else
+    # Always resume on lid open - regardless of suspend source
+    ${DEBUG} && log $0 "Lid opened - resuming"
+    resume
+  fi
 fi
 
 exit 0

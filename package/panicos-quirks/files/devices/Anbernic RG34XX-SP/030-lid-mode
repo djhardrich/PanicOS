@@ -1,0 +1,9 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0
+
+. /etc/profile.d/001-functions
+
+# Default lid sleep mode for hinge devices: blank display only, no fake suspend
+if [ -z "$(get_setting system.lid.sleep.mode)" ]; then
+  set_setting system.lid.sleep.mode displayoff
+fi

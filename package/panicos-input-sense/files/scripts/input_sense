@@ -257,7 +257,7 @@ get_devices() {
     for DEV in /dev/input/ev*
     do
       unset SUPPORTS
-      SUPPORTS=$(udevadm info ${DEV} | awk '/ID_INPUT_KEY=|ID_INPUT_JOYSTICK=|ID_INPUT_TOUCHSCREEN=/ {print $2}')
+      SUPPORTS=$(udevadm info ${DEV} | awk '/ID_INPUT_KEY=|ID_INPUT_JOYSTICK=|ID_INPUT_TOUCHSCREEN=|ID_INPUT_SWITCH=/ {print $2}')
       if [ -n "${SUPPORTS}" ]; then
         DEVICE=$(udevadm info ${DEV} | awk 'BEGIN {FS="="} /DEVNAME=/ {print $2}')
         INPUT_DEVICES+=("${DEVICE}")
