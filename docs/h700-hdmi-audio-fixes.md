@@ -231,6 +231,123 @@ migrates the default output on cable connect.
 
 ---
 
+---
+
+## Fix 6 — HDMI audio plays at ~80–85% speed (wrong PLL rate)
+
+**Root cause:** A bug in `ccu_nm_set_rate()` in the sunxi-ng CCU driver
+(`drivers/clk/sunxi-ng/ccu_nm.c`) causes the `pll-audio-hs` clock to
+never lock to the correct audio frequency, leaving it at whatever rate
+U-Boot set (688 MHz on RG35XX Pro). At 688 MHz the audio-hub ends up at
+43 MHz and audio-codec-1x at ~98.286 MHz — close to the target 98.304 MHz
+but not exact, producing audio that plays at approximately 80–85% of
+normal speed.
+
+### The three-layer failure
+
+**Layer 1 — wrong DTS clock binding.**
+The Armbian AHUB patch's `clk_pll_audio_4x` DT reference used
+`CLK_AUDIO_CODEC_4X` (index 92, the `audio-codec-4x` post-divider clock).
+`audio-codec-4x` is **not** in `audio-hub`'s parent MUX table — the MUX
+accepts only `{pll-audio-1x, pll-audio-2x, pll-audio-4x, pll-audio-hs}`.
+`clk_set_parent(audio-hub, audio-codec-4x)` always returned `-EINVAL`
+silently.
+
+**Fix:** Bind `clk_pll_audio_4x` to index `20` (`pll-audio-4x`,
+`CLK_PLL_AUDIO_4X` in `ccu-sun50i-h616.h`), which **is** in the MUX.
+Note: `CLK_PLL_AUDIO_4X=20` is only in the internal driver header; the
+public `include/dt-bindings/clock/sun50i-h616-ccu.h` does not export it.
+Use the raw index:
+
+```dts
+clocks = <&ccu CLK_AUDIO_CODEC_1X>,
+         <&ccu 20>,               /* pll-audio-4x (index 20 in ccu-sun50i-h616.h) */
+         <&ccu CLK_AUDIO_HUB>,
+         <&ccu CLK_BUS_AUDIO_HUB>;
+clock-names = "clk_pll_audio", "clk_pll_audio_4x",
+              "clk_audio_hub", "clk_bus_audio_hub";
+```
+
+**Layer 2 — `sunxi_ahub_dai_set_pll` programmed the wrong clock.**
+The AHUB driver's `set_pll` function called `clk_set_rate(clk_pll, ...)` where
+`clk_pll` = `audio-codec-1x`. `audio-codec-1x` has `CLK_SET_RATE_PARENT`
+and its parent chain reaches `pll-audio-hs` through several dividers;
+`clk_set_rate` propagated the wrong M value (7) giving ≈98.286 MHz instead
+of 98.304 MHz. Also called `clk_set_rate(clk_module, 0)` which switched
+audio-hub back to the minimum-rate parent.
+
+**Fix:** Change `set_pll` to directly rate `clk_pllx4` (`pll-audio-4x`),
+reparent `audio-hub` to it, then set the module clock to `freq_in`. The
+`pll-audio-4x → pll-audio-hs` chain propagates correctly with
+`CLK_SET_RATE_PARENT`.
+
+**Layer 3 (root cause) — SDM table stores output rates, not VCO rates.**
+`ccu_nm_set_rate()` multiplies the requested rate by `fixed_post_div`
+**before** comparing against the SDM table:
+
+```c
+/* ccu_nm.c */
+if (nm->common.features & CCU_FEATURE_FIXED_POSTDIV)
+    rate = rate * nm->fixed_post_div;   /* ×2 — BEFORE the SDM lookup */
+
+if (ccu_sdm_helper_has_rate(&nm->common, &nm->sdm, rate)) {
+    /* enabled only if table entry matches the pre-multiplied rate */
+}
+```
+
+`pll-audio-hs` has `fixed_post_div = 2`, so requesting 98304000 Hz causes
+the comparison to run against **196608000**. But the SDM table in
+`ccu-sun50i-h616.c` stores output rates:
+
+```c
+/* WRONG — stores output rates */
+static struct ccu_sdm_setting pll_audio_sdm_table[] = {
+    { .rate = 90316800,  .pattern = 0xc001288d, .m = 3, .n = 22 },
+    { .rate = 98304000,  .pattern = 0xc001eb85, .m = 5, .n = 40 },
+};
+```
+
+`ccu_sdm_helper_has_rate(196608000)` finds no match → SDM is disabled →
+integer-only N/M calculation → PLL fails to lock → `ccu_helper_wait_for_lock`
+WARN_ON fires at ~500 ms → function returns 0 anyway → PLL stays at U-Boot
+value (688 MHz).
+
+`ccu_nm_recalc_rate()` already divides the table rate by `fixed_post_div`
+when returning the observable clock rate, so the fix is simply to store
+**VCO rates** (output × `fixed_post_div` = output × 2) in the table:
+
+```c
+/* CORRECT — stores VCO rates */
+static struct ccu_sdm_setting pll_audio_sdm_table[] = {
+    { .rate = 180633600, .pattern = 0xc001288d, .m = 3, .n = 22 },
+    { .rate = 196608000, .pattern = 0xc001eb85, .m = 5, .n = 40 },
+};
+```
+
+After this fix: `ccu_sdm_helper_has_rate(196608000)` hits → SDM enabled →
+pattern 0xc001eb85 written → PLL locks to 196608000 Hz VCO / 2 = 98304000 Hz
+output → audio-hub clocked at 98304000 Hz → audio plays at correct speed.
+
+**Verification:**
+```bash
+# Before fix:
+cat /sys/kernel/debug/clk/pll-audio-hs/clk_rate  # → 688000000 (U-Boot value)
+dmesg | grep ccu_helper                           # → WARNING: wait_for_lock timeout
+
+# After fix:
+cat /sys/kernel/debug/clk/pll-audio-hs/clk_rate  # → 98304000
+dmesg | grep ccu_helper                           # (silent)
+```
+
+**Note for ROCKNIX / upstream:** This SDM table bug affects all mainline
+kernels on H616/H700 using `ccu-sun50i-h616.c`. The WARN_ON from
+`ccu_helper_wait_for_lock` in `ccu_nm_set_rate` is the diagnostic
+fingerprint. Any board that boots into U-Boot with pll-audio-hs at a
+non-audio rate (e.g. 688 MHz, 600 MHz) and never hears audio play at
+the right pitch has this problem.
+
+---
+
 ## Summary — Checklist for H616/H700 HDMI Audio
 
 | # | What | How |
@@ -240,10 +357,12 @@ migrates the default output on cable connect.
 | 3 | dw-hdmi stuck in DVI mode | Patch `dw_hdmi_audio_enable()`: force `FC_INVIDCONF` HDMI mode bit unconditionally |
 | 4 | Hotplug chain never fires | Install udev rule for DRM events; replace `pgrep -x emulationstation` with `pidof` in hotplug scripts |
 | 5 | AHUB sink name not matched | Update `hdmi_sense` to match `ahub1_mach` (case-insensitive) in addition to `hdmi` |
+| 6 | Audio plays at ~80–85% speed | Fix `pll_audio_sdm_table` in `ccu-sun50i-h616.c`: use VCO rates (×2); fix `clk_pll_audio_4x` DTS to bind to index 20; fix `set_pll` to rate `pll-audio-4x` directly |
 
 Fixes 1–3 are kernel-level and required for any audio at all. Fix 4 is
 required for automatic routing on cable connect/disconnect. Fix 5 is
-required for `hdmi_sense` to actually switch the default sink.
+required for `hdmi_sense` to actually switch the default sink. Fix 6 is
+required for audio to play at the correct pitch/speed.
 
 ---
 
@@ -251,8 +370,9 @@ required for `hdmi_sense` to actually switch the default sink.
 
 ```
 soc/allwinner-h700/mainline/linux/patches/
-  0224-0701-armbian-h616-hdmi-audio.patch          # Fix 1 (Armbian import)
-  0225-0702-h616-digital-audio-node.patch           # Fix 1 (companion)
-  0226-sunxi_v2-ahub-hdmi-routing-fix.patch         # Fix 2 (AHUB routing)
-  0227-dw-hdmi-force-hdmi-mode-on-audio-enable.patch # Fix 3 (DVI mode)
+  0221-fix-h616-pll-audio-hs-sdm-table-vco-rates.patch  # Fix 6 (SDM table VCO rates)
+  0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import)
+  0225-0702-h616-digital-audio-node.patch                # Fix 1 (companion)
+  0226-sunxi_v2-ahub-hdmi-routing-fix.patch              # Fix 2 (AHUB routing)
+  0227-dw-hdmi-force-hdmi-mode-on-audio-enable.patch     # Fix 3 (DVI mode)
 ```

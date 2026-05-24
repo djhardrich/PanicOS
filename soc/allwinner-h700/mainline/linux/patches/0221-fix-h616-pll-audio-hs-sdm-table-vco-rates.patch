@@ -1,0 +1,48 @@
+From: PanicOS <panicos@localhost>
+Date: Sat, 24 May 2026 00:00:00 +0000
+Subject: [PATCH] clk: sunxi-ng: fix pll-audio-hs SDM table rates for H616
+
+ccu_nm_set_rate() multiplies the requested rate by fixed_post_div before
+comparing against the SDM table (drivers/clk/sunxi-ng/ccu_nm.c line 178):
+
+    if (nm->common.features & CCU_FEATURE_FIXED_POSTDIV)
+        rate = rate * nm->fixed_post_div;  /* ×2 BEFORE SDM check */
+
+    if (ccu_sdm_helper_has_rate(..., rate)) { ... }
+
+pll-audio-hs has fixed_post_div=2, so when the AHUB driver requests
+98304000 Hz the SDM check compares 196608000 against the table entries
+{90316800, 98304000}.  The comparison always fails, SDM stays disabled,
+integer-only N/M is used, and the PLL fails to lock (ccu_helper_wait_for_lock
+WARN_ON at ~500ms).  The PLL stays at whatever rate U-Boot left it at
+(688 MHz on RG35XX Pro), causing HDMI audio to play at ~80-85% speed.
+
+Fix: store VCO rates (= output × fixed_post_div = output × 2) in the table
+so that ccu_nm_set_rate's pre-multiplied comparison hits the right entry.
+ccu_nm_recalc_rate already divides the table rate by fixed_post_div when
+returning the clock's observable output rate, so recalc_rate is unaffected.
+
+VCO rates:
+  48 kHz path:  98304000 Hz output × 2 = 196608000 Hz VCO  (N=40, M=5)
+  44.1 kHz path: 90316800 Hz output × 2 = 180633600 Hz VCO  (N=22, M=3)
+
+Signed-off-by: PanicOS <panicos@localhost>
+---
+ drivers/clk/sunxi-ng/ccu-sun50i-h616.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/sunxi-ng/ccu-sun50i-h616.c b/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
+index 1111111..2222222 100644
+--- a/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
++++ b/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
+@@ -223,8 +223,8 @@
+  * frequencies with less error.
+  */
+ static struct ccu_sdm_setting pll_audio_sdm_table[] = {
+-	{ .rate = 90316800, .pattern = 0xc001288d, .m = 3, .n = 22 },
+-	{ .rate = 98304000, .pattern = 0xc001eb85, .m = 5, .n = 40 },
++	{ .rate = 180633600, .pattern = 0xc001288d, .m = 3, .n = 22 },
++	{ .rate = 196608000, .pattern = 0xc001eb85, .m = 5, .n = 40 },
+ };
+
+ #define SUN50I_H616_PLL_AUDIO_REG	0x078
