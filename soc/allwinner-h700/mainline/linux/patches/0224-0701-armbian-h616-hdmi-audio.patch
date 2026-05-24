@@ -481,22 +481,19 @@ index 000000000000..111111111111
 +       clk_info = &ahub_info->clk_info;
 +
 +       if (freq_in > 24576000) {
-+               //if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
-+               //      SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
-+               //      return -EINVAL;
-+               //}
-+
-+               /* clk_pll_audio only supports 24.576/22.5792 MHz base rates.
-+                * freq_in is 4x the base (pll-fs=4 in DTS) — divide back down. */
-+               if (clk_set_rate(clk_info->clk_pll, freq_in / 4)) {
++               if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
++                       SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
++                       return -EINVAL;
++               }
++               if (clk_set_rate(clk_info->clk_pll, freq_in)) {
 +                       SND_LOG_ERR(HLOG, "freq : %u pllx4 clk unsupport\n", freq_in);
 +                       return -EINVAL;
 +               }
 +       } else {
-+               //if (clk_set_parent(clk_info->clk_module, clk_info->clk_pll)) {
-+               //      SND_LOG_ERR(HLOG, "set parent of clk_module to pll failed\n");
-+               //      return -EINVAL;
-+               //}
++               if (clk_set_parent(clk_info->clk_module, clk_info->clk_pll)) {
++                       SND_LOG_ERR(HLOG, "set parent of clk_module to pll failed\n");
++                       return -EINVAL;
++               }
 +               if (clk_set_rate(clk_info->clk_pll, freq_in)) {
 +                       SND_LOG_ERR(HLOG, "freq : %u pll clk unsupport\n", freq_in);
 +                       return -EINVAL;
@@ -2009,8 +2006,8 @@ index 000000000000..111111111111
 +	SND_LOG_DEBUG(HLOG, "\n");
 +
 +	clk_disable_unprepare(clk_info->clk_module);
++	clk_disable_unprepare(clk_info->clk_pllx4);
 +	clk_disable_unprepare(clk_info->clk_pll);
-+	//clk_disable_unprepare(clk_info->clk_pllx4);
 +	clk_disable_unprepare(clk_info->clk_bus);
 +	reset_control_assert(clk_info->clk_rst);
 +
@@ -2035,10 +2032,10 @@ index 000000000000..111111111111
 +		SND_LOG_ERR(HLOG, "clk_pll enable failed\n");
 +		return -EBUSY;
 +	}
-+	//if (clk_prepare_enable(clk_info->clk_pllx4)) {
-+	//	SND_LOG_ERR(HLOG, "clk_pllx4 enable failed\n");
-+	//	return -EBUSY;
-+	//}
++	if (clk_prepare_enable(clk_info->clk_pllx4)) {
++		SND_LOG_ERR(HLOG, "clk_pllx4 enable failed\n");
++		return -EBUSY;
++	}
 +	if (clk_prepare_enable(clk_info->clk_module)) {
 +		SND_LOG_ERR(HLOG, "clk_module enable failed\n");
 +		return -EBUSY;
@@ -2200,17 +2197,17 @@ index 000000000000..111111111111
 +		SND_LOG_ERR(HLOG, "clk_pll is invalid\n");
 +		return -EINVAL;
 +	}
-+	//if (IS_ERR_OR_NULL(g_clk_info.clk_pllx4)) {
-+	//	SND_LOG_ERR(HLOG, "clk_pllx4 is invalid\n");
-+	//	return -EINVAL;
-+	//}
++	if (IS_ERR_OR_NULL(g_clk_info.clk_pllx4)) {
++		SND_LOG_ERR(HLOG, "clk_pllx4 is invalid\n");
++		return -EINVAL;
++	}
 +	if (IS_ERR_OR_NULL(g_clk_info.clk_module)) {
 +		SND_LOG_ERR(HLOG, "clk_module is invalid\n");
 +		return -EINVAL;
 +	}
 +
 +	clk_info->clk_pll = g_clk_info.clk_pll;
-+	//clk_info->clk_pllx4 = g_clk_info.clk_pllx4;
++	clk_info->clk_pllx4 = g_clk_info.clk_pllx4;
 +	clk_info->clk_module = g_clk_info.clk_module;
 +
 +	return 0;
@@ -2319,19 +2316,19 @@ index 000000000000..111111111111
 +		ret = -EBUSY;
 +		goto err_pll_clk;
 +	}
-+	//clk_info->clk_pllx4 = of_clk_get_by_name(np, "clk_pll_audio_4x");
-+	//if (IS_ERR_OR_NULL(clk_info->clk_pllx4)) {
-+	//	SND_LOG_ERR(HLOG, "clk pllx4 get failed\n");
-+	//	ret = -EBUSY;
-+	//	goto err_pllx4_clk;
-+	//}
++	clk_info->clk_pllx4 = of_clk_get_by_name(np, "clk_pll_audio_4x");
++	if (IS_ERR_OR_NULL(clk_info->clk_pllx4)) {
++		SND_LOG_ERR(HLOG, "clk pllx4 get failed\n");
++		ret = -EBUSY;
++		goto err_pllx4_clk;
++	}
 +
 +	/* set ahub clk parent */
-+	//if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
-+	//	SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
-+	//	ret = -EINVAL;
-+	//	goto err_set_parent_clk;
-+	//}
++	if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
++		SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
++		ret = -EINVAL;
++		goto err_set_parent_clk;
++	}
 +
 +	/* enable clk of ahub */
 +	if (clk_prepare_enable(clk_info->clk_pll)) {
@@ -2339,11 +2336,11 @@ index 000000000000..111111111111
 +		ret = -EBUSY;
 +		goto err_pll_clk_enable;
 +	}
-+	//if (clk_prepare_enable(clk_info->clk_pllx4)) {
-+	//	SND_LOG_ERR(HLOG, "clk_pllx4 enable failed\n");
-+	//	ret = -EBUSY;
-+	//	goto err_pllx4_clk_enable;
-+	//}
++	if (clk_prepare_enable(clk_info->clk_pllx4)) {
++		SND_LOG_ERR(HLOG, "clk_pllx4 enable failed\n");
++		ret = -EBUSY;
++		goto err_pllx4_clk_enable;
++	}
 +	if (clk_prepare_enable(clk_info->clk_module)) {
 +		SND_LOG_ERR(HLOG, "clk_module enable failed\n");
 +		ret = -EBUSY;
@@ -2353,14 +2350,14 @@ index 000000000000..111111111111
 +	return 0;
 +
 +err_module_clk_enable:
-+//	clk_disable_unprepare(clk_info->clk_pllx4);
-+//err_pllx4_clk_enable:
++	clk_disable_unprepare(clk_info->clk_pllx4);
++err_pllx4_clk_enable:
 +	clk_disable_unprepare(clk_info->clk_pll);
 +err_pll_clk_enable:
-+//err_set_parent_clk:
-+//	clk_put(clk_info->clk_pllx4);
-+//err_pllx4_clk:
-+//	clk_put(clk_info->clk_pll);
++err_set_parent_clk:
++	clk_put(clk_info->clk_pllx4);
++err_pllx4_clk:
++	clk_put(clk_info->clk_pll);
 +err_pll_clk:
 +	clk_put(clk_info->clk_module);
 +err_module_clk:
@@ -2428,10 +2425,10 @@ index 000000000000..111111111111
 +
 +	clk_disable_unprepare(clk_info->clk_module);
 +	clk_put(clk_info->clk_module);
++	clk_disable_unprepare(clk_info->clk_pllx4);
++	clk_put(clk_info->clk_pllx4);
 +	clk_disable_unprepare(clk_info->clk_pll);
 +	clk_put(clk_info->clk_pll);
-+	//clk_disable_unprepare(clk_info->clk_pllx4);
-+	//clk_put(clk_info->clk_pllx4);
 +	clk_disable_unprepare(clk_info->clk_bus);
 +	clk_put(clk_info->clk_bus);
 +	reset_control_assert(clk_info->clk_rst);
