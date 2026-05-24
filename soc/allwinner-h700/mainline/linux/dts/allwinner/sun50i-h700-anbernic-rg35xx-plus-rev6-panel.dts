@@ -13,3 +13,16 @@
 &panel {
 	compatible = "anbernic,rg35xx-plus-rev6-panel", "panel-mipi-dpi-spi";
 };
+
+/* Enable HDMI audio via Allwinner AHUB → dw-hdmi-i2s-audio. */
+&ahub_dam_plat {
+	status = "okay";
+};
+
+&ahub1_plat {
+	status = "okay";
+};
+
+&ahub1_mach {
+	status = "okay";
+};
