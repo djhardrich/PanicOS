@@ -90,7 +90,10 @@ index 111111111111..222222222222 100644
 +			reg        = <0x05097000 0x1000>;
 +			resets     = <&ccu RST_BUS_AUDIO_HUB>;
 +			clocks     = <&ccu CLK_AUDIO_CODEC_1X>,
-+				     <&ccu CLK_AUDIO_CODEC_4X>,
++				     <&ccu 20>, /* pll-audio-4x (idx 20 in ccu-sun50i-h616.h) —
++				      * audio-hub's MUX parents are {pll-audio-1x/2x/4x/hs};
++				      * CLK_AUDIO_CODEC_4X (audio-codec-4x) is NOT in that list
++				      * so clk_set_parent(audio-hub, audio-codec-4x) always fails. */
 +				     <&ccu CLK_AUDIO_HUB>,
 +				     <&ccu CLK_BUS_AUDIO_HUB>;
 +                        clock-names =   "clk_pll_audio",
