@@ -32,6 +32,8 @@ Environment=SDL_AUDIODRIVER=pipewire
 # sway 1.11 has no sd_notify, so Type=simple on the sway unit means systemd
 # marks it "active" the instant the process forks — before the socket exists.
 ExecStartPre=/bin/sh -c 'i=0; while [ $i -lt 100 ]; do [ -S "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ] && exit 0; sleep 0.1; i=$((i+1)); done; echo "panicos-es: timed out waiting for wayland socket" >&2; exit 1'
+# Apply saved HDMI resolution (es.resolution) via swaymsg before ES initialises.
+ExecStartPre=-/usr/bin/batocera-resolution apply
 ExecStart=/usr/bin/emulationstation
 StandardInput=null
 StandardOutput=journal

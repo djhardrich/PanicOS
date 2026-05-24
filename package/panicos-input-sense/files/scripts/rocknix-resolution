@@ -1,0 +1,16 @@
+#!/bin/bash
+# rocknix-resolution: gate script checked by ES isScriptingSupported(RESOLUTION)
+# Also serves listOutputs for rocknix-config
+
+export SWAYSOCK=/var/run/0-runtime-dir/sway-ipc.0.sock
+
+case "$1" in
+  listOutputs)
+    swaymsg -t get_outputs 2>/dev/null | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for o in data:
+    print(o['name'])
+" 2>/dev/null
+    ;;
+esac

@@ -1,0 +1,74 @@
+#!/bin/bash
+# batocera-resolution: list and apply display modes via Sway (Wayland/KMS)
+# Interface: batocera-resolution [--screen <output>] listModes
+#            batocera-resolution apply   (reads es.resolution from system.cfg)
+
+. /etc/profile.d/001-functions
+
+export SWAYSOCK=/var/run/0-runtime-dir/sway-ipc.0.sock
+
+SCREEN=""
+CMD=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --screen) SCREEN="$2"; shift 2 ;;
+    *)        CMD="$1";    shift   ;;
+  esac
+done
+
+sway_outputs_json() {
+  swaymsg -t get_outputs 2>/dev/null
+}
+
+# Returns the first connected HDMI/DP output name, or empty
+hdmi_output() {
+  sway_outputs_json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for o in data:
+    if any(k in o['name'] for k in ('HDMI', 'DP', 'DisplayPort')):
+        print(o['name'])
+        sys.exit(0)
+" 2>/dev/null
+}
+
+list_modes() {
+  local output="$1"
+  sway_outputs_json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+seen = set()
+for o in data:
+    if o['name'] != '$output':
+        continue
+    for m in o.get('modes', []):
+        w, h, r = m['width'], m['height'], int(m['refresh'] / 1000)
+        key = f'{w}x{h}@{r}'
+        if key not in seen:
+            seen.add(key)
+            print(f'{key}:{w}x{h} @ {r}Hz')
+" 2>/dev/null
+}
+
+case "$CMD" in
+  listModes)
+    if [[ -n "$SCREEN" ]]; then
+      list_modes "$SCREEN"
+    else
+      out=$(hdmi_output)
+      [[ -n "$out" ]] && list_modes "$out"
+    fi
+    ;;
+
+  apply)
+    MODE=$(get_setting es.resolution)
+    [[ -z "$MODE" || "$MODE" == "auto" ]] && exit 0
+    out=$(hdmi_output)
+    [[ -z "$out" ]] && exit 0
+    # MODE format: WxH@R  e.g. 1920x1080@60
+    W=$(echo "$MODE" | cut -dx -f1)
+    H=$(echo "$MODE" | cut -d@ -f1 | cut -dx -f2)
+    R=$(echo "$MODE" | cut -d@ -f2)
+    swaymsg "output $out resolution ${W}x${H} refresh $R" 2>/dev/null
+    ;;
+esac

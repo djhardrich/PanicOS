@@ -1,0 +1,65 @@
+#!/bin/bash
+# set-audio: PipeWire/WirePlumber audio output selector for EmulationStation
+# Interface: set-audio list | get | set '<node.name>' | list-profiles | get-profile | set-profile '<p>'
+
+. /etc/profile.d/001-functions
+
+pw_sinks() {
+  pw-dump 2>/dev/null | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for obj in data:
+    info = obj.get('info', {})
+    props = info.get('props', {})
+    if props.get('media.class') == 'Audio/Sink':
+        print(str(obj['id']) + '|' + props.get('node.name', '') + '|' + props.get('node.description', ''))
+"
+}
+
+pw_default_sink_name() {
+  pw-dump 2>/dev/null | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for obj in data:
+    if 'Metadata' not in obj.get('type', ''):
+        continue
+    for meta in obj.get('info', {}).get('metadata', []):
+        if meta.get('key') == 'default.audio.sink':
+            print(meta.get('value', {}).get('name', ''))
+            sys.exit(0)
+"
+}
+
+case "$1" in
+  list)
+    pw_sinks | while IFS='|' read -r id name desc; do
+      printf '%s\t%s\n' "$name" "$desc"
+    done
+    ;;
+  get)
+    stored=$(get_setting audio.device)
+    if [[ -n "$stored" && "$stored" != "auto" ]]; then
+      echo "$stored"
+    else
+      pw_default_sink_name
+    fi
+    ;;
+  set)
+    # ES calls: set-audio set 'node.name' (single-quoted in shell expansion)
+    device="${2//\'/}"
+    set_setting audio.device "$device"
+    if [[ -n "$device" && "$device" != "auto" ]]; then
+      node_id=$(pw_sinks | awk -F'|' -v n="$device" '$2 == n {print $1; exit}')
+      [[ -n "$node_id" ]] && wpctl set-default "$node_id"
+    fi
+    ;;
+  list-profiles)
+    # PipeWire has no profile concept at this level
+    ;;
+  get-profile)
+    echo "default"
+    ;;
+  set-profile)
+    # no-op
+    ;;
+esac
