@@ -1,6 +1,6 @@
 [Unit]
 Description=Volume button service
-After=headphones.service
+After=headphones.service panicos-bt-wakeup.service
 Before=rocknix.target
 StartLimitIntervalSec=0
 
