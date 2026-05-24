@@ -1,0 +1,35 @@
+From: PanicOS <panicos@localhost>
+Date: Sat, 24 May 2026 00:00:00 +0000
+Subject: [PATCH] GuiMenu: add LID SLEEP MODE option to fake-suspend section
+
+Expose system.lid.sleep.mode in the SUSPEND settings panel for
+fake-suspend devices (H700 and other non-hardware-suspend platforms).
+Options: FAKE SUSPEND (full software suspend) and DISPLAY OFF ONLY
+(zero backlight only, no CPU/audio/input effects). rocknix-fake-suspend
+reads this setting to decide which action to take on lid close.
+
+---
+ es-app/src/guis/GuiMenu.cpp | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+--- a/es-app/src/guis/GuiMenu.cpp
++++ b/es-app/src/guis/GuiMenu.cpp
+@@ -2140,6 +2140,20 @@ void GuiMenu::openSystemSettings_batocera()
+ 	optionsSuspendDpms->setOnChangedCallback([optionsSuspendDpms] {
+ 		bool suspendDpmsState = optionsSuspendDpms->getState();
+ 		SystemConf::getInstance()->set("system.suspend.dpms", suspendDpmsState ? "1" : "0");
+ 	});
++
++	// Lid close sleep mode
++	auto optionsLidSleepMode = std::make_shared<OptionListComponent<std::string>>(mWindow, _("LID SLEEP MODE"), false);
++	std::string selectedLidSleepMode = SystemConf::getInstance()->get("system.lid.sleep.mode");
++	if (selectedLidSleepMode.empty())
++		selectedLidSleepMode = "fake";
++	optionsLidSleepMode->add(_("FAKE SUSPEND"), "fake", selectedLidSleepMode == "fake");
++	optionsLidSleepMode->add(_("DISPLAY OFF ONLY"), "displayoff", selectedLidSleepMode == "displayoff");
++	s->addWithLabel(_("LID SLEEP MODE"), optionsLidSleepMode);
++	s->addSaveFunc([optionsLidSleepMode, selectedLidSleepMode] {
++		if (optionsLidSleepMode->changed())
++			SystemConf::getInstance()->set("system.lid.sleep.mode", optionsLidSleepMode->getSelected());
++	});
+ #endif
