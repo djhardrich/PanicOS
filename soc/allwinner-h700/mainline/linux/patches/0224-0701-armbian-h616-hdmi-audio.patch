@@ -481,12 +481,25 @@ index 000000000000..111111111111
 +       clk_info = &ahub_info->clk_info;
 +
 +       if (freq_in > 24576000) {
++               /* freq_in = pll_fs × base_rate (98304000 for 48kHz, 90316800 for 44.1kHz).
++                * Both are exact SDM entries in pll-audio-hs — set the PLL directly.
++                * clk_set_rate(clk_pll) goes through audio-codec-1x CLK_SET_RATE_PARENT
++                * which picks M≈7 from the current 688 MHz PLL rate and then asks the
++                * PLL for an unachievable 688×7 MHz, leaving it at 688 MHz.
++                * clk_set_rate(clk_module, 0) then switches audio-hub's MUX back to
++                * pll-audio-1x (CLK fw minimises rate), undoing the parent set.
++                * Fix: program clk_pllx4 (= pll-audio-hs) directly, then set
++                * audio-hub = freq_in so its div=1 matches BCLKDIV computed by hw_params. */
++               if (clk_set_rate(clk_info->clk_pllx4, freq_in)) {
++                       SND_LOG_ERR(HLOG, "freq : %u pllx4 clk unsupport\n", freq_in);
++                       return -EINVAL;
++               }
 +               if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
 +                       SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
 +                       return -EINVAL;
 +               }
-+               if (clk_set_rate(clk_info->clk_pll, freq_in)) {
-+                       SND_LOG_ERR(HLOG, "freq : %u pllx4 clk unsupport\n", freq_in);
++               if (clk_set_rate(clk_info->clk_module, freq_in)) {
++                       SND_LOG_ERR(HLOG, "freq : %u module clk unsupport\n", freq_in);
 +                       return -EINVAL;
 +               }
 +       } else {
@@ -498,10 +511,12 @@ index 000000000000..111111111111
 +                       SND_LOG_ERR(HLOG, "freq : %u pll clk unsupport\n", freq_in);
 +                       return -EINVAL;
 +               }
-+       }
-+       if (clk_set_rate(clk_info->clk_module, freq_out / 2)) {
-+               SND_LOG_ERR(HLOG, "freq : %u module clk unsupport\n", freq_out);
-+               return -EINVAL;
++               if (freq_out > 0) {
++                       if (clk_set_rate(clk_info->clk_module, freq_out / 2)) {
++                               SND_LOG_ERR(HLOG, "freq : %u module clk unsupport\n", freq_out);
++                               return -EINVAL;
++                       }
++               }
 +       }
 +
 +       ahub_info->pllclk_freq = freq_in;
