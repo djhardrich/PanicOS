@@ -453,45 +453,39 @@ context.properties = {
 
 ---
 
-## Fix 9 — USB audio devices don't enumerate (USB-C always in peripheral mode)
+## Fix 9 — USB audio devices don't enumerate (USB-C port stays in peripheral mode)
 
-**Affects:** Any USB audio interface or USB-C headphones connected to the
-USB-C port. Symptom: device never appears in `aplay -l` or as a PipeWire
-sink; `lsusb` shows only root hubs; `dmesg` is silent on plug.
+**Affects:** Any USB audio interface, USB-C headphones, or USB storage
+connected to the USB-C port. Symptom: device never appears in `aplay -l`
+or as a PipeWire sink; `lsusb` shows only root hubs; `dmesg` is silent on
+plug.
 
-**Root cause:** The `sun4i-usb-phy` OTG driver on H616/H700 shares `phy0`
-between the MUSB controller (peripheral) and the EHCI host controller.
-Routing is determined by the ID pin GPIO (`usb0_id_det-gpios`):
+**Root cause:** The `sun4i-usb-phy` OTG driver shares `phy0` between the
+MUSB peripheral controller and the EHCI host controller. Routing is set by
+the ID detection GPIO (`usb0_id_det-gpios`, PI4):
 
-- GPIO HIGH → peripheral mode (phy0 → MUSB, VBUS off, EHCI disabled)
-- GPIO LOW  → host mode (phy0 → EHCI, VBUS on)
+- PI4 HIGH → peripheral mode (phy0 → MUSB, VBUS off, EHCI disabled)
+- PI4 LOW  → host mode (phy0 → EHCI, VBUS on)
 
-The RG35XX Pro's USB-C port does **not** have a traditional Micro-USB ID pin.
-Role switching is handled by the AXP717 PMIC's CC controller — but the AXP717
-USB-C role-switch functionality is **not yet described by the DTS binding**
-(see comment in upstream DTS). As a result, the ID GPIO (PI4) never goes LOW,
-the OTG scan always sees `id_det = 1`, and the port permanently stays in
-peripheral mode. USB audio interfaces, USB-C headphones, USB storage, and
-gamepads connected to the USB-C port all fail to enumerate.
+The original `dr_mode = "peripheral"` DTS keeps phy0 in peripheral mode
+permanently, so nothing ever enumerates.
 
-The logic in `sun4i_usb_phy0_get_id_det()`:
-
-```c
-case USB_DR_MODE_OTG:
-    if (data->id_det_gpio)
-        return gpiod_get_value_cansleep(data->id_det_gpio);  /* always 1 */
-    else
-        return 1; /* Fallback to peripheral mode */
-case USB_DR_MODE_HOST:
-    return 0;  /* ← always host, always routes phy0 to EHCI */
-```
-
-**Fix:** Change `dr_mode = "otg"` to `dr_mode = "host"` in the board DTS
-and remove the now-unused `usb0_id_det-gpios`. Keep `usb0_vbus-supply` so
-the PI16 GPIO regulator enables VBUS unconditionally on boot.
+**Fix:** Change `dr_mode = "peripheral"` to `dr_mode = "otg"` and add the
+AXP717 role-switch GPIO (`usb0_id_det-gpios = <&pio 8 4 (GPIO_ACTIVE_LOW |
+GPIO_PULL_UP)>`). This matches ROCKNIX's configuration exactly. The AXP717
+PMIC has built-in USB-C CC detection: when a USB device's Rd pull-down is
+detected on the CC pin, the AXP717 drives PI4 LOW in hardware, the kernel
+detects `id_det = 0`, switches phy0 to EHCI, enables VBUS via the PI16
+regulator, and the device enumerates.
 
 ```dts
-/* WRONG — AXP717 CC not in DTS binding, PI4 never fires, always peripheral */
+/* WRONG — permanent peripheral mode, nothing enumerates */
+&usbotg {
+    dr_mode = "peripheral";
+    status = "okay";
+};
+
+/* CORRECT — OTG; AXP717 drives PI4 LOW on device connect */
 &usbotg {
     dr_mode = "otg";
     status = "okay";
@@ -502,31 +496,19 @@ the PI16 GPIO regulator enables VBUS unconditionally on boot.
     usb0_vbus-supply = <&reg_usb0_vbus>;
     status = "okay";
 };
-
-/* CORRECT — phy0 always routes to EHCI, VBUS always on */
-&usbotg {
-    dr_mode = "host";
-    status = "okay";
-};
-&usbphy {
-    usb0_vbus_power-supply = <&usb_power>;
-    usb0_vbus-supply = <&reg_usb0_vbus>;
-    status = "okay";
-};
 ```
 
-After the fix: `usb0-vbus` regulator shows `enabled` at boot, MUSB reports
-`a_idle` (host idle), and any USB device plugged into the USB-C port
-enumerates immediately on the EHCI bus (`Bus 001`).
+**Why not `dr_mode = "host"`?** Always-host keeps VBUS on but the AXP717
+CC Rp pull-ups are not active, so strict USB-C to USB-C devices (those that
+require CC negotiation before powering up) fail to enumerate. OTG mode lets
+the AXP717 handle CC negotiation properly and works for both USB-A OTG
+adapters and USB-C direct connections.
 
 **Patch:** `soc/allwinner-h700/mainline/linux/patches/0216-0152-rg35xx-2024-enable-usb-otg.patch`
 
-**Important for anyone applying our audio patches:** Fixes 1–8 add AHUB
-DTS nodes, which cause PipeWire to negotiate S32_LE with the internal codec
-and push USB audio to attempt enumeration. If you apply our audio patches
-without this USB host fix, USB audio devices will silently fail to appear —
-not because of a missing driver (`snd-usb-audio` is built-in) but because
-phy0 is stuck in peripheral mode and the EHCI host never receives power.
+**Important for anyone applying our audio patches:** Without this fix, USB
+audio devices silently fail to appear — not because of a missing driver
+(`snd-usb-audio` is built-in) but because phy0 is stuck in peripheral mode.
 
 ---
 
@@ -560,12 +542,31 @@ required for HDMI audio to play at the correct pitch/speed.
 
 | # | What | How |
 |---|------|-----|
-| 9 | USB devices never enumerate (peripheral mode) | Change `dr_mode = "otg"` → `"host"` in board DTS; remove `usb0_id_det-gpios`; keep `usb0_vbus-supply` |
+| 9 | USB devices never enumerate (peripheral mode) | Change `dr_mode = "peripheral"` → `"otg"` in board DTS; add `usb0_id_det-gpios = PI4 ACTIVE_LOW PULL_UP`; keep `usb0_vbus_power-supply` and `usb0_vbus-supply` |
 
 **Warning:** If you apply Fixes 1–8 without Fix 9, USB audio devices will
 appear to be missing a driver but the real cause is phy0 permanently stuck
 in peripheral mode. Fix 9 is a DTS-only change — no kernel rebuild needed,
 just recompile the DTB and update `dtb.img` on the boot partition.
+
+**Do not use `dr_mode = "host"`** — it breaks USB-C to USB-C connections
+because the AXP717 CC Rp pull-ups are not active, so strict USB-C devices
+(those that need CC negotiation before powering up) fail to enumerate.
+
+### Internal speaker (UCM fix)
+
+| # | What | How |
+|---|------|-----|
+| 10 | Speaker silent at boot, works after headphone cycle | Add `cset "name='Line Out Playback Switch' on"` to UCM `FixedBootSequence` in `h616-audio-codec.conf` |
+
+**Root cause:** The H616 codec's `Line Out Playback Switch` hardware gate
+defaults to off. Without it, the Speaker DAPM widget is never activated and
+the PA GPIO (PI5) stays LOW regardless of what PipeWire does. The headphone
+insertion/removal cycle worked because `snd_soc_jack_report()` forces a
+DAPM sync that cascades to activate the Speaker widget — but only after
+PI5 is already gated low by the missing Line Out switch.
+
+**UCM file:** `soc/allwinner-h700/mainline/rootfs-overlay/usr/share/alsa/ucm2/conf.d/sun4i-codec/h616-audio-codec.conf`
 
 ---
 
@@ -573,13 +574,17 @@ just recompile the DTB and update `dtb.img` on the boot partition.
 
 ```
 soc/allwinner-h700/mainline/linux/patches/
-  0216-0152-rg35xx-2024-enable-usb-otg.patch             # Fix 9 (USB always-host)
+  0216-0152-rg35xx-2024-enable-usb-otg.patch             # Fix 9 (USB OTG mode)
   0221-fix-h616-pll-audio-hs-sdm-table-vco-rates.patch  # Fix 6 (SDM table VCO rates)
   0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import)
   0225-0702-h616-digital-audio-node.patch                # Fix 1 (companion)
   0226-sunxi_v2-ahub-hdmi-routing-fix.patch              # Fix 2 (AHUB routing)
   0227-dw-hdmi-force-hdmi-mode-on-audio-enable.patch     # Fix 3 (DVI mode)
   0228-sun4i-codec-h616-bclk-mclk-ratio.patch            # Fix 7 (internal codec half-speed)
+
+soc/allwinner-h700/mainline/rootfs-overlay/
+  usr/share/alsa/ucm2/conf.d/sun4i-codec/
+    h616-audio-codec.conf                               # Fix 10 (speaker Line Out switch)
 
 flavors/launcher/rootfs-overlay/
   etc/pipewire/pipewire.conf.d/50-panicos-rates.conf    # Fix 8 (44.1 kHz passthrough)
