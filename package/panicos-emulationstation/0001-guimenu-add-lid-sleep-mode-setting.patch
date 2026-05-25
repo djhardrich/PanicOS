@@ -1,16 +1,26 @@
 From: PanicOS <panicos@localhost>
 Date: Sat, 24 May 2026 00:00:00 +0000
-Subject: [PATCH] GuiMenu: add LID SLEEP MODE option to fake-suspend section
+Subject: [PATCH] GuiMenu: add SUSPEND/LID CLOSE MODE; separate AUDIO group
 
-Expose system.lid.sleep.mode in the SUSPEND settings panel for
-fake-suspend devices (H700 and other non-hardware-suspend platforms).
-Options: FAKE SUSPEND (full software suspend) and DISPLAY OFF ONLY
-(zero backlight only, no CPU/audio/input effects). rocknix-fake-suspend
-reads this setting to decide which action to take on lid close.
+Three changes to openSystemSettings_batocera():
+
+1. Add SUSPEND/LID CLOSE MODE option to the fake-suspend section.
+   Expose system.lid.sleep.mode so the user can choose between FAKE
+   SUSPEND (full software suspend) and DISPLAY OFF ONLY (backlight off
+   only, no CPU/audio/input effects). rocknix-fake-suspend reads this
+   setting on lid close. Save unconditionally (no changed() guard) to
+   avoid the bug where OptionListComponent::changed() returns false and
+   the user's selection is silently discarded.
+
+2. Rename label "LID SLEEP MODE" → "SUSPEND/LID CLOSE MODE" to better
+   describe both the lid-close and manual suspend use cases.
+
+3. Add an AUDIO group header before the AUDIO OUTPUT / AUDIO PROFILE
+   block so it is visually separated from the SUSPEND section.
 
 ---
- es-app/src/guis/GuiMenu.cpp | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ es-app/src/guis/GuiMenu.cpp | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 --- a/es-app/src/guis/GuiMenu.cpp
 +++ b/es-app/src/guis/GuiMenu.cpp
@@ -20,16 +30,26 @@ reads this setting to decide which action to take on lid close.
  		SystemConf::getInstance()->set("system.suspend.dpms", suspendDpmsState ? "1" : "0");
  	});
 +
-+	// Lid close sleep mode
-+	auto optionsLidSleepMode = std::make_shared<OptionListComponent<std::string>>(mWindow, _("LID SLEEP MODE"), false);
++	// Lid close / suspend mode
++	auto optionsLidSleepMode = std::make_shared<OptionListComponent<std::string>>(mWindow, _("SUSPEND/LID CLOSE MODE"), false);
 +	std::string selectedLidSleepMode = SystemConf::getInstance()->get("system.lid.sleep.mode");
 +	if (selectedLidSleepMode.empty())
 +		selectedLidSleepMode = "fake";
 +	optionsLidSleepMode->add(_("FAKE SUSPEND"), "fake", selectedLidSleepMode == "fake");
 +	optionsLidSleepMode->add(_("DISPLAY OFF ONLY"), "displayoff", selectedLidSleepMode == "displayoff");
-+	s->addWithLabel(_("LID SLEEP MODE"), optionsLidSleepMode);
-+	s->addSaveFunc([optionsLidSleepMode, selectedLidSleepMode] {
-+		if (optionsLidSleepMode->changed())
-+			SystemConf::getInstance()->set("system.lid.sleep.mode", optionsLidSleepMode->getSelected());
++	s->addWithLabel(_("SUSPEND/LID CLOSE MODE"), optionsLidSleepMode);
++	s->addSaveFunc([optionsLidSleepMode] {
++		SystemConf::getInstance()->set("system.lid.sleep.mode", optionsLidSleepMode->getSelected());
 +	});
  #endif
+
+ #ifdef BATOCERA
+@@ -2184,6 +2198,8 @@ void GuiMenu::openSystemSettings_batocera()
+ 	}
+ #endif
+
++	s->addGroup(_("AUDIO"));
++
+ 	if (ApiSystem::getInstance()->isScriptingSupported(ApiSystem::AUDIODEVICE))
+ 	{
+ 		std::vector<std::string> availableAudio = ApiSystem::getInstance()->getAvailableAudioOutputDevices();

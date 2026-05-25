@@ -1,12 +1,14 @@
-# H616/H700 HDMI Audio Fixes (Allwinner RG35XX Pro)
+# H616/H700 Audio Fixes (Allwinner RG35XX Pro)
 
 **Platform:** Allwinner H616/H700 (sun50i-h616 family)  
 **Kernel:** mainline 7.0.x with Armbian sunxi-7.0 audio patches  
 **Display bridge:** Synopsys dw-hdmi (sun8i variant)  
-**Audio path:** app → ALSA → AHUB DMA → I2S TDM1 → dw-hdmi frame composer → HDMI stream  
+**HDMI audio path:** app → ALSA → AHUB DMA → I2S TDM1 → dw-hdmi frame composer → HDMI stream  
+**Internal codec path:** app → ALSA → sun4i-codec DMA → H616 internal I2S → DAC → speaker/headphone  
 **Symptoms fixed:** HDMI audio completely silent, no HDMI ALSA card, hotplug
 routing not switching away from handheld speakers, Rescan-HDMI-Audio
-blanking the display.
+blanking the display, internal speaker/headphone audio playing at half speed,
+44.1 kHz content playing at wrong pitch.
 
 ---
 
@@ -348,7 +350,189 @@ the right pitch has this problem.
 
 ---
 
-## Summary — Checklist for H616/H700 HDMI Audio
+---
+
+## Fix 7 — Internal codec plays at half speed (H616 fixed BCLK/MCLK ratio)
+
+**Affects:** Speaker and 3.5 mm headphone output on all H616/H700 devices
+(RG35XX Pro, RG34XX SP, RG28XX, RG40XX, RGCubeXX, etc.). HDMI and USB-C
+audio are unaffected.
+
+**Root cause:** The H616 internal codec I2S interface generates BCLK at a
+hardware-fixed ratio of **MCLK/16**, and always uses **32-bit I2S slots**
+(64 BCLK pulses per LRCLK period) regardless of sample format. The legacy
+`sun4i_codec_get_mod_freq()` returns 24576000 Hz for any 48 kHz rate:
+
+```
+BCLK  = MCLK / 16 = 24576000 / 16 = 1536000 Hz
+LRCLK = BCLK / 64 = 1536000 / 64  = 24000 Hz   ← half of 48000 Hz
+```
+
+Both S16_LE and S32_LE are affected equally because the slot width is
+always 32 bits in hardware regardless of the logical sample width.
+
+The half-speed symptom appeared after AHUB DTS nodes were enabled, which
+caused PipeWire to negotiate S32_LE with the internal codec (exposing the
+latent mismatch). However the bug existed for S16_LE too — it was just
+never triggered because PipeWire defaulted to S16_LE before AHUB was
+present and the SDM table bug (Fix 6) masked the audio entirely.
+
+**Measured:** `hw_ptr` advanced ~24 120 frames/s (≈ 0.5×) for both S16_LE
+and S32_LE at 48 kHz before the fix; 48 000 frames/s after.
+
+**Fix:** Add `mclk_mult` to `struct sun4i_codec` and precompute it in
+`sun4i_codec_probe()` from the per-chip quirks:
+
+```c
+/* In struct sun4i_codec: */
+u32 mclk_mult;  /* MCLK = rate * mclk_mult; 0 → use get_mod_freq() */
+
+/* New quirk fields in struct sun4i_codec_quirks: */
+u8 fixed_bclk_div;   /* hardware BCLK = MCLK / fixed_bclk_div */
+u8 i2s_slot_width;   /* physical I2S slot width in bits (0 → use params_physical_width) */
+
+/* In sun4i_codec_probe(), after quirks = of_device_get_match_data(): */
+if (quirks->fixed_bclk_div) {
+    unsigned int sw = quirks->i2s_slot_width ?: 16;
+    scodec->mclk_mult = sw * 2 * quirks->fixed_bclk_div;
+}
+
+/* H616 quirks entry: */
+.fixed_bclk_div = 16,
+.i2s_slot_width = 32,
+/* → mclk_mult = 32 × 2 × 16 = 1024 */
+
+/* In sun4i_codec_hw_params(), replacing sun4i_codec_get_mod_freq(): */
+if (scodec->mclk_mult) {
+    clk_freq = (unsigned long)params_rate(params) * scodec->mclk_mult;
+} else {
+    clk_freq = sun4i_codec_get_mod_freq(params);
+    if (!clk_freq)
+        return -EINVAL;
+}
+```
+
+**MCLK values after fix:**
+
+| Rate   | MCLK = rate × 1024 | PLL parent         |
+|--------|--------------------|--------------------|
+| 48 kHz | 49 152 000 Hz      | pll-audio-2x       |
+| 44.1 kHz | 45 158 400 Hz   | pll-audio-2x (44.1)|
+
+Both are reachable from `audio-codec-1x`'s parent MUX via `CLK_SET_RATE_PARENT`.
+No change to behaviour for any chip that does not set `fixed_bclk_div`.
+
+**Patch:** `soc/allwinner-h700/mainline/linux/patches/0228-sun4i-codec-h616-bclk-mclk-ratio.patch`
+
+---
+
+## Fix 8 — 44.1 kHz content sounds slightly fast (PipeWire resampling to 48 kHz)
+
+**Symptoms:** 44.1 kHz audio files play at the correct speed overall (the
+half-speed bug is gone after Fix 7) but sound a subtle ~8.8% fast or pitch-shifted.
+
+**Root cause:** PipeWire's default `default.clock.allowed-rates = [ 48000 ]`
+means it resamples **all** content to 48 kHz before sending it to the ALSA
+device, regardless of the source sample rate. The kernel (after Fix 7) runs
+the hardware at 48 kHz with `MCLK = 49152000 Hz` — technically correct, but
+the SRC introduces the off-pitch perception.
+
+**Fix:** Add a PipeWire drop-in that enables 44.1 kHz as an allowed hardware
+rate. PipeWire then switches the hardware clock when the source is 44.1 kHz,
+avoiding SRC entirely. The kernel's `rate × 1024` MCLK formula handles both
+rates correctly (44100 × 1024 = 45158400 Hz, reachable on the 44.1 kHz PLL chain).
+
+```
+# /etc/pipewire/pipewire.conf.d/50-panicos-rates.conf
+context.properties = {
+    default.clock.allowed-rates = [ 44100 48000 ]
+}
+```
+
+**Overlay location:** `flavors/launcher/rootfs-overlay/etc/pipewire/pipewire.conf.d/50-panicos-rates.conf`
+
+---
+
+## Fix 9 — USB audio devices don't enumerate (USB-C always in peripheral mode)
+
+**Affects:** Any USB audio interface or USB-C headphones connected to the
+USB-C port. Symptom: device never appears in `aplay -l` or as a PipeWire
+sink; `lsusb` shows only root hubs; `dmesg` is silent on plug.
+
+**Root cause:** The `sun4i-usb-phy` OTG driver on H616/H700 shares `phy0`
+between the MUSB controller (peripheral) and the EHCI host controller.
+Routing is determined by the ID pin GPIO (`usb0_id_det-gpios`):
+
+- GPIO HIGH → peripheral mode (phy0 → MUSB, VBUS off, EHCI disabled)
+- GPIO LOW  → host mode (phy0 → EHCI, VBUS on)
+
+The RG35XX Pro's USB-C port does **not** have a traditional Micro-USB ID pin.
+Role switching is handled by the AXP717 PMIC's CC controller — but the AXP717
+USB-C role-switch functionality is **not yet described by the DTS binding**
+(see comment in upstream DTS). As a result, the ID GPIO (PI4) never goes LOW,
+the OTG scan always sees `id_det = 1`, and the port permanently stays in
+peripheral mode. USB audio interfaces, USB-C headphones, USB storage, and
+gamepads connected to the USB-C port all fail to enumerate.
+
+The logic in `sun4i_usb_phy0_get_id_det()`:
+
+```c
+case USB_DR_MODE_OTG:
+    if (data->id_det_gpio)
+        return gpiod_get_value_cansleep(data->id_det_gpio);  /* always 1 */
+    else
+        return 1; /* Fallback to peripheral mode */
+case USB_DR_MODE_HOST:
+    return 0;  /* ← always host, always routes phy0 to EHCI */
+```
+
+**Fix:** Change `dr_mode = "otg"` to `dr_mode = "host"` in the board DTS
+and remove the now-unused `usb0_id_det-gpios`. Keep `usb0_vbus-supply` so
+the PI16 GPIO regulator enables VBUS unconditionally on boot.
+
+```dts
+/* WRONG — AXP717 CC not in DTS binding, PI4 never fires, always peripheral */
+&usbotg {
+    dr_mode = "otg";
+    status = "okay";
+};
+&usbphy {
+    usb0_id_det-gpios = <&pio 8 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    usb0_vbus_power-supply = <&usb_power>;
+    usb0_vbus-supply = <&reg_usb0_vbus>;
+    status = "okay";
+};
+
+/* CORRECT — phy0 always routes to EHCI, VBUS always on */
+&usbotg {
+    dr_mode = "host";
+    status = "okay";
+};
+&usbphy {
+    usb0_vbus_power-supply = <&usb_power>;
+    usb0_vbus-supply = <&reg_usb0_vbus>;
+    status = "okay";
+};
+```
+
+After the fix: `usb0-vbus` regulator shows `enabled` at boot, MUSB reports
+`a_idle` (host idle), and any USB device plugged into the USB-C port
+enumerates immediately on the EHCI bus (`Bus 001`).
+
+**Patch:** `soc/allwinner-h700/mainline/linux/patches/0216-0152-rg35xx-2024-enable-usb-otg.patch`
+
+**Important for anyone applying our audio patches:** Fixes 1–8 add AHUB
+DTS nodes, which cause PipeWire to negotiate S32_LE with the internal codec
+and push USB audio to attempt enumeration. If you apply our audio patches
+without this USB host fix, USB audio devices will silently fail to appear —
+not because of a missing driver (`snd-usb-audio` is built-in) but because
+phy0 is stuck in peripheral mode and the EHCI host never receives power.
+
+---
+
+## Summary — Checklist for H616/H700 Audio
+
+### HDMI audio
 
 | # | What | How |
 |---|------|-----|
@@ -357,12 +541,31 @@ the right pitch has this problem.
 | 3 | dw-hdmi stuck in DVI mode | Patch `dw_hdmi_audio_enable()`: force `FC_INVIDCONF` HDMI mode bit unconditionally |
 | 4 | Hotplug chain never fires | Install udev rule for DRM events; replace `pgrep -x emulationstation` with `pidof` in hotplug scripts |
 | 5 | AHUB sink name not matched | Update `hdmi_sense` to match `ahub1_mach` (case-insensitive) in addition to `hdmi` |
-| 6 | Audio plays at ~80–85% speed | Fix `pll_audio_sdm_table` in `ccu-sun50i-h616.c`: use VCO rates (×2); fix `clk_pll_audio_4x` DTS to bind to index 20; fix `set_pll` to rate `pll-audio-4x` directly |
+| 6 | HDMI audio plays at ~80–85% speed | Fix `pll_audio_sdm_table` in `ccu-sun50i-h616.c`: use VCO rates (×2); fix `clk_pll_audio_4x` DTS to bind to index 20; fix `set_pll` to rate `pll-audio-4x` directly |
 
-Fixes 1–3 are kernel-level and required for any audio at all. Fix 4 is
+Fixes 1–3 are kernel-level and required for any HDMI audio at all. Fix 4 is
 required for automatic routing on cable connect/disconnect. Fix 5 is
 required for `hdmi_sense` to actually switch the default sink. Fix 6 is
-required for audio to play at the correct pitch/speed.
+required for HDMI audio to play at the correct pitch/speed.
+
+### Internal codec audio (speaker / 3.5 mm headphone)
+
+| # | What | How |
+|---|------|-----|
+| 6 | PLL doesn't lock (shared with HDMI) | Same SDM table fix as HDMI Fix 6 — required for both paths |
+| 7 | Internal audio plays at half speed | Add `fixed_bclk_div=16`, `i2s_slot_width=32` to `sun50i_h616_codec_quirks`; precompute `mclk_mult=1024` in probe; use `rate × mclk_mult` in `hw_params` |
+| 8 | 44.1 kHz content sounds fast | Add `/etc/pipewire/pipewire.conf.d/50-panicos-rates.conf` with `default.clock.allowed-rates = [ 44100 48000 ]` |
+
+### USB audio (USB-C port)
+
+| # | What | How |
+|---|------|-----|
+| 9 | USB devices never enumerate (peripheral mode) | Change `dr_mode = "otg"` → `"host"` in board DTS; remove `usb0_id_det-gpios`; keep `usb0_vbus-supply` |
+
+**Warning:** If you apply Fixes 1–8 without Fix 9, USB audio devices will
+appear to be missing a driver but the real cause is phy0 permanently stuck
+in peripheral mode. Fix 9 is a DTS-only change — no kernel rebuild needed,
+just recompile the DTB and update `dtb.img` on the boot partition.
 
 ---
 
@@ -370,9 +573,14 @@ required for audio to play at the correct pitch/speed.
 
 ```
 soc/allwinner-h700/mainline/linux/patches/
+  0216-0152-rg35xx-2024-enable-usb-otg.patch             # Fix 9 (USB always-host)
   0221-fix-h616-pll-audio-hs-sdm-table-vco-rates.patch  # Fix 6 (SDM table VCO rates)
   0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import)
   0225-0702-h616-digital-audio-node.patch                # Fix 1 (companion)
   0226-sunxi_v2-ahub-hdmi-routing-fix.patch              # Fix 2 (AHUB routing)
   0227-dw-hdmi-force-hdmi-mode-on-audio-enable.patch     # Fix 3 (DVI mode)
+  0228-sun4i-codec-h616-bclk-mclk-ratio.patch            # Fix 7 (internal codec half-speed)
+
+flavors/launcher/rootfs-overlay/
+  etc/pipewire/pipewire.conf.d/50-panicos-rates.conf    # Fix 8 (44.1 kHz passthrough)
 ```
