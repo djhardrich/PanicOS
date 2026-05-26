@@ -354,6 +354,32 @@ else
     warn "Set BOARD_OUTPUT=/path/to/output/<board> to include kernel headers"
 fi
 
+# ── Bluetooth firmware fix: RTL8821CS SDIO config blob ───────────────────────
+# Debian's firmware-realtek ships rtl8821cs_config.bin as a symlink to
+# rtl8761b_config.bin (wrong chip). The launcher's SOC overlay has the
+# correct 29-byte SDIO blob; install it explicitly. We also `cp -a` of the
+# buildroot firmware tree earlier writes THROUGH the bad symlink and
+# corrupts rtl8761b_config.bin, so restore that too if present.
+SOC_RTL_BLOB="$ROOT/soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/firmware/rtl_bt/rtl8821cs_config.bin"
+EXPECTED_MD5="37338e0b8861a20ce877c0a10cbaaae3"
+ACTUAL_MD5="$(md5sum "$SOC_RTL_BLOB" 2>/dev/null | cut -d' ' -f1)"
+[ "$ACTUAL_MD5" = "$EXPECTED_MD5" ] \
+    || error "SOC rtl8821cs_config.bin md5 mismatch: got $ACTUAL_MD5 expected $EXPECTED_MD5"
+
+RTL_FW_DIR="$ROOTFS/lib/firmware/rtl_bt"
+mkdir -p "$RTL_FW_DIR"
+rm -f "$RTL_FW_DIR/rtl8821cs_config.bin"
+install -m 0644 "$SOC_RTL_BLOB" "$RTL_FW_DIR/rtl8821cs_config.bin"
+info "Installed correct rtl8821cs_config.bin (29-byte SDIO blob)"
+
+# Restore rtl8761b_config.bin from Debian firmware-realtek if the earlier
+# cp -a wrote through the symlink and corrupted it. Re-install from .deb if
+# present; otherwise it stays whatever the buildroot firmware tree had.
+if dpkg-deb --version >/dev/null 2>&1; then
+    chroot_run apt-get install --reinstall -y firmware-realtek 2>&1 \
+        | grep -vE '^(Reading|Building|0 upgraded|After this)' || true
+fi
+
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
 # /boot and /storage are moved into the new root by the initramfs too.
