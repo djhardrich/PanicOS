@@ -163,6 +163,7 @@ def do_autopair():
     """Run one auto-pair session. Returns when discovery ends."""
     LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     lock_fd = os.open(str(LOCK_PATH), os.O_CREAT | os.O_RDWR, 0o600)
+    agent = None
     try:
         try:
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -198,7 +199,6 @@ def do_autopair():
             return
 
         # Register agent (idempotent: unregister first if it already exists)
-        agent = BTAgent(bus, AGENT_PATH)
         agent_mgr = dbus.Interface(
             bus.get_object(BLUEZ_SERVICE, "/org/bluez"),
             "org.bluez.AgentManager1")
@@ -206,6 +206,7 @@ def do_autopair():
             agent_mgr.UnregisterAgent(AGENT_PATH)
         except dbus.DBusException:
             pass
+        agent = BTAgent(bus, AGENT_PATH)
         agent_mgr.RegisterAgent(AGENT_PATH, "NoInputNoOutput")
         agent_mgr.RequestDefaultAgent(AGENT_PATH)
 
@@ -221,7 +222,7 @@ def do_autopair():
             result["matched"] = (path, dict(props))
             loop.quit()
 
-        bus.add_signal_receiver(
+        sig_match = bus.add_signal_receiver(
             on_interfaces_added,
             dbus_interface=OM_IFACE,
             signal_name="InterfacesAdded")
@@ -239,13 +240,17 @@ def do_autopair():
         try:
             adapter_iface.StartDiscovery()
         except dbus.DBusException as e:
-            notify("Pair failed", f"StartDiscovery: {e}", urgency="critical")
-            return
+            if e.get_dbus_name() == "org.bluez.Error.InProgress":
+                log.info("StartDiscovery: already scanning, continuing")
+            else:
+                notify("Pair failed", f"StartDiscovery: {e}", urgency="critical")
+                return
 
         timeout_source = GLib.timeout_add_seconds(
             DISCOVERY_WINDOW_SECONDS, lambda: (loop.quit() or False))
 
         loop.run()
+        sig_match.remove()
         GLib.source_remove(timeout_source)
 
         try:
@@ -288,6 +293,8 @@ def do_autopair():
 
         notify("Connected", str(name))
     finally:
+        if agent is not None:
+            agent.remove_from_connection()
         os.close(lock_fd)
 
 
@@ -320,7 +327,10 @@ def main():
         if line == "short":
             toggle_osk(osk_cmd, osk_name)
         elif line == "long":
-            do_autopair()
+            try:
+                do_autopair()
+            except Exception:
+                log.exception("auto-pair raised; staying alive")
         else:
             log.warning(f"ignoring unknown event {line!r}")
 
