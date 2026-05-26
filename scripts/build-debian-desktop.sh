@@ -195,7 +195,7 @@ cat > "$ROOTFS/etc/hosts" <<'EOF'
 EOF
 
 # User
-chroot_run useradd -m -s /bin/bash -G sudo,audio,video,input,render,netdev panicos
+chroot_run useradd -m -s /bin/bash -G sudo,audio,video,input,render,netdev,bluetooth panicos
 echo "panicos:panicos" | chroot_run chpasswd
 echo "root:panicos" | chroot_run chpasswd
 echo "panicos ALL=(ALL) NOPASSWD:ALL" > "$ROOTFS/etc/sudoers.d/panicos"
