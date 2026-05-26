@@ -16,8 +16,8 @@
 # code unconditionally `#include <pugixml/src/pugixml.hpp>` from that
 # path. Tarballs don't carry submodule contents, so the build fails with
 # "fatal error: pugixml/src/pugixml.hpp: No such file" without this.
-PANICOS_EMULATIONSTATION_VERSION = 5890d64a33d7eef1815e4740a484ffe3c1e3a813
-PANICOS_EMULATIONSTATION_SITE = https://github.com/ROCKNIX/emulationstation-next.git
+PANICOS_EMULATIONSTATION_VERSION = 4a6c9f2f2a8e030dec8c6e108236f79ad38072b9
+PANICOS_EMULATIONSTATION_SITE = https://github.com/djhardrich/emulationstation-next.git
 PANICOS_EMULATIONSTATION_SITE_METHOD = git
 PANICOS_EMULATIONSTATION_GIT_SUBMODULES = YES
 PANICOS_EMULATIONSTATION_LICENSE = MIT

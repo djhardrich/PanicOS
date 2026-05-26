@@ -79,6 +79,11 @@ onlinethreads() {
   set_online_threads ${1} ${2}
 }
 
+default() {
+  set_cpu_gov schedutil
+  set_dmc_gov ondemand
+}
+
 performance() {
   set_cpu_gov performance
   set_dmc_gov performance
