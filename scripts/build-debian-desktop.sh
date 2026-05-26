@@ -428,7 +428,12 @@ install -m 0755 "$ASSETS/services/panicos-output-init.sh" \
 mkdir -p "$ROOTFS/etc/xdg/kanshi"
 install -m 0644 "$ASSETS/configs/kanshi.conf" \
     "$ROOTFS/etc/xdg/kanshi/config"
-info "Installed multi-monitor handling (kanshi + panicos-output-init)"
+# Sway drop-in: mirrors wayfire.ini [autostart] so kanshi + output-init +
+# session-agent start under sway too (sway doesn't honour XDG autostart).
+mkdir -p "$ROOTFS/etc/sway/config.d"
+install -m 0644 "$ASSETS/configs/sway-50-panicos.conf" \
+    "$ROOTFS/etc/sway/config.d/50-panicos.conf"
+info "Installed multi-monitor handling (kanshi + panicos-output-init + sway drop-in)"
 
 # ── H616 audio: ALSA UCM + PipeWire/WirePlumber drop-ins ────────────────────
 # Without these, the h616-audio-codec boots muted (DAC Playback Switch=off)
