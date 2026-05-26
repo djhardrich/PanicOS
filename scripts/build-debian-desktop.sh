@@ -78,6 +78,10 @@ PACKAGES=(
     # LightDM greeter + X11 on-screen keyboard (alternative to SDDM/qtvkbd path)
     lightdm-gtk-greeter onboard
 
+    # Wayland output management — wlr-randr is the CLI equivalent of xrandr,
+    # kanshi is a hot-plug-aware declarative output profile manager.
+    wlr-randr kanshi
+
     # Audio (pipewire)
     pipewire pipewire-pulse wireplumber
 
@@ -417,6 +421,14 @@ install -m 0644 "$ASSETS/services/panicos-swapfile.service" \
     "$ROOTFS/usr/lib/systemd/system/panicos-swapfile.service"
 chroot_run systemctl enable panicos-swapfile.service
 info "Installed and enabled panicos-swapfile.service"
+
+# ── Multi-monitor / EDID-less output handling ────────────────────────────────
+install -m 0755 "$ASSETS/services/panicos-output-init.sh" \
+    "$ROOTFS/usr/local/lib/panicos/panicos-output-init.sh"
+mkdir -p "$ROOTFS/etc/xdg/kanshi"
+install -m 0644 "$ASSETS/configs/kanshi.conf" \
+    "$ROOTFS/etc/xdg/kanshi/config"
+info "Installed multi-monitor handling (kanshi + panicos-output-init)"
 
 # ── H616 audio: ALSA UCM + PipeWire/WirePlumber drop-ins ────────────────────
 # Without these, the h616-audio-codec boots muted (DAC Playback Switch=off)
