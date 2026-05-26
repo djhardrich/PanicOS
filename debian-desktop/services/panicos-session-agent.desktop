@@ -5,4 +5,3 @@ Comment=Handles Menu-button OSK toggle and Bluetooth auto-pair
 Exec=/usr/local/lib/panicos/panicos-session-agent.py
 NoDisplay=true
 X-GNOME-Autostart-enabled=true
-OnlyShowIn=GNOME;KDE;XFCE;LXDE;LXQt;MATE;Cinnamon;Wayfire;sway;

@@ -52,12 +52,33 @@ APPEARANCE_HID_MAX = 0x03C4
 # ── OSK helpers ─────────────────────────────────────────────────────────────
 
 def pick_osk_command():
-    """Return (cmd_list, basename) for the on-screen keyboard, or None."""
+    """Return (cmd_list, basename) for the on-screen keyboard, or None.
+
+    Candidates are ordered by session type: Wayland-native OSKs first when
+    XDG_SESSION_TYPE=wayland, X11 OSKs first otherwise. We always try the
+    other set as a fallback because XWayland and Xorg-on-Wayland mean an
+    X11 keyboard may work in a Wayland session and vice versa with the
+    right compositor support. shutil.which() is the only test; we trust
+    that an installed binary works in its declared session type.
+    """
     session_type = os.environ.get("XDG_SESSION_TYPE", "")
-    if session_type == "wayland" and shutil.which("wvkbd-mobintl"):
-        return (["wvkbd-mobintl", "-L", "160"], "wvkbd-mobintl")
-    if shutil.which("onboard"):
-        return (["onboard"], "onboard")
+    wayland_candidates = [
+        (["wvkbd-mobintl", "-L", "160"], "wvkbd-mobintl"),
+        (["svkbd-mobile-intl"],          "svkbd-mobile-intl"),
+    ]
+    x11_candidates = [
+        (["onboard"],                    "onboard"),
+        (["florence"],                   "florence"),
+        (["matchbox-keyboard"],          "matchbox-keyboard"),
+    ]
+    if session_type == "wayland":
+        candidates = wayland_candidates + x11_candidates
+    else:
+        candidates = x11_candidates + wayland_candidates
+    for cmd, name in candidates:
+        if shutil.which(cmd[0]):
+            log.info(f"OSK candidate selected: {name}")
+            return (cmd, name)
     log.warning("No supported OSK found; short-press will no-op")
     return None
 
