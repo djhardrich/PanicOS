@@ -12,9 +12,9 @@ Protocol:
 - Payloads: ASCII bytes, exactly one of b"short\n" or b"long\n"
 - Any other payload MUST be ignored by the agent.
 """
-import os, socket, tempfile, unittest
+import os, sys, socket, tempfile, unittest
 
-# Importable helper we are about to write
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import menu_socket
 
 
