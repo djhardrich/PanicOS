@@ -64,7 +64,7 @@ PACKAGES=(
     # network-manager-tui: nmtui was split from network-manager in NM 1.56
     # wpasupplicant: only a Recommends of NM, not pulled in by minbase — required for WiFi
     network-manager network-manager-tui network-manager-gnome wpasupplicant
-    bluetooth blueman
+    bluetooth blueman bluez-tools libspa-0.2-bluetooth
 
     # Notification daemon
     mako-notifier
