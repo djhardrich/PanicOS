@@ -402,6 +402,12 @@ cp "$ROOT/soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/systemd/system/pani
 chroot_run systemctl enable panicos-bt-wakeup.service
 info "Installed and enabled panicos-bt-wakeup.service"
 
+# ── 1GB swapfile on /storage (first-boot setup) ──────────────────────────────
+install -m 0644 "$ASSETS/services/panicos-swapfile.service" \
+    "$ROOTFS/usr/lib/systemd/system/panicos-swapfile.service"
+chroot_run systemctl enable panicos-swapfile.service
+info "Installed and enabled panicos-swapfile.service"
+
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
 # /boot and /storage are moved into the new root by the initramfs too.

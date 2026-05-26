@@ -1,0 +1,29 @@
+[Unit]
+Description=PanicOS 1GB swapfile on /storage (creates on first boot, then swapon)
+DefaultDependencies=no
+After=local-fs.target
+Before=swap.target
+RequiresMountsFor=/storage
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Create /storage/swapfile if missing or wrong size, then swapon.
+# ext4 supports fallocate for swap on modern kernels (>= 4.18-ish).
+# Idempotent: re-running just swapon's the existing file.
+ExecStart=/bin/sh -c '\
+    set -e; \
+    SWAP=/storage/swapfile; \
+    NEED_BYTES=$((1024*1024*1024)); \
+    if [ ! -f "$SWAP" ] || [ "$(stat -c %s "$SWAP")" -lt "$NEED_BYTES" ]; then \
+        echo "Creating 1GB swapfile at $SWAP"; \
+        rm -f "$SWAP"; \
+        fallocate -l 1G "$SWAP" || dd if=/dev/zero of="$SWAP" bs=1M count=1024; \
+        chmod 0600 "$SWAP"; \
+        mkswap "$SWAP"; \
+    fi; \
+    swapon "$SWAP" 2>/dev/null || true'
+ExecStop=/bin/sh -c 'swapoff /storage/swapfile 2>/dev/null || true'
+
+[Install]
+WantedBy=multi-user.target
