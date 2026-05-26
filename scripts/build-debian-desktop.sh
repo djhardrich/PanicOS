@@ -75,6 +75,9 @@ PACKAGES=(
     # SDDM greeter theme that renders InputMethod=qtvirtualkeyboard
     sddm-theme-debian-elarun
 
+    # LightDM greeter + X11 on-screen keyboard (alternative to SDDM/qtvkbd path)
+    lightdm-gtk-greeter onboard
+
     # Audio (pipewire)
     pipewire pipewire-pulse wireplumber
 
@@ -212,6 +215,10 @@ cp "$ASSETS/configs/sddm.conf" "$ROOTFS/etc/sddm.conf.d/panicos.conf"
 mkdir -p "$ROOTFS/usr/share/wayland-sessions"
 cp "$ASSETS/configs/wayfire.desktop" "$ROOTFS/usr/share/wayland-sessions/"
 
+# Make the default DM explicit (Debian's alternatives system can otherwise
+# flip it back to lightdm when both packages are installed).
+chroot_run sh -c 'echo /usr/bin/sddm > /etc/X11/default-display-manager'
+chroot_run dpkg-reconfigure -f noninteractive sddm 2>&1 | tail -3 || true
 chroot_run systemctl enable sddm
 
 # ── Wayfire + waybar config for panicos user ──────────────────────────────────
@@ -441,6 +448,15 @@ for f in \
     [ -f "$f" ] || error "missing after copy: $f"
 done
 info "Installed H616 audio configs (UCM + PipeWire + WirePlumber)"
+
+# ── LightDM greeter on-screen keyboard config ───────────────────────────────
+# Surface onboard at the greeter so username/password entry works without
+# a physical keyboard. Works alongside the SDDM qtvirtualkeyboard config —
+# whichever DM the user enables, OSK is available.
+mkdir -p "$ROOTFS/etc/lightdm"
+install -m 0644 "$ASSETS/configs/lightdm-gtk-greeter.conf" \
+    "$ROOTFS/etc/lightdm/lightdm-gtk-greeter.conf"
+info "Installed LightDM GTK greeter config (onboard --xid OSK)"
 
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
