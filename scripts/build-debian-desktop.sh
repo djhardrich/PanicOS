@@ -380,6 +380,16 @@ if dpkg-deb --version >/dev/null 2>&1; then
         | grep -vE '^(Reading|Building|0 upgraded|After this)' || true
 fi
 
+# ── Bluetooth UART re-probe workaround service ───────────────────────────────
+# With CONFIG_BT_LE=y the hci_uart serdev probe races the rfkill GPIO at boot
+# and silently defers, leaving /sys/class/bluetooth empty. This oneshot
+# reloads hci_uart after bluetooth.service if hci0 didn't appear. Same
+# workaround the launcher image uses.
+cp "$ROOT/soc/allwinner-h700/mainline/rootfs-overlay/usr/lib/systemd/system/panicos-bt-wakeup.service" \
+    "$ROOTFS/usr/lib/systemd/system/panicos-bt-wakeup.service"
+chroot_run systemctl enable panicos-bt-wakeup.service
+info "Installed and enabled panicos-bt-wakeup.service"
+
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
 # /boot and /storage are moved into the new root by the initramfs too.
