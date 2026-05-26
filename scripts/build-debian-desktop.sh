@@ -266,21 +266,33 @@ HandleLidSwitch=ignore
 HandleLidSwitchDocked=ignore
 EOF
 
-# ── Gamepad mouse daemon ──────────────────────────────────────────────────────
+# ── Gamepad mouse daemon + per-user session agent ────────────────────────────
 mkdir -p "$ROOTFS/usr/local/lib/panicos"
-cp "$ASSETS/services/gamepad-mouse.py" \
+install -m 0755 "$ASSETS/services/gamepad-mouse.py" \
     "$ROOTFS/usr/local/lib/panicos/gamepad-mouse.py"
-chmod +x "$ROOTFS/usr/local/lib/panicos/gamepad-mouse.py"
-cp "$ASSETS/services/gamepad-mouse.service" \
+install -m 0755 "$ASSETS/services/panicos-session-agent.py" \
+    "$ROOTFS/usr/local/lib/panicos/panicos-session-agent.py"
+install -m 0644 "$ASSETS/services/menu_socket.py" \
+    "$ROOTFS/usr/local/lib/panicos/menu_socket.py"
+
+# System service
+install -m 0644 "$ASSETS/services/gamepad-mouse.service" \
     "$ROOTFS/etc/systemd/system/gamepad-mouse.service"
 chroot_run systemctl enable gamepad-mouse
 
-# udev rule: tag the virtual mouse with seat+uaccess so logind assigns it to
-# the compositor's seat.  Without this, Wayfire never opens the uinput device.
+# XDG autostart for the user-session agent (any DE that honors the spec)
+mkdir -p "$ROOTFS/etc/xdg/autostart"
+install -m 0644 "$ASSETS/services/panicos-session-agent.desktop" \
+    "$ROOTFS/etc/xdg/autostart/panicos-session-agent.desktop"
+
+# python-dbus + python-gi for the session agent
+chroot_run apt-get install -y --no-install-recommends \
+    python3-dbus python3-gi 2>&1 | tail -5
+
+# udev rule: only the virtual mouse exists now (Gamepad Keys is gone).
 mkdir -p "$ROOTFS/etc/udev/rules.d"
 cat > "$ROOTFS/etc/udev/rules.d/99-panicos-uinput.rules" <<'UDEV'
 SUBSYSTEM=="input", ATTRS{name}=="PanicOS Gamepad Mouse", TAG+="seat", TAG+="uaccess"
-SUBSYSTEM=="input", ATTRS{name}=="PanicOS Gamepad Keys", TAG+="seat", TAG+="uaccess"
 UDEV
 
 # ── Kernel headers (for out-of-tree module building) ─────────────────────────
