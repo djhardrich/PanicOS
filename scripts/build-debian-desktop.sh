@@ -408,6 +408,37 @@ install -m 0644 "$ASSETS/services/panicos-swapfile.service" \
 chroot_run systemctl enable panicos-swapfile.service
 info "Installed and enabled panicos-swapfile.service"
 
+# ── H616 audio: ALSA UCM + PipeWire/WirePlumber drop-ins ────────────────────
+# Without these, the h616-audio-codec boots muted (DAC Playback Switch=off)
+# and PipeWire enumerates zero devices. Configs are the same ones the
+# launcher image uses (verified working on root@192.168.1.181 2026-05-26).
+SOC_OVERLAY="$ROOT/soc/allwinner-h700/mainline/rootfs-overlay"
+LAUNCHER_OVERLAY="$ROOT/flavors/launcher/rootfs-overlay"
+
+# ALSA UCM (ucm.conf + Allwinner/ + conf.d/sun4i-codec/)
+mkdir -p "$ROOTFS/usr/share/alsa"
+cp -a "$SOC_OVERLAY/usr/share/alsa/." "$ROOTFS/usr/share/alsa/"
+
+# WirePlumber 48kHz HDMI pinning
+mkdir -p "$ROOTFS/usr/share/wireplumber"
+cp -a "$SOC_OVERLAY/usr/share/wireplumber/." "$ROOTFS/usr/share/wireplumber/"
+
+# PipeWire 44.1+48 kHz allowed clock rates
+mkdir -p "$ROOTFS/etc/pipewire/pipewire.conf.d"
+install -m 0644 "$LAUNCHER_OVERLAY/etc/pipewire/pipewire.conf.d/50-panicos-rates.conf" \
+    "$ROOTFS/etc/pipewire/pipewire.conf.d/50-panicos-rates.conf"
+
+# Verify the four critical files landed
+for f in \
+    "$ROOTFS/usr/share/alsa/ucm2/ucm.conf" \
+    "$ROOTFS/usr/share/alsa/ucm2/conf.d/sun4i-codec/h616-audio-codec.conf" \
+    "$ROOTFS/usr/share/alsa/ucm2/Allwinner/sun4i-h616/HiFi.conf" \
+    "$ROOTFS/usr/share/wireplumber/wireplumber.conf.d/90-panicos-h700-alsa.conf" \
+    "$ROOTFS/etc/pipewire/pipewire.conf.d/50-panicos-rates.conf"; do
+    [ -f "$f" ] || error "missing after copy: $f"
+done
+info "Installed H616 audio configs (UCM + PipeWire + WirePlumber)"
+
 # ── fstab ─────────────────────────────────────────────────────────────────────
 # Root + overlayfs is handled by the PanicOS initramfs.
 # /boot and /storage are moved into the new root by the initramfs too.
