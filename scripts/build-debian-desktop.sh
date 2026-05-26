@@ -72,6 +72,9 @@ PACKAGES=(
     # Fonts
     fonts-dejavu-core fonts-liberation
 
+    # SDDM greeter theme that renders InputMethod=qtvirtualkeyboard
+    sddm-theme-debian-elarun
+
     # Audio (pipewire)
     pipewire pipewire-pulse wireplumber
 
