@@ -32,6 +32,7 @@ NETWORKMANAGER_LICENSE_FILES = COPYING
 
 NETWORKMANAGER_DEPENDENCIES = \
 	host-pkgconf \
+	host-libxslt \
 	dbus \
 	libglib2 \
 	libndp \

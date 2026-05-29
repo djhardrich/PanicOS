@@ -12,3 +12,33 @@ BR2_PACKAGE_LINUX_FIRMWARE=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX_BT=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_88XX_BT=y
 BR2_PACKAGE_LINUX_FIRMWARE_RTL_RTW88=y
+
+# PowerVR GE8300 userspace GPU driver blobs (vendor kernel only).
+# The pvrsrvkm.ko kernel module is pre-built into the 4.9.191 vendor kernel;
+# this package provides libEGL/libGLES/libVK_IMG + pvrsrvctl + firmware.
+BR2_PACKAGE_PANICOS_POWERVR_GE8300=y
+
+# SDL2 mali-fbdev patch — adds the PVR GE8300 EGL fbdev video driver to SDL2
+# so that EmulationStation and SDL2 games use GPU rendering instead of software.
+# The patch lives here; SDL2_AUTORECONF=YES and --enable-video-mali are injected
+# into sdl2.mk by the PanicOS Makefile (same mechanism as --enable-video-wayland).
+# gen-defconfig.sh merges this with the base $ROOT/patches into one value.
+BR2_GLOBAL_PATCH_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/vendor/patches"
+
+# A133 vendor uses PowerVR GE8300 (panicos-powervr-ge8300) as the EGL/GLES
+# provider. mesa3d would conflict — both claim the libegl virtual package.
+# The vendor 4.9 kernel also has no KMS/DRM support, so Wayland/wlroots/Sway
+# cannot function. Disable all three groups; the launcher flavor re-enables
+# them for mainline/H700 targets but they are wrong here.
+# BR2_PACKAGE_MESA3D is not set
+# BR2_PACKAGE_MESA3D_GBM is not set
+# BR2_PACKAGE_MESA3D_OPENGL_EGL is not set
+# BR2_PACKAGE_MESA3D_OPENGL_ES is not set
+# BR2_PACKAGE_MESA3D_LLVM is not set
+# BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_PANFROST is not set
+# BR2_PACKAGE_MESA3D_VULKAN_DRIVER_PANFROST is not set
+# BR2_PACKAGE_PANICOS_GL4ES is not set
+# BR2_PACKAGE_WAYLAND is not set
+# BR2_PACKAGE_WAYLAND_PROTOCOLS is not set
+# BR2_PACKAGE_SWAY is not set
+# BR2_PACKAGE_PANICOS_SWAY is not set

@@ -1,0 +1,15 @@
+config BR2_PACKAGE_PANICOS_RTL8852BS
+	bool "panicos-rtl8852bs"
+	depends on BR2_LINUX_KERNEL
+	help
+	  Build the out-of-tree Realtek RTL8852BS SDIO WiFi kernel module
+	  (rtl8852bs.ko) for the TrimUI Brick (Allwinner A133) mainline
+	  kernel. The AW859A chip (Allwinner part number for RTL8852BS) is
+	  connected via SDIO on sdc1.
+
+	  Only needed with the mainline kernel (KERNEL=mainline). With the
+	  vendor kernel (KERNEL=vendor), the SDIO WiFi driver is built into
+	  the 4.9.191 kernel blob and this module is not required.
+
+	  Firmware files (rtl8852b_fw.bin) are provided by linux-firmware
+	  selected via BR2_PACKAGE_LINUX_FIRMWARE_RTL_RTW88.

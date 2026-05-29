@@ -1,0 +1,325 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * Device tree for TrimUI Brick (TG3040) — Allwinner A133 Plus
+ *
+ * SoC:     Allwinner A133 Plus (sun50i-a100 family; rebinned A100)
+ * CPU:     4× Cortex-A53 @ up to 1.8 GHz
+ * GPU:     PowerVR GE8300 (Series 8XE) — no mainline driver; not described
+ * RAM:     1 GB LPDDR3
+ * Storage: microSD only (eMMC present but unused/disabled in vendor firmware)
+ * PMIC:    AXP2202 (x-powers) + TCS4838 (CPU VDD regulator)
+ * Display: MIPI DSI 3.2" IPS 1024×768, panel: OTM1289A, 4-lane
+ * WiFi/BT: AW859A (RTL8852BS) via SDIO on sdc1; BT on uart1
+ * USB:     USB-C (OTG, AXP2202 Type-C detection)
+ *
+ * Mainline bringup status (kernel 7.0):
+ *   EXPECTED:  UART console, SD card, USB OTG, simplefb, PMIC, LRADC keys
+ *   PARTIAL:   PMIC regulators (mapped from vendor DTB; not multimeter-verified)
+ *   MISSING:   GPU (PowerVR), WiFi driver (out-of-tree), audio codec, DSI panel
+ *
+ * Vendor DTB source: extracted from boot_package.fex at offset 0xe6000 (148689 B)
+ *   TCS4838 voltage regulator (s_twi, 0x41): dcdc0/dcdc1 supply CPU/SYS
+ *   AXP2202 (s_twi, 0x34): cldo3 → vmmc (SD/eMMC), cldo1 → vqmmc + audio cpvin
+ *   LCD: OTM1289A DSI, PWM0 backlight, BL-EN = PH18, RST = PD22
+ *   Speaker PA enable: PH6 (active-high)
+ *   SD card CD: PF6 (active-low, cd-used-24M in vendor)
+ */
+
+#include "sun50i-a100.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/linux-event-codes.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+	model = "TrimUI Brick (TG3040)";
+	compatible = "trimui,brick", "allwinner,sun50i-a133",
+		     "allwinner,sun50i-a100";
+
+	aliases {
+		serial0 = &uart0;
+		mmc0    = &mmc0;   /* microSD */
+		mmc1    = &mmc1;   /* SDIO / WiFi (AW859A) */
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x0 0x40000000 0x0 0x40000000>;
+	};
+
+	/*
+	 * Simple framebuffer inherited from vendor U-Boot display init.
+	 * Vendor U-Boot (in boot_package.fex) initialises the OTM1289A DSI
+	 * panel at 1024×768 and allocates a linear ARGB32 framebuffer.
+	 * Leave disabled — U-Boot passes a /framebuffer node via DT fixup,
+	 * or enable and hardcode the base address once confirmed from
+	 * /proc/iomem on a running vendor kernel.
+	 */
+	framebuffer: framebuffer@0 {
+		compatible = "simple-framebuffer";
+		/* reg = <0x0 0x???? 0x0 0x300000>; — 1024*768*4 = 3 MB */
+		width  = <1024>;
+		height = <768>;
+		stride = <4096>;	/* 1024 px * 4 B/px */
+		format = "a8r8g8b8";
+		status = "disabled";
+	};
+
+	/*
+	 * LRADC-based buttons (vendor: "allwinner,keyboard_1350mv", VREF=1350mV).
+	 * Register in vendor DTB: 0x05070800. Voltages extracted from vendor DTB.
+	 * Volume keys route through LRADC; all other buttons are on a GPIO matrix
+	 * (not yet traced from PCB).
+	 *
+	 * For mainline, add an lradc node in sun50i-a100.dtsi if not present,
+	 * using compatible "allwinner,sun50i-a100-lradc-keys" or the generic
+	 * "allwinner,sun4i-a10-lradc-keys" depending on driver match.
+	 * Voltage → key mapping from vendor DTB:
+	 *   ~646 mV  → KEY_VOLUMEDOWN
+	 *   ~750 mV  → KEY_ENTER
+	 *   ~880 mV  → KEY_HOME
+	 *   ~900 mV  → KEY_VOLUMEUP
+	 */
+
+	/* GPIO button matrix — TODO: trace PCB for D-pad / face buttons */
+};
+
+/* ── Serial console (UART0) ──────────────────────────────────────────────── */
+&uart0 {
+	pinctrl-0 = <&uart0_pb_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+/* ── microSD (mmc0, 4-bit) ───────────────────────────────────────────────── */
+&mmc0 {
+	pinctrl-0 = <&mmc0_pins>;
+	pinctrl-names = "default";
+	vmmc-supply   = <&reg_cldo3>;
+	vqmmc-supply  = <&reg_cldo1>;
+	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>;	/* PF6, from vendor DTB */
+	bus-width = <4>;
+	status = "okay";
+};
+
+/*
+ * eMMC (mmc2) — present on SoC but disabled in vendor firmware.
+ * The TrimUI Brick boots exclusively from microSD (mmcblk0).
+ * Vendor DTB has sdc2 status = "disabled". Leave disabled here too.
+ */
+&mmc2 {
+	bus-width = <8>;
+	status = "disabled";
+};
+
+/* ── SDIO / WiFi — AW859A (RTL8852BS) on sdc1 ───────────────────────────── */
+&mmc1 {
+	pinctrl-0 = <&mmc1_pins>;
+	pinctrl-names = "default";
+	vmmc-supply  = <&reg_bldo1>;
+	vqmmc-supply = <&reg_aldo3>;
+	bus-width = <4>;
+	cap-sdio-irq;
+	keep-power-in-suspend;
+	mmc-pwrseq = <&wifi_pwrseq>;
+	non-removable;
+	status = "okay";
+};
+
+/* ── USB OTG (USB-C port) ────────────────────────────────────────────────── */
+&usb_otg {
+	dr_mode = "otg";
+	status = "okay";
+};
+
+&usbphy {
+	/*
+	 * VBUS detect is via AXP2202 USB power supply (pmu_vbus_det_gpio in
+	 * vendor DTB: PH13). ID detection also via AXP2202 (pmu_acin_usbid_drv:
+	 * PH12). No separate id/vbus GPIOs needed in mainline — AXP2202 handles
+	 * it via its USB supply extcon.
+	 */
+	status = "okay";
+};
+
+/* ── AXP2202 PMIC (R_TWI / s_twi at 0x07081400, address 0x34) ───────────── */
+&r_i2c {
+	status = "okay";
+
+	/* TCS4838 CPU/SYS voltage regulator — always-on, managed by U-Boot */
+	tcs4838: regulator@41 {
+		compatible = "ti,tcs4838";
+		reg = <0x41>;
+	};
+
+	axp: pmic@34 {
+		compatible = "x-powers,axp2202";
+		reg = <0x34>;
+		interrupt-parent = <&nmi_intc>;
+		interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		x-powers,drive-vbus-en;
+		wakeup-source;
+
+		axp_adc: adc {
+			compatible = "x-powers,axp2202-adc";
+			#io-channel-cells = <1>;
+		};
+
+		axp_bat: battery-power-supply {
+			compatible = "x-powers,axp2202-battery-power-supply";
+		};
+
+		axp_ac: ac-power-supply {
+			compatible = "x-powers,axp2202-ac-power-supply";
+			input-current-limit-microamp = <2000000>;
+		};
+
+		axp_keys: input {
+			compatible = "x-powers,axp2202-pek";
+			interrupt-parent = <&axp>;
+			interrupts = <0>;
+		};
+
+		/*
+		 * Regulator constraints derived from vendor DTB.
+		 * always-on/boot-on flags preserved from vendor; voltages are
+		 * vendor defaults — verify with multimeter before relying on them.
+		 *
+		 * Rail assignments (best-guess from vendor DTS consumer props):
+		 *   dcdc1     → VDD-CPU (via TCS4838 on s_twi too)
+		 *   dcdc2     → VCC-SYS
+		 *   dcdc3     → VCC-IO (1.8 V I/O domain)
+		 *   aldo3     → VCC-WIFI-IO (1.8 V, wlan_io_regulator)
+		 *   aldo4     → AVCC (audio codec)
+		 *   bldo1     → VCC-WIFI (WiFi module power)
+		 *   bldo3     → (always-on, suspend-off — likely VCC-DSP)
+		 *   cldo1     → VCC-LCD / audio cpvin / SD vqmmc-1v8
+		 *   cldo3     → VCC-SD (vmmc for SD card and eMMC; boot-on)
+		 *   cldo4     → VCC-LCD2
+		 */
+		regulators {
+			reg_dcdc1: dcdc1 {
+				regulator-name = "vdd-cpu";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <1500000>;
+				regulator-ramp-delay = <250>;
+				regulator-always-on;
+			};
+
+			reg_dcdc2: dcdc2 {
+				regulator-name = "vcc-sys";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3400000>;
+				regulator-ramp-delay = <250>;
+				regulator-always-on;
+			};
+
+			reg_dcdc3: dcdc3 {
+				regulator-name = "vcc-io";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			reg_rtcldo: rtcldo {
+				regulator-name = "vcc-rtc";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			reg_aldo2: aldo2 {
+				regulator-name = "vcc-aldo2";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+				regulator-always-on;
+			};
+
+			reg_aldo3: aldo3 {
+				regulator-name = "vcc-wifi-io";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			reg_aldo4: aldo4 {
+				regulator-name = "vcc-avcc";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+				regulator-always-on;
+			};
+
+			reg_bldo1: bldo1 {
+				regulator-name = "vcc-wifi";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+			};
+
+			reg_bldo2: bldo2 {
+				regulator-name = "vcc-bldo2";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+				regulator-always-on;
+			};
+
+			reg_bldo3: bldo3 {
+				regulator-name = "vcc-dsp";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+				regulator-always-on;
+				regulator-off-in-suspend;
+			};
+
+			reg_cldo1: cldo1 {
+				regulator-name = "vcc-lcd";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+			};
+
+			reg_cldo3: cldo3 {
+				regulator-name = "vcc-sd";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+				regulator-enable-ramp-delay = <1000>;
+			};
+
+			reg_cldo4: cldo4 {
+				regulator-name = "vcc-lcd2";
+				regulator-min-microvolt = <500000>;
+				regulator-max-microvolt = <3500000>;
+			};
+		};
+	};
+};
+
+/*
+ * WiFi power sequencing.
+ * wlan_regon: PL5 (r_pio port L=11, pin 5) per vendor DTB.
+ * Adjust the gpio phandle to &r_pio and correct port/pin if sun50i-a100.dtsi
+ * names the R-domain GPIO controller differently.
+ */
+wifi_pwrseq: wifi-pwrseq {
+	compatible = "mmc-pwrseq-simple";
+	reset-gpios = <&r_pio 0 5 GPIO_ACTIVE_LOW>;	/* PL5 */
+	post-power-on-delay-ms = <200>;
+};
+
+/*
+ * Internal audio codec (Allwinner sun50i-a100 codec, same family as sun50i).
+ * Speaker PA enable: PH6 (gpio-spk from vendor DTB).
+ * AVCC supply: axp2202-aldo4 (avcc-supply in vendor DTB).
+ *
+ * The internal codec driver for A100/A133 is not yet upstreamed (as of 7.0).
+ * When it is, add:
+ *   &codec {
+ *       status = "okay";
+ *       allwinner,audio-routing = "Speaker", "LINEOUT";
+ *       allwinner,pa-gpios = <&pio 7 6 GPIO_ACTIVE_HIGH>;
+ *       avcc-supply = <&reg_aldo4>;
+ *   };
+ */

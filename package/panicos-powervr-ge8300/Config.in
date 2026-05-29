@@ -1,0 +1,23 @@
+config BR2_PACKAGE_PANICOS_POWERVR_GE8300
+	bool "panicos-powervr-ge8300"
+	depends on BR2_aarch64
+	select BR2_PACKAGE_HAS_LIBEGL
+	select BR2_PACKAGE_HAS_LIBGLES
+	help
+	  Install the PowerVR GE8300 userspace GPU driver blobs for the
+	  TrimUI Brick (Allwinner A133). Provides libEGL, libGLESv2,
+	  libGLESv1_CM, libVK_IMG, pvrsrvctl, and the GPU firmware blob.
+
+	  The kernel-side pvrsrvkm.ko driver is pre-built into the vendor
+	  4.9.191 kernel — this package is only useful with KERNEL=vendor.
+	  With the mainline kernel, pvrsrvkm.ko is absent and GPU init fails.
+
+if BR2_PACKAGE_PANICOS_POWERVR_GE8300
+
+config BR2_PACKAGE_PROVIDES_LIBEGL
+	default "panicos-powervr-ge8300"
+
+config BR2_PACKAGE_PROVIDES_LIBGLES
+	default "panicos-powervr-ge8300"
+
+endif

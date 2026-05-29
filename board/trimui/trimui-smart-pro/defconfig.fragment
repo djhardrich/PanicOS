@@ -1,0 +1,10 @@
+BR2_aarch64=y
+BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
+BR2_TARGET_GENERIC_HOSTNAME="panicos-trimui-smart-pro"
+BR2_TARGET_GENERIC_ISSUE="PanicOS — TrimUI Smart Pro"
+
+# No BR2_TARGET_UBOOT_BOARDNAME — bootloader blobs are pre-built.
+# No BR2_LINUX_KERNEL — kernel blob is pre-built (boot.img in prebuilt dir).
+
+BR2_ROOTFS_POST_IMAGE_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/vendor/post-image.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/vendor/genimage.cfg.in trimui-smart-pro"

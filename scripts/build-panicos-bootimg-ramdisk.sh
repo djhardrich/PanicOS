@@ -13,6 +13,7 @@
 # from SD card instead of the vendor's eMMC firmware.
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET_DIR="${1:?usage: $0 <target_dir> <init_script> <out.cpio.gz>}"
 INIT_SCRIPT="${2:?missing init script}"
 OUT="${3:?missing output path}"
@@ -94,11 +95,27 @@ echo ">>> ramdisk libs: $resolved"
 
 # Applets the init script (and a recovery shell) actually call.
 APPLETS_BIN="sh ash mount umount mkdir ls cat echo grep awk sleep head sed cp mv rm chmod"
-APPLETS_SBIN="losetup switch_root reboot poweroff"
+APPLETS_SBIN="losetup switch_root reboot poweroff watchdog"
 for a in $APPLETS_BIN; do ln -sf busybox "$STAGE/bin/$a"; done
 for a in $APPLETS_SBIN; do ln -sf ../bin/busybox "$STAGE/sbin/$a"; done
 
 install -m 0755 "$INIT_SCRIPT" "$STAGE/init"
+# Allwinner vendor env.img sets rdinit=/rdinit; kernel panics if /rdinit absent.
+ln -sf init "$STAGE/rdinit"
+
+# Multiboot menu helper — compile statically against the cross-toolchain.
+# The cross-cc lives in HOST_DIR (sibling of TARGET_DIR inside the output tree).
+HOST_DIR="$(dirname "$TARGET_DIR")/host"
+CC="$HOST_DIR/bin/aarch64-buildroot-linux-gnu-gcc"
+if [ -x "$CC" ]; then
+    echo ">>> Compiling panicos-mbselect (multiboot menu helper)"
+    "$CC" -static -O2 -Wall \
+        -o "$STAGE/sbin/panicos-mbselect" \
+        "$ROOT/panicos-initramfs/mbselect.c"
+    chmod 755 "$STAGE/sbin/panicos-mbselect"
+else
+    echo ">>> WARN: panicos-mbselect skipped (no cross-cc at $CC) — multiboot menu will not appear"
+fi
 
 # Pre-pend a tiny cpio with /dev/console + /dev/null device nodes. Without
 # these the kernel's console_on_rootfs() fails to set up /init's stdin/

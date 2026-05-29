@@ -308,3 +308,69 @@ imports:
         src: board/batocera/allwinner/a133/trimui-smart-pro/uInitrd
         src_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
         dest_sha256: 8436a3a5dea823a61d85c3b55d8c2c6d7b3d4bb480eb571e6744e8460d91bd75
+      # Partition blobs for PanicOS device builds (boot0, boot_package, boot, env).
+      # These are staged into prebuilt/<device>/partitions/ and used by genimage.
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-smart-pro/partitions/boot0.img
+        src: board/batocera/allwinner/a133/trimui-smart-pro/partitions/boot0.img
+        src_sha256: b2486495bec61e7711622da899a918efdce2ec14f1b36027b6d69d5328fb5143
+        dest_sha256: b2486495bec61e7711622da899a918efdce2ec14f1b36027b6d69d5328fb5143
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-smart-pro/partitions/boot.img
+        src: board/batocera/allwinner/a133/trimui-smart-pro/partitions/boot.img
+        src_sha256: e3b34618269209042ef473211f9e58c6a8d9af655683fef7063a680802b0fafd
+        dest_sha256: e3b34618269209042ef473211f9e58c6a8d9af655683fef7063a680802b0fafd
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-smart-pro/partitions/boot_package.fex
+        src: board/batocera/allwinner/a133/trimui-smart-pro/partitions/boot_package.fex
+        src_sha256: 43795aa418f3d0b51d268bdb742a25ca6e9a426077f691d5e5d00f31a9fd0ffd
+        dest_sha256: 43795aa418f3d0b51d268bdb742a25ca6e9a426077f691d5e5d00f31a9fd0ffd
+      - dest: soc/allwinner-a133/vendor/prebuilt/trimui-smart-pro/partitions/env.img
+        src: board/batocera/allwinner/a133/trimui-smart-pro/partitions/env.img
+        src_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+        dest_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+      - dest: soc/allwinner-a133/vendor/prebuilt/magicx-zero-28/partitions/boot0.img
+        src: board/batocera/allwinner/a133/magicx-zero-28/partitions/boot0.img
+        src_sha256: 21db35ac82564d2f29598d8a3bb5e6f728d58b4dc9d1512b2a97da54349e4e74
+        dest_sha256: 21db35ac82564d2f29598d8a3bb5e6f728d58b4dc9d1512b2a97da54349e4e74
+      - dest: soc/allwinner-a133/vendor/prebuilt/magicx-zero-28/partitions/boot.img
+        src: board/batocera/allwinner/a133/magicx-zero-28/partitions/boot.img
+        src_sha256: ea9f81541ea04cacf7f1df53ea04c582dbc012a9dc73b0b3c37fc3e388abcbce
+        dest_sha256: ea9f81541ea04cacf7f1df53ea04c582dbc012a9dc73b0b3c37fc3e388abcbce
+      - dest: soc/allwinner-a133/vendor/prebuilt/magicx-zero-28/partitions/boot_package.fex
+        src: board/batocera/allwinner/a133/magicx-zero-28/partitions/boot_package.fex
+        src_sha256: 9b62d6894def7e80e0c0b4b54bc2c9589271bb6faa41081c25f50a1210584008
+        dest_sha256: 9b62d6894def7e80e0c0b4b54bc2c9589271bb6faa41081c25f50a1210584008
+      - dest: soc/allwinner-a133/vendor/prebuilt/magicx-zero-28/partitions/env.img
+        src: board/batocera/allwinner/a133/magicx-zero-28/partitions/env.img
+        src_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+        dest_sha256: ecd875222fce2d3e7bd0964b2d37aba1bddcf98a4e8a76986b3d9d2847558169
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v20/partitions/boot0.img
+        src: board/batocera/allwinner/a133/powkiddy-v20/partitions/boot0.img
+        src_sha256: 638d5d75f9d348a4fbcadb901a2c102fd88148900c3d186acc7ae6d4095784c4
+        dest_sha256: 638d5d75f9d348a4fbcadb901a2c102fd88148900c3d186acc7ae6d4095784c4
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v20/partitions/boot.img
+        src: board/batocera/allwinner/a133/powkiddy-v20/partitions/boot.img
+        src_sha256: 592e95d440df3c19a84f63bbd01de2102dcda74d69f783765b9405871c25fc0f
+        dest_sha256: 592e95d440df3c19a84f63bbd01de2102dcda74d69f783765b9405871c25fc0f
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v20/partitions/boot_package.fex
+        src: board/batocera/allwinner/a133/powkiddy-v20/partitions/boot_package.fex
+        src_sha256: 9138e92d06a77a2844fb101ec2b2fa15ef11770a901b917ccafd82275b35114e
+        dest_sha256: 9138e92d06a77a2844fb101ec2b2fa15ef11770a901b917ccafd82275b35114e
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v20/partitions/env.img
+        src: board/batocera/allwinner/a133/powkiddy-v20/partitions/env.img
+        src_sha256: e53c8673bd5bde392310b6076eef08a3d06abe3941395fac8ab3351d8e648526
+        dest_sha256: e53c8673bd5bde392310b6076eef08a3d06abe3941395fac8ab3351d8e648526
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v90s/partitions/boot0.img
+        src: board/batocera/allwinner/a133/powkiddy-v90s/partitions/boot0.img
+        src_sha256: 638d5d75f9d348a4fbcadb901a2c102fd88148900c3d186acc7ae6d4095784c4
+        dest_sha256: 638d5d75f9d348a4fbcadb901a2c102fd88148900c3d186acc7ae6d4095784c4
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v90s/partitions/boot.img
+        src: board/batocera/allwinner/a133/powkiddy-v90s/partitions/boot.img
+        src_sha256: bbe414affec58d884b9497827ccb28d11f73f81ef8967ffd5c9c1714a0478653
+        dest_sha256: bbe414affec58d884b9497827ccb28d11f73f81ef8967ffd5c9c1714a0478653
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v90s/partitions/boot_package.fex
+        src: board/batocera/allwinner/a133/powkiddy-v90s/partitions/boot_package.fex
+        src_sha256: 9138e92d06a77a2844fb101ec2b2fa15ef11770a901b917ccafd82275b35114e
+        dest_sha256: 9138e92d06a77a2844fb101ec2b2fa15ef11770a901b917ccafd82275b35114e
+      - dest: soc/allwinner-a133/vendor/prebuilt/powkiddy-v90s/partitions/env.img
+        src: board/batocera/allwinner/a133/powkiddy-v90s/partitions/env.img
+        src_sha256: e53c8673bd5bde392310b6076eef08a3d06abe3941395fac8ab3351d8e648526
+        dest_sha256: e53c8673bd5bde392310b6076eef08a3d06abe3941395fac8ab3351d8e648526

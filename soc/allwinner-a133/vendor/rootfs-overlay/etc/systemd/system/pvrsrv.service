@@ -1,0 +1,17 @@
+[Unit]
+Description=PowerVR GE8300 GPU service (TrimUI Brick vendor kernel)
+After=local-fs.target
+Before=graphical.target
+
+[Service]
+Type=forking
+# Load the GPU kernel module first (ABI-locked to 4.9.191)
+ExecStartPre=/sbin/insmod /lib/modules/4.9.191/pvrsrvkm.ko 2>/dev/null || true
+# pvrsrvctl initialises the userspace daemon connection to pvrsrvkm
+ExecStart=/usr/bin/pvrsrvctl --start --up
+ExecStop=/usr/bin/pvrsrvctl --stop
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target

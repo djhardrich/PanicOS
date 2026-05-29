@@ -25,7 +25,8 @@ PANICOS_EMULATIONSTATION_LICENSE_FILES = LICENSE.md
 
 PANICOS_EMULATIONSTATION_DEPENDENCIES = \
 	sdl2 sdl2_mixer alsa-lib freetype panicos-libfreeimage libcurl openssl rapidjson \
-	boost vlc bash fping p7zip xmlstarlet mesa3d
+	boost vlc bash fping p7zip xmlstarlet \
+	$(if $(BR2_PACKAGE_MESA3D),mesa3d)
 
 # CMake options tracking ROCKNIX's package.mk verbatim except:
 #  * GL=0 (no desktop OpenGL on these handhelds)

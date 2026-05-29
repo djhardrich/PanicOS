@@ -1,0 +1,31 @@
+# panicos-extras — A133 mainline additions on top of linux.config.fragment.
+# Rendered to $O/panicos-extras.config.fragment by the Makefile, with
+# @PANICOS_INITRAMFS_PATH@ substituted to an absolute path.
+#
+# Mirrors soc/allwinner-h700/mainline/linux/panicos-extras.config.fragment.in
+# exactly — the initramfs embedding strategy is the same across SoCs.
+
+CONFIG_SQUASHFS=y
+CONFIG_SQUASHFS_XATTR=y
+CONFIG_SQUASHFS_ZLIB=y
+CONFIG_SQUASHFS_GZIP=y
+CONFIG_BLK_DEV_LOOP=y
+CONFIG_EXT4_FS=y
+CONFIG_VFAT_FS=y
+CONFIG_NLS_CODEPAGE_437=y
+CONFIG_NLS_ASCII=y
+CONFIG_NLS_ISO8859_1=y
+CONFIG_NLS_UTF8=y
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_INITRAMFS_SOURCE="@PANICOS_INITRAMFS_PATH@"
+CONFIG_INITRAMFS_COMPRESSION_GZIP=y
+
+# Don't bake external firmware blobs into the kernel image.
+CONFIG_EXTRA_FIRMWARE=""
+CONFIG_EXTRA_FIRMWARE_DIR=""
+
+# PREEMPT_RT: full real-time preemption (mainlined in 6.12).
+# CONFIG_PREEMPT is not set
+# CONFIG_PREEMPT_DYNAMIC is not set
+CONFIG_PREEMPT_RT=y

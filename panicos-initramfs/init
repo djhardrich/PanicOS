@@ -34,7 +34,11 @@ export PATH
 mkdir -p /proc /sys /dev /run /boot /storage-base /storage /sysroot
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
-mount -t devtmpfs devtmpfs /dev
+mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
+# Allwinner boot0 starts the hardware watchdog; kick it now or the device
+# reboots before init completes. Mirrors what Knulli's initramfs does.
+exec < /dev/console > /dev/console 2>&1 || true
+watchdog -t 15 /dev/watchdog0 2>/dev/null || true
 mount -t tmpfs tmpfs /run
 
 panic() {

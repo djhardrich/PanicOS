@@ -216,9 +216,10 @@ BR2_PACKAGE_PIPEWIRE_GSTREAMER=y
 # on-device audio diagnostics (play a WAV directly through PipeWire,
 # record to verify mic routing). Small (~200KB).
 BR2_PACKAGE_LIBSNDFILE=y
-# Lua needed by wireplumber's session-policy scripts.
+# Lua 5.3 — norns requires 5.3 specifically (incompatible with 5.4 API).
+# wireplumber supports both 5.3 and 5.4 so this is safe.
 BR2_PACKAGE_LUA=y
-BR2_PACKAGE_LUA_5_4=y
+BR2_PACKAGE_LUA_5_3=y
 BR2_PACKAGE_WIREPLUMBER=y                  # session manager (default)
 
 # Multimedia stack PortMaster + ports rely on at startup. PortMaster's
@@ -441,6 +442,32 @@ BR2_PACKAGE_LIBARCHIVE=y
 # path; both can coexist because ffmpeg4-compat installs to a separate
 # prefix — see its comment above.
 BR2_PACKAGE_FFMPEG=y
+
+# norns / matron IPC transport.
+BR2_PACKAGE_NANOMSG=y
+
+# norns core deps: OSC messaging, evdev input, Cairo 2D, ncurses TUI.
+BR2_PACKAGE_LIBLO=y
+BR2_PACKAGE_LIBEVDEV=y
+BR2_PACKAGE_CAIRO=y
+BR2_PACKAGE_NCURSES=y
+
+# Lua 5.3 modules for norns scripts.
+BR2_PACKAGE_LPEG=y                          # lua-lpeg
+BR2_PACKAGE_LUA_CJSON=y
+BR2_PACKAGE_LUASOCKET=y
+BR2_PACKAGE_LUAFILESYSTEM=y
+BR2_PACKAGE_LUAPOSIX=y
+BR2_PACKAGE_LUASEC=y                        # needs openssl (already present via python3-ssl)
+
+# Runtime utilities — script install, Maiden, port tools.
+BR2_PACKAGE_GIT=y
+BR2_PACKAGE_LIBCURL_CURL=y                  # curl CLI (libcurl already present)
+BR2_PACKAGE_WGET=y
+BR2_PACKAGE_RSYNC=y
+BR2_PACKAGE_SOX=y
+BR2_PACKAGE_JQ=y
+BR2_PACKAGE_BC=y
 
 # Rootfs overlay applied after all packages install. We use it to land
 # /usr/bin/sh -> bash (mirrors ROCKNIX): ES + vendored ROCKNIX scripts

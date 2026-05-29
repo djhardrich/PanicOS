@@ -149,3 +149,19 @@ if [ -n "$OVERLAY_PATHS" ]; then
     echo "# Merged BR2_ROOTFS_OVERLAY (across device/flavor/SoC fragments)" >> "$OUTPUT"
     echo "BR2_ROOTFS_OVERLAY=\"$OVERLAY_PATHS\"" >> "$OUTPUT"
 fi
+
+# Merge BR2_GLOBAL_PATCH_DIR values. Same problem as OVERLAY — the base
+# script line plus any SoC/device fragment lines must become one
+# space-separated value. Buildroot supports multiple dirs in this var.
+PATCH_PATHS=$(grep '^BR2_GLOBAL_PATCH_DIR=' "$OUTPUT" \
+    | sed -E 's/^BR2_GLOBAL_PATCH_DIR="(.*)"$/\1/' \
+    | tr ' ' '\n' \
+    | awk '!seen[$0]++' \
+    | tr '\n' ' ' \
+    | sed 's/[[:space:]]*$//')
+if [ -n "$PATCH_PATHS" ]; then
+    sed -i '/^BR2_GLOBAL_PATCH_DIR=/d' "$OUTPUT"
+    echo "" >> "$OUTPUT"
+    echo "# Merged BR2_GLOBAL_PATCH_DIR (base patches + SoC/device extras)" >> "$OUTPUT"
+    echo "BR2_GLOBAL_PATCH_DIR=\"$PATCH_PATHS\"" >> "$OUTPUT"
+fi

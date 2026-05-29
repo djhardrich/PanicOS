@@ -9,6 +9,10 @@ source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg353p/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rk3326-a/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rk3326-b/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-brick/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/trimui/trimui-smart-pro/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/magicx/magicx-zero-28/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/powkiddy/powkiddy-v20/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/board/powkiddy/powkiddy-v90s/Config.in"
 
 endchoice
 
@@ -21,3 +25,7 @@ config PANICOS_DEVICE_NAME
 	default "rk3326-a" if PANICOS_DEVICE_RK3326_A
 	default "rk3326-b" if PANICOS_DEVICE_RK3326_B
 	default "trimui-brick" if PANICOS_DEVICE_TRIMUI_BRICK
+	default "trimui-smart-pro" if PANICOS_DEVICE_TRIMUI_SMART_PRO
+	default "magicx-zero-28" if PANICOS_DEVICE_MAGICX_ZERO_28
+	default "powkiddy-v20" if PANICOS_DEVICE_POWKIDDY_V20
+	default "powkiddy-v90s" if PANICOS_DEVICE_POWKIDDY_V90S

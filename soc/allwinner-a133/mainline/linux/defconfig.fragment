@@ -1,0 +1,60 @@
+# Linux kernel — Allwinner A133 mainline flavor.
+# A133 = rebinned A100 (sun50i-a100 family); basic SoC support landed in 6.13.
+# Bootloader: vendor blobs unchanged (boot0 + boot_package.fex from Knulli import).
+# Kernel: built from kernel.org sources; loaded by vendor U-Boot via boot.scr
+#         from the boot VFAT (boot.scr loads /Image + /sun50i-a133-trimui-brick.dtb).
+# Boot: TrimUI Brick boots exclusively from microSD; eMMC is unused/disabled.
+#
+# What works on this kernel path (2026):
+#   UART console, SD card, USB OTG, simplefb display (via U-Boot handover), PMIC
+# Still missing:
+#   GPU (PowerVR GE8300 — no mainline/Mesa driver)
+#   WiFi (AW859A/RTL8852BS — out-of-tree driver needed)
+#   Audio codec (Allwinner internal codec, not yet upstreamed for A100/A133)
+#   GPIO buttons (PCB trace needed) + LRADC keys (driver exists, DT needed)
+
+# Use 6.12 vanilla headers for toolchain ABI so our 7.x kernel patches
+# don't get applied to linux-headers extraction. Same rationale as H700.
+# BR2_KERNEL_HEADERS_AS_KERNEL is not set
+BR2_KERNEL_HEADERS_6_12=y
+
+BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="7.0.2"
+
+# Out-of-tree patches applied before build (currently empty; add per-driver
+# patches here as A133 hardware support is progressively upstreamed).
+BR2_LINUX_KERNEL_PATCH="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/mainline/linux/patches"
+
+# Start from the arm64 arch defconfig, then overlay our fragment.
+BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/mainline/linux/linux.config.fragment $(O)/panicos-extras.config.fragment"
+
+# Build our DTS from the external tree; Buildroot copies allwinner/ subdir
+# into arch/arm64/boot/dts/ before compiling.
+BR2_LINUX_KERNEL_DTS_SUPPORT=y
+BR2_LINUX_KERNEL_CUSTOM_DTS_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/mainline/linux/dts"
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="allwinner/sun50i-a133-trimui-brick"
+
+# Plain Image (uncompressed) — vendor U-Boot may not support .gz decompression.
+# BR2_LINUX_KERNEL_GZIP is not set
+BR2_LINUX_KERNEL_IMAGE_TARGET_NAME="Image"
+
+# Rootfs overlay: reuse the vendor overlay — same /boot, /system, /storage
+# mountpoints + fstab regardless of kernel flavor.
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/soc/allwinner-a133/vendor/rootfs-overlay"
+
+# host-uboot-tools provides mkimage used in post-image.sh to generate boot.scr.
+BR2_PACKAGE_HOST_UBOOT_TOOLS=y
+
+# Firmware blobs: RTL WiFi/BT covers AW859A (RTL8852BS) companion chip.
+BR2_PACKAGE_LINUX_FIRMWARE=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX_BT=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_88XX_BT=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_RTW88=y
+
+# WiFi on mainline kernel: chip is likely XR829 (Xradio combo) based on
+# Knulli's fsoverlay containing xradio_*.ko for 4.9.191. No mainline driver
+# exists for XR829 — leave WiFi disabled on mainline until confirmed.
+# If the chip turns out to be RTL8852BS, enable panicos-rtl8852bs instead:
+# BR2_PACKAGE_PANICOS_RTL8852BS=y

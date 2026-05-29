@@ -1,0 +1,84 @@
+# Allwinner A133 vendor disk image — shared template for all 5 A133 devices.
+#
+# Partition layout (identical for trimui-brick, trimui-smart-pro,
+# magicx-zero-28, powkiddy-v20, powkiddy-v90s — all share the same BSP):
+#
+#   boot0.img        (in-partition-table=no) at offset 262144   (0x40000)
+#     Allwinner A133 eGON.BT0 BROM stage1. A133 BROM scans at this
+#     exact offset — wrong offset = BROM ignores boot0 = black screen.
+#     Confirmed from Knulli's genimage.cfg for all A133 devices.
+#   boot_package.fex (in-partition-table=no) at offset 16793600 (0x1004000)
+#     Allwinner TOC1: U-Boot + ATF + SCP + DTB, ~4.6MB.
+#   boot-fw          Android bootimg at offset 37748736 (0x2400000)
+#     vendor kernel + PanicOS ramdisk (repacked by post-image.sh).
+#     Loaded by: bootcmd → run setargs_nand boot_normal → sunxi_flash read 45000000 boot
+#   env / env-redund U-Boot environment, 128KB each.
+#   boot             VFAT, bootable — squashfs + PanicOS config files.
+#   storage          ext4 — writable user / game data.
+#
+# Note: VFAT contains only PanicOS files. Knulli's uImage/boot.scr are
+# not included — the vendor bootcmd never reaches the VFAT; it loads
+# boot.img from the boot-fw partition directly.
+
+image boot.vfat {
+	vfat {
+		extraargs = "-F 32 -n BATOCERA"
+		files = {
+			"panicos-active.cfg",
+			"panicos-wifi.cfg",
+			"${PANICOS_OUTPUT_NAME}.squashfs",
+		}
+	}
+	size = ${PANICOS_BOOT_PARTITION_SIZE_MB}M
+}
+
+image storage.ext4 {
+	ext4 {
+		label = "storage"
+	}
+	size = ${PANICOS_STORAGE_PARTITION_INITIAL_SIZE_MB}M
+}
+
+image ${PANICOS_OUTPUT_NAME}.img {
+	hdimage {
+		partition-table-type = "gpt"
+		align = "1M"
+		gpt-location = 81920
+	}
+
+	partition bootloader {
+		in-partition-table = "no"
+		image = "partitions/boot0.img"
+		offset = 262144
+	}
+
+	partition boot-package {
+		in-partition-table = "no"
+		image = "partitions/boot_package.fex"
+		offset = 16793600
+	}
+
+	partition boot-fw {
+		image = "partitions/boot.img"
+		offset = 37748736
+	}
+
+	partition env {
+		image = "partitions/env.img"
+	}
+
+	partition env-redund {
+		image = "partitions/env.img"
+	}
+
+	partition boot {
+		partition-type-uuid = "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
+		bootable = "true"
+		image = "boot.vfat"
+	}
+
+	partition storage {
+		partition-type-uuid = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
+		image = "storage.ext4"
+	}
+}

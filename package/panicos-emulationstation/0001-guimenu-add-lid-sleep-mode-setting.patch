@@ -19,13 +19,12 @@ Three changes to openSystemSettings_batocera():
    block so it is visually separated from the SUSPEND section.
 
 ---
- es-app/src/guis/GuiMenu.cpp | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ es-app/src/guis/GuiMenu.cpp | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 --- a/es-app/src/guis/GuiMenu.cpp
 +++ b/es-app/src/guis/GuiMenu.cpp
-@@ -2140,6 +2140,20 @@ void GuiMenu::openSystemSettings_batocera()
- 	optionsSuspendDpms->setOnChangedCallback([optionsSuspendDpms] {
+@@ -2141,6 +2141,18 @@ void GuiMenu::openSystemSettings_batocera()
  		bool suspendDpmsState = optionsSuspendDpms->getState();
  		SystemConf::getInstance()->set("system.suspend.dpms", suspendDpmsState ? "1" : "0");
  	});
@@ -44,7 +43,7 @@ Three changes to openSystemSettings_batocera():
  #endif
 
  #ifdef BATOCERA
-@@ -2184,6 +2198,8 @@ void GuiMenu::openSystemSettings_batocera()
+@@ -2183,6 +2195,8 @@ void GuiMenu::openSystemSettings_batocera()
  	}
  #endif
 

@@ -1,0 +1,7 @@
+config PANICOS_DEVICE_MAGICX_ZERO_28
+	bool "magicx/zero-28 (Allwinner A133)"
+	select PANICOS_SOC_ALLWINNER_A133
+	help
+	  MagicX Zero 28 — Allwinner A133 (quad-core Cortex-A53).
+	  All kernel and bootloader components are pre-built blobs from the
+	  vendor BSP. Build mode: blob-staging (no kernel/U-Boot compile).

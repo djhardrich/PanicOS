@@ -1,0 +1,9 @@
+config PANICOS_DEVICE_POWKIDDY_V90S
+	bool "powkiddy/v90s (Allwinner A133)"
+	select PANICOS_SOC_ALLWINNER_A133
+	help
+	  Powkiddy V90s — Allwinner A133 (quad-core Cortex-A53).
+	  All kernel and bootloader components are pre-built blobs from the
+	  vendor BSP. Build mode: blob-staging (no kernel/U-Boot compile).
+	  Note: V90s ships a different kernel binary than V20 despite sharing
+	  the same SoC and partition layout.

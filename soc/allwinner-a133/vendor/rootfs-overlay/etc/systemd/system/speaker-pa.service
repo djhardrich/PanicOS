@@ -1,0 +1,29 @@
+[Unit]
+Description=TrimUI Brick speaker PA enable (PH6)
+After=sound.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# PH6 = gpiochip0 line 7*8+6 = 62 (port H = bank 7, pin 6).
+# Allwinner PIO bank numbering: A=0,B=1,C=2,D=3,E=4,F=5,G=6,H=7
+# So PH6 = bank 7, pin 6 → global GPIO number 7*32+6 = 230 (legacy sysfs).
+# Use gpioset (libgpiod) if available, else fall back to sysfs export.
+ExecStart=/bin/sh -c '\
+  if command -v gpioset >/dev/null 2>&1; then \
+    gpioset --mode=signal gpiochip0 230=1; \
+  else \
+    echo 230 > /sys/class/gpio/export 2>/dev/null || true; \
+    echo out > /sys/class/gpio/gpio230/direction; \
+    echo 1   > /sys/class/gpio/gpio230/value; \
+  fi'
+ExecStop=/bin/sh -c '\
+  if command -v gpioset >/dev/null 2>&1; then \
+    gpioset gpiochip0 230=0; \
+  else \
+    echo 0 > /sys/class/gpio/gpio230/value 2>/dev/null || true; \
+  fi'
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: glesv2
+Description: PowerVR GE8300 OpenGL ES 2.0 implementation (fbdev)
+Version: 2.0
+Libs: -L${libdir} -lGLESv2 -lGLESv1_CM
+Cflags: -I${includedir}

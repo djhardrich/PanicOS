@@ -152,7 +152,23 @@ rk3326-b:
 
 .PHONY: trimui-brick
 trimui-brick:
-	$(MAKE) _build DEVICE=trimui-brick FLAVOR=$(FLAVOR) KERNEL=vendor
+	$(MAKE) _build DEVICE=trimui-brick FLAVOR=$(FLAVOR) KERNEL=$(if $(KERNEL),$(KERNEL),vendor)
+
+.PHONY: trimui-smart-pro
+trimui-smart-pro:
+	$(MAKE) _build DEVICE=trimui-smart-pro FLAVOR=$(FLAVOR) KERNEL=$(if $(KERNEL),$(KERNEL),vendor)
+
+.PHONY: magicx-zero-28
+magicx-zero-28:
+	$(MAKE) _build DEVICE=magicx-zero-28 FLAVOR=$(FLAVOR) KERNEL=$(if $(KERNEL),$(KERNEL),vendor)
+
+.PHONY: powkiddy-v20
+powkiddy-v20:
+	$(MAKE) _build DEVICE=powkiddy-v20 FLAVOR=$(FLAVOR) KERNEL=$(if $(KERNEL),$(KERNEL),vendor)
+
+.PHONY: powkiddy-v90s
+powkiddy-v90s:
+	$(MAKE) _build DEVICE=powkiddy-v90s FLAVOR=$(FLAVOR) KERNEL=$(if $(KERNEL),$(KERNEL),vendor)
 
 .PHONY: _build
 _build:
@@ -186,6 +202,15 @@ _build:
 	@# falls back to SDL2's built-in lower-quality version.
 	@grep -q '^SDL2_DEPENDENCIES += libsamplerate' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
 		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_DEPENDENCIES += libsamplerate' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@# mali-fbdev driver for PowerVR GE8300 (A133 vendor kernel). We patch
+	@# configure.ac (not the generated configure), so Buildroot must re-run
+	@# autoconf after applying BR2_GLOBAL_PATCH_DIR patches. SDL2_AUTORECONF=YES
+	@# triggers that. --enable-video-mali then picks up the new CheckMaliVideo()
+	@# function. Both guards are idempotent.
+	@grep -q '^SDL2_AUTORECONF' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_AUTORECONF = YES' "$(BUILDROOT)/package/sdl2/sdl2.mk"
+	@grep -q 'enable-video-mali' "$(BUILDROOT)/package/sdl2/sdl2.mk" || \
+		sed -i '/^\$$(eval \$$(autotools-package))/i SDL2_CONF_OPTS += --enable-video-mali' "$(BUILDROOT)/package/sdl2/sdl2.mk"
 	@# SDL2's autoconf detects WAYLAND_SCANNER via pkg-config, but ends up
 	@# baking in the build-host's /usr/bin/wayland-scanner path (which
 	@# doesn't exist on most build hosts). Force it to use the host-wayland
@@ -263,6 +288,15 @@ _build:
 	@#   have a substantially different configure (autoconf bumped). The
 	@#   underlying issue (host XOPEN_SOURCE detection) doesn't bite us
 	@#   on a 2025-vintage Ubuntu/Debian build host.
+	@# host-tar's gnulib stdbool detection intermittently produces a config.h
+	@# with HAVE_STDBOOL_H undefined on recent gcc, even though stdbool.h is
+	@# present. The gl_STDBOOL check at configure:43903 (bool b = true == false
+	@# at global scope without stdbool.h) fails on C11 compilers, and gnulib
+	@# leaves HAVE_STDBOOL_H undef. gnulib's stdbool guard then fires with
+	@# "#error stdbool.h does not exist". Post-configure hook forces it.
+	@grep -q 'HOST_TAR_STDBOOL_FIX' "$(BUILDROOT)/package/tar/tar.mk" || \
+		sed -i '/^\$$(eval \$$(host-autotools-package))/i define HOST_TAR_STDBOOL_FIX\n\tsed -i '"'"'s|/\\* #undef HAVE_STDBOOL_H \\*/|#define HAVE_STDBOOL_H 1|'"'"' $$(@D)/config.h\nendef\nHOST_TAR_POST_CONFIGURE_HOOKS += HOST_TAR_STDBOOL_FIX\n' \
+		"$(BUILDROOT)/package/tar/tar.mk"
 	@# Buildroot host-python3.14 is built without the _ssl extension (Python
 	@# 3.14's OpenSSL detection regressed vs the host's libssl-dev). Samba4's
 	@# waf does `import ssl` at configure time and hard-fails without it.
