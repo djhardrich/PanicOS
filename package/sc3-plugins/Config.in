@@ -1,0 +1,12 @@
+config BR2_PACKAGE_SC3_PLUGINS
+	bool "sc3-plugins"
+	depends on BR2_PACKAGE_SUPERCOLLIDER
+	help
+	  Official SuperCollider UGen plugin collection (sc3-plugins).
+	  Builds against the supercollider package source tree so plugin
+	  ABI always matches the installed scsynth.
+
+	  Installs .so files to /usr/lib/SuperCollider/plugins/ where
+	  scsynth discovers them automatically at startup.
+
+	  https://github.com/supercollider/sc3-plugins

@@ -1,0 +1,5 @@
+# Plugin source trees are populated by scripts/vendor-sc-community-plugins.sh
+# and are not tracked in git (they can be large and are re-cloned on demand).
+*
+!.gitignore
+!.gitkeep

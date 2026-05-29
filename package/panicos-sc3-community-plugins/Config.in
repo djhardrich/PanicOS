@@ -1,0 +1,17 @@
+config BR2_PACKAGE_PANICOS_SC3_COMMUNITY_PLUGINS
+	bool "panicos-sc3-community-plugins"
+	depends on BR2_PACKAGE_SUPERCOLLIDER
+	help
+	  Community SuperCollider UGen plugin collections for norns.
+	  Builds from source against the supercollider package source tree
+	  (-DSC_PATH) so plugin ABI always matches the installed scsynth.
+
+	  Plugins included:
+	    PortedPlugins, f0plugins, XPlayBuf, NasalDemons, PulsePTR,
+	    TrianglePTR, CDSkip, mi-UGens, SuperBuf, IBufWr
+
+	  Installs .so files to /usr/share/SuperCollider/Extensions/<name>/
+	  (sclang extension path, discovered at sclang startup).
+
+	  Requires: run scripts/vendor-sc-community-plugins.sh first to
+	  populate vendor/sc-community-plugins/ with the plugin sources.

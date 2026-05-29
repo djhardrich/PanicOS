@@ -32,5 +32,8 @@ source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-gl4es/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-libglu/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-powervr-ge8300/Config.in"
 source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-rtl8852bs/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/supercollider/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/sc3-plugins/Config.in"
+source "$BR2_EXTERNAL_PANICOS_PATH/package/panicos-sc3-community-plugins/Config.in"
 
 endmenu
