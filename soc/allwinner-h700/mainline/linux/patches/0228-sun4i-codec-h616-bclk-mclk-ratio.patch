@@ -1,60 +1,22 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: PanicOS <panicos@localhost>
-Date: Sun, 25 May 2026 00:00:00 +0000
 Subject: sun4i-codec: fix H616 internal codec half-speed audio
 
-The H616 internal codec I2S interface has two hardware-fixed behaviours
-that the generic sun4i_codec_get_mod_freq() path does not account for:
+H616 internal codec I2S generates BCLK at a fixed MCLK/16 ratio and always
+uses 32-bit slots regardless of sample format, so the generic
+sun4i_codec_get_mod_freq() path clocks LRCLK at half the target rate.
+Add fixed_bclk_div/i2s_slot_width quirks, precompute mclk_mult = sw*2*div
+(= 1024 for H616), and use MCLK = rate * mclk_mult in hw_params.
 
-  1. BCLK is generated at MCLK/16 (fixed ratio, not auto-adapting like
-     H3/A33).
-  2. The I2S interface always uses 32-bit slots regardless of the
-     logical sample format (S16_LE or S32_LE).  params_physical_width()
-     returns 16 for S16_LE, but the hardware clocks 64 BCLK pulses per
-     LRCLK period in both cases.
-
-With MCLK = 24576000 Hz (what get_mod_freq returns for 48 kHz):
-
-  BCLK  = 24576000 / 16        = 1 536 000 Hz
-  LRCLK = 1 536 000 / 64       =    24 000 Hz  ← half of target 48 kHz
-
-This produces audio that plays at exactly half speed with the wrong
-pitch, for both S16_LE and S32_LE.  The symptom appeared once AHUB DTS
-nodes were enabled (PipeWire then negotiated S32_LE with the codec),
-but both formats were broken.
-
-Fix: add two new quirk fields:
-
-  fixed_bclk_div   — hardware BCLK = MCLK / fixed_bclk_div
-  i2s_slot_width   — physical I2S slot width in bits (0 → params_physical_width)
-
-In sun4i_codec_probe(), after the quirks pointer is available, precompute
-mclk_mult = i2s_slot_width × 2 × fixed_bclk_div and store it in the
-sun4i_codec instance.  sun4i_codec_hw_params() then uses:
-
-  MCLK = params_rate(params) × mclk_mult
-
-giving the correct MCLK for any sample rate or format:
-
-  48 kHz  → 48000  × 1024 = 49 152 000 Hz  (pll-audio-2x)
-  44.1 kHz → 44100 × 1024 = 45 158 400 Hz  (pll-audio-2x·44.1)
-
-When mclk_mult is zero (all other chips) the legacy get_mod_freq() path
-is used unchanged.
-
-Measured before fix: hw_ptr advanced ~24 120 frames/s (≈ 0.5×) at 48 kHz.
-After fix: 48 000 frames/s.
+See docs/h700-hdmi-audio-fixes.md Fix 7. Regenerated as a clean diff against
+mainline 7.0.2 (the prior patch's hand-authored hunk counts + inter-hunk blank
+lines only ever applied its first hunk, dropping the actual fix).
 
 Signed-off-by: PanicOS <panicos@localhost>
 ---
- sound/soc/sunxi/sun4i-codec.c | 42 ++++++++++++++++++++++++++++------
- 1 file changed, 35 insertions(+), 7 deletions(-)
-
-diff --git a/sound/soc/sunxi/sun4i-codec.c b/sound/soc/sunxi/sun4i-codec.c
-index 111111111111..222222222222 100644
---- a/sound/soc/sunxi/sun4i-codec.c
-+++ b/sound/soc/sunxi/sun4i-codec.c
-@@ -342,3 +342,7 @@ struct sun4i_codec {
+--- a/sound/soc/sunxi/sun4i-codec.c	2026-05-29 22:33:52.950750260 -0700
++++ b/sound/soc/sunxi/sun4i-codec.c	2026-05-29 22:38:03.547393405 -0700
+@@ -341,6 +341,10 @@
+ 
  	struct snd_dmaengine_dai_dma_data	capture_dma_data;
  	struct snd_dmaengine_dai_dma_data	playback_dma_data;
 +
@@ -62,8 +24,26 @@ index 111111111111..222222222222 100644
 +	 * 0 means use the legacy sun4i_codec_get_mod_freq() table. */
 +	u32 mclk_mult;
  };
-
-@@ -2149,4 +2153,11 @@ struct sun4i_codec_quirks {
+ 
+ static void sun4i_codec_start_playback(struct sun4i_codec *scodec)
+@@ -657,9 +661,13 @@
+ 	unsigned long clk_freq;
+ 	int ret, hwrate;
+ 
+-	clk_freq = sun4i_codec_get_mod_freq(params);
+-	if (!clk_freq)
+-		return -EINVAL;
++	if (scodec->mclk_mult) {
++		clk_freq = (unsigned long)params_rate(params) * scodec->mclk_mult;
++	} else {
++		clk_freq = sun4i_codec_get_mod_freq(params);
++		if (!clk_freq)
++			return -EINVAL;
++	}
+ 
+ 	ret = clk_set_rate(scodec->clk_module, clk_freq);
+ 	if (ret)
+@@ -2149,6 +2157,13 @@
  	bool has_reset;
  	bool playback_only;
  	u32 dma_max_burst;
@@ -75,47 +55,28 @@ index 111111111111..222222222222 100644
 +	u8 fixed_bclk_div;
 +	u8 i2s_slot_width;
  };
-
-@@ -2241,3 +2254,7 @@ static const struct sun4i_codec_quirks sun50i_h616_codec_quirks = {
+ 
+ static const struct sun4i_codec_quirks sun4i_codec_quirks = {
+@@ -2238,6 +2253,10 @@
+ 	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
  	.has_reset	= true,
  	.dma_max_burst	= SUN4I_DMA_MAX_BURST,
 +	/* H616 codec I2S: BCLK = MCLK/16 (hardware fixed), slot width always
-+	 * 32 bits.  MCLK = rate*32*2*16 = rate*1024 → 49152000 Hz at 48 kHz. */
++	 * 32 bits.  MCLK = rate*32*2*16 = rate*1024 -> 49152000 Hz at 48 kHz. */
 +	.fixed_bclk_div	= 16,
 +	.i2s_slot_width	= 32,
  };
-
-@@ -2330,4 +2347,9 @@ static int sun4i_codec_probe(struct platform_device *pdev)
+ 
+ static const struct sun4i_codec_quirks suniv_f1c100s_codec_quirks = {
+@@ -2314,6 +2333,11 @@
  		return -ENODEV;
  	}
-
+ 
 +	if (quirks->fixed_bclk_div) {
 +		unsigned int sw = quirks->i2s_slot_width ?: 16;
 +		scodec->mclk_mult = sw * 2 * quirks->fixed_bclk_div;
 +	}
 +
  	scodec->regmap = devm_regmap_init_mmio(&pdev->dev, base,
-
-@@ -2659,12 +2682,16 @@ static int sun4i_codec_hw_params(struct snd_pcm_substream *substream,
- {
- 	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
- 	struct sun4i_codec *scodec = snd_soc_card_get_drvdata(rtd->card);
--	unsigned long clk_freq;
-+	unsigned long clk_freq;
- 	int ret, hwrate;
-
--	clk_freq = sun4i_codec_get_mod_freq(params);
--	if (!clk_freq)
--		return -EINVAL;
-+	if (scodec->mclk_mult) {
-+		clk_freq = (unsigned long)params_rate(params) * scodec->mclk_mult;
-+	} else {
-+		clk_freq = sun4i_codec_get_mod_freq(params);
-+		if (!clk_freq)
-+			return -EINVAL;
-+	}
-
- 	ret = clk_set_rate(scodec->clk_module, clk_freq);
- 	if (ret)
---
-2.34.1
+ 					       quirks->regmap_config);
+ 	if (IS_ERR(scodec->regmap)) {
