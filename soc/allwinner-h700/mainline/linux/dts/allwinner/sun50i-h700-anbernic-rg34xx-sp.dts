@@ -34,8 +34,3 @@
 &ahub1_mach {
 	status = "okay";
 };
-
-/* USB-C host mode: force host so MUSB enables VBUS without CC-pin ID detection */
-&usbotg {
-	dr_mode = "host";
-};
