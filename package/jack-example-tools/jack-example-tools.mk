@@ -10,6 +10,7 @@
 JACK_EXAMPLE_TOOLS_VERSION = 4
 JACK_EXAMPLE_TOOLS_SITE = $(call github,jackaudio,jack-example-tools,$(JACK_EXAMPLE_TOOLS_VERSION))
 JACK_EXAMPLE_TOOLS_LICENSE = GPL-2.0+
+JACK_EXAMPLE_TOOLS_LICENSE_FILES = LICENSE
 JACK_EXAMPLE_TOOLS_DEPENDENCIES = host-pkgconf jack2
 
 # Optional deps we already ship — listing them makes meson's `auto` features

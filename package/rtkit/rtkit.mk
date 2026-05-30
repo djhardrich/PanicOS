@@ -19,18 +19,10 @@ define RTKIT_USERS
 	rtkit -1 rtkit -1 * - - - RealtimeKit daemon
 endef
 
-# rtkit's meson uses `xxd -i` to embed org.freedesktop.RealtimeKit1.xml into
-# xml-introspection.h; when xxd is absent it falls back to a pre-existing
-# xml-introspection.h that the tarball does NOT ship. xxd isn't in the build
-# environment, so pre-generate that header ourselves (coreutils only). The .c
-# includes it inside `{ ... ,0x00 }`, so it must be a comma-separated hex byte
-# list with no trailing comma — exactly what `xxd -i < file` emits.
-define RTKIT_GEN_INTROSPECTION
-	od -An -v -tx1 $(@D)/org.freedesktop.RealtimeKit1.xml \
-		| tr -s ' \n' '\n' | grep -v '^$$' | sed 's/^/0x/' \
-		| paste -sd, > $(@D)/xml-introspection.h
-endef
-RTKIT_PRE_CONFIGURE_HOOKS += RTKIT_GEN_INTROSPECTION
+# NOTE: rtkit's meson embeds org.freedesktop.RealtimeKit1.xml into
+# xml-introspection.h via `xxd -i`; the no-xxd fallback expects a pre-existing
+# header the tarball doesn't ship. xxd is provided in the build image
+# (docker/Dockerfile), so the native codepath is used — no workaround needed.
 
 RTKIT_CONF_OPTS = -Dinstalled_tests=false
 

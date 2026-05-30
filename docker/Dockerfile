@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         wget \
         whiptail \
+        xxd \
         xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
