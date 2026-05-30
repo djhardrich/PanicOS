@@ -490,6 +490,10 @@ BR2_PACKAGE_LUAFILESYSTEM=y
 BR2_PACKAGE_LUAPOSIX=y
 BR2_PACKAGE_LUASEC=y                        # needs openssl (already present via python3-ssl)
 
+# libusb — USB device access from userspace. Required by norns-push2-display
+# and any other port that uses libusb-1.0 directly (Ableton Push 2, etc.).
+BR2_PACKAGE_LIBUSB=y
+
 # Runtime utilities — script install, Maiden, port tools.
 BR2_PACKAGE_GIT=y
 BR2_PACKAGE_LIBCURL_CURL=y                  # curl CLI (libcurl already present)
@@ -505,3 +509,7 @@ BR2_PACKAGE_BC=y
 # this via overlay rather than panicos-launcher-tools post-install
 # avoids ordering races against busybox's own sh symlink.
 BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_PANICOS_PATH)/flavors/launcher/rootfs-overlay"
+
+# GNU userland replacements for BusyBox limitations
+BR2_PACKAGE_FINDUTILS=y    # GNU find — adds -printf, -printf0, etc.
+BR2_PACKAGE_COREUTILS=y    # GNU df, uniq, sort, etc. — fixes df -l, uniq --all-repeated

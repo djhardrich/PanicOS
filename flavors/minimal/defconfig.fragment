@@ -48,3 +48,7 @@ BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NETWORK=y
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_NFC=y
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SAP=y
 BR2_PACKAGE_BLUEZ5_UTILS_PLUGINS_SIXAXIS=y
+
+# GNU userland replacements for BusyBox limitations
+BR2_PACKAGE_FINDUTILS=y    # GNU find — adds -printf, -printf0, etc.
+BR2_PACKAGE_COREUTILS=y    # GNU df, uniq, sort, etc. — fixes df -l, uniq --all-repeated

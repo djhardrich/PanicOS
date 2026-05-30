@@ -79,7 +79,7 @@ index 111111111111..222222222222 100644
  			reg = <0x030f0000 0x10000>;
  			interrupts = <GIC_SPI 61 IRQ_TYPE_LEVEL_HIGH>;
  			clocks = <&ccu CLK_BUS_IOMMU>;
-@@ -886,6 +887,63 @@ codec: codec@5096000 {
+@@ -886,6 +887,66 @@ codec: codec@5096000 {
  			status = "disabled";
  		};
  
@@ -386,7 +386,7 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/sound/soc/sunxi_v2/snd_sunxi_ahub.c
-@@ -0,0 +1,1475 @@
+@@ -0,0 +1,1489 @@
 +/*
 + * sound\soc\sunxi\snd_sunxi_ahub.c
 + * (C) Copyright 2021-2025

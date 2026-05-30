@@ -105,7 +105,7 @@ Real HDMI monitors and disconnect detection are unaffected.
  static int sun8i_hdmi_phy_probe(struct platform_device *pdev)
 --- a/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
 +++ b/drivers/gpu/drm/sun4i/sun8i_dw_hdmi.c
-@@ -8,13 +8,89 @@
+@@ -8,13 +8,90 @@
  #include <linux/of.h>
  #include <linux/platform_device.h>
  
@@ -126,6 +126,7 @@ Real HDMI monitors and disconnect detection are unaffected.
 +	container_of(x, struct sun8i_dw_hdmi, enc_bridge)
 +
 +static int sun8i_hdmi_enc_attach(struct drm_bridge *bridge,
++				 struct drm_encoder *encoder,
 +				 enum drm_bridge_attach_flags flags)
 +{
 +	struct sun8i_dw_hdmi *hdmi = bridge_to_sun8i_dw_hdmi(bridge);

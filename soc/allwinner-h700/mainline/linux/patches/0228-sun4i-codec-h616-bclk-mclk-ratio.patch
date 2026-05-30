@@ -54,7 +54,7 @@ diff --git a/sound/soc/sunxi/sun4i-codec.c b/sound/soc/sunxi/sun4i-codec.c
 index 111111111111..222222222222 100644
 --- a/sound/soc/sunxi/sun4i-codec.c
 +++ b/sound/soc/sunxi/sun4i-codec.c
-@@ -342,6 +342,10 @@ struct sun4i_codec {
+@@ -342,3 +342,7 @@ struct sun4i_codec {
  	struct snd_dmaengine_dai_dma_data	capture_dma_data;
  	struct snd_dmaengine_dai_dma_data	playback_dma_data;
 +
@@ -63,7 +63,7 @@ index 111111111111..222222222222 100644
 +	u32 mclk_mult;
  };
 
-@@ -2149,6 +2153,15 @@ struct sun4i_codec_quirks {
+@@ -2149,4 +2153,11 @@ struct sun4i_codec_quirks {
  	bool has_reset;
  	bool playback_only;
  	u32 dma_max_burst;
@@ -76,7 +76,7 @@ index 111111111111..222222222222 100644
 +	u8 i2s_slot_width;
  };
 
-@@ -2241,6 +2254,10 @@ static const struct sun4i_codec_quirks sun50i_h616_codec_quirks = {
+@@ -2241,3 +2254,7 @@ static const struct sun4i_codec_quirks sun50i_h616_codec_quirks = {
  	.has_reset	= true,
  	.dma_max_burst	= SUN4I_DMA_MAX_BURST,
 +	/* H616 codec I2S: BCLK = MCLK/16 (hardware fixed), slot width always
@@ -85,7 +85,7 @@ index 111111111111..222222222222 100644
 +	.i2s_slot_width	= 32,
  };
 
-@@ -2330,6 +2347,12 @@ static int sun4i_codec_probe(struct platform_device *pdev)
+@@ -2330,4 +2347,9 @@ static int sun4i_codec_probe(struct platform_device *pdev)
  		return -ENODEV;
  	}
 
@@ -96,7 +96,7 @@ index 111111111111..222222222222 100644
 +
  	scodec->regmap = devm_regmap_init_mmio(&pdev->dev, base,
 
-@@ -2659,11 +2682,16 @@ static int sun4i_codec_hw_params(struct snd_pcm_substream *substream,
+@@ -2659,12 +2682,16 @@ static int sun4i_codec_hw_params(struct snd_pcm_substream *substream,
  {
  	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
  	struct sun4i_codec *scodec = snd_soc_card_get_drvdata(rtd->card);
