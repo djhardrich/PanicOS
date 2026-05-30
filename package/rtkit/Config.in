@@ -1,0 +1,16 @@
+config BR2_PACKAGE_RTKIT
+	bool "rtkit"
+	depends on BR2_PACKAGE_DBUS
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	select BR2_PACKAGE_LIBCAP
+	help
+	  RealtimeKit — a D-Bus system service that hands out realtime
+	  (SCHED_RR) scheduling priority to client processes on request,
+	  with watchdog/canary safeguards. PipeWire and JACK clients use it
+	  to get low-latency RT scheduling without per-user rlimit config.
+
+	  Now maintained under the PipeWire project.
+	  https://gitlab.freedesktop.org/pipewire/rtkit
+
+comment "rtkit needs dbus and a toolchain w/ threads"
+	depends on !BR2_PACKAGE_DBUS || !BR2_TOOLCHAIN_HAS_THREADS

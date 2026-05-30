@@ -214,6 +214,15 @@ BR2_PACKAGE_PIPEWIRE_ALSA=y                # ALSA → pipewire shim
 # BR2_PACKAGE_PIPEWIRE_JACK is not a real option in this Buildroot version.
 BR2_PACKAGE_JACK2=y
 BR2_PACKAGE_JACK2_LEGACY=y
+# jack-example-tools: the JACK CLI clients (jack_lsp, jack_connect,
+# jack_disconnect, jack_transport, jack_samplerate, jack_bufsize, ...) that
+# jack2 1.9.22 split into a separate project. jack2 itself now ships only
+# jackd. Useful for inspecting/wiring the PipeWire-JACK graph from a shell.
+BR2_PACKAGE_JACK_EXAMPLE_TOOLS=y
+# rtkit: D-Bus RealtimeKit daemon. Grants SCHED_RR realtime priority to
+# PipeWire and JACK clients on request, so low-latency audio (norns/crone,
+# scsynth) gets RT scheduling without per-user rlimit configuration.
+BR2_PACKAGE_RTKIT=y
 # GStreamer plugin for PipeWire: enables the spa-gstreamer SPA plugin so
 # PipeWire can source/sink via GStreamer pipelines. We already ship
 # gstreamer1 + gst1-plugins-base (PortMaster GUI needs them); this just

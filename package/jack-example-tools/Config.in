@@ -1,0 +1,15 @@
+config BR2_PACKAGE_JACK_EXAMPLE_TOOLS
+	bool "jack-example-tools"
+	depends on BR2_PACKAGE_JACK2
+	help
+	  JACK example / CLI tools, split out of jack2 upstream into their
+	  own project. Provides jack_lsp, jack_connect, jack_disconnect,
+	  jack_transport, jack_samplerate, jack_bufsize, jack_wait,
+	  jack_metro, jack_load, jack_unload, jack_property, jack_evmon,
+	  jack_midi_dump and friends.
+
+	  Builds against jack2's jack.pc; at runtime they connect to
+	  whatever JACK server owns the socket (on PanicOS that is PipeWire
+	  via the libjack compat shim).
+
+	  https://github.com/jackaudio/jack-example-tools
