@@ -103,11 +103,11 @@ mkdir -p "$(dirname "$OUTPUT")"
 	fi
 	# Wire up BR2_GLOBAL_PATCH_DIR so Buildroot picks up our out-of-tree
 	# patches (e.g. patches/libfreeimage/) without modifying the buildroot
-	# submodule. Path is absolute since BR2_GLOBAL_PATCH_DIR doesn't expand
-	# Make variables. Inside docker, $ROOT is /work.
+	# submodule. Uses $(BR2_EXTERNAL_PANICOS_PATH) so the path works both
+	# on the host and inside Docker (where $ROOT would be /work).
 	echo
 	echo "# PanicOS out-of-tree patches"
-	echo "BR2_GLOBAL_PATCH_DIR=\"$ROOT/patches\""
+	echo 'BR2_GLOBAL_PATCH_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/patches"'
 	# ccache shared across O= dirs (per-host, lives in repo at .ccache/
 	# so it persists across docker runs — $HOME=/tmp inside the container
 	# would otherwise wipe it every invocation). Massive speedup when
@@ -117,7 +117,7 @@ mkdir -p "$(dirname "$OUTPUT")"
 	echo
 	echo "# Shared ccache for fast cross-output-dir rebuilds"
 	echo "BR2_CCACHE=y"
-	echo "BR2_CCACHE_DIR=\"$ROOT/.ccache\""
+	echo 'BR2_CCACHE_DIR="$(BR2_EXTERNAL_PANICOS_PATH)/.ccache"'
 	# Post-build sanity script. Catches the rare /lib-as-dir corruption
 	# that has bitten this project once already (target/ wipe + per-pkg
 	# stamp wipe → install order became non-deterministic → linux-modules
@@ -127,7 +127,7 @@ mkdir -p "$(dirname "$OUTPUT")"
 	# is healthy.
 	echo
 	echo "# Sanity / auto-repair of target/ before squashfs gen"
-	echo "BR2_ROOTFS_POST_BUILD_SCRIPT=\"$ROOT/scripts/sanity-fix-target.sh\""
+	echo 'BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_PANICOS_PATH)/scripts/sanity-fix-target.sh"'
 } > "$OUTPUT"
 
 # Merge BR2_ROOTFS_OVERLAY values across fragments. Kconfig has only

@@ -58,4 +58,17 @@ if [ -n "$PANICOS_ROOT" ]; then
     echo ">>> sanity-fix-target: stamped OS_BUILD=${BUILD_DATE}-${BUILD_REV}"
 fi
 
+# Redirect libjack.so.0 to PipeWire's JACK compat shim. jack2 installs its
+# own libjack.so.0 → libjack.so.0.1.0 (the real jackd client). JACK apps
+# (norns/crone) using that lib auto-spawn jackd, which fails because PipeWire
+# already owns the ALSA device. PipeWire's compat shim connects directly to
+# the PipeWire socket instead of spawning jackd.
+# This must be done in post-build (not the rootfs overlay) because Buildroot's
+# overlay rsync uses --safe-links which skips absolute symlinks.
+if [ -d "$TARGET/usr/lib/pipewire-0.3/jack" ]; then
+    ln -sf /usr/lib/pipewire-0.3/jack/libjack.so.0 \
+        "$TARGET/usr/lib/libjack.so.0"
+    echo ">>> sanity-fix-target: libjack.so.0 → pipewire-0.3/jack/libjack.so.0"
+fi
+
 echo ">>> sanity-fix-target: ok"

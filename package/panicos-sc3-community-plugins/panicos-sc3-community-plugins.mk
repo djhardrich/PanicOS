@@ -37,12 +37,14 @@ define PANICOS_SC3_COMMUNITY_PLUGINS_BUILD_CMDS
 		mkdir -p "$(@D)/$$plugin/build"; \
 		$(HOST_DIR)/bin/cmake -S "$(@D)/$$plugin" -B "$(@D)/$$plugin/build" \
 			-DCMAKE_BUILD_TYPE=Release \
-			-DCMAKE_TOOLCHAIN_FILE=$(HOST_DIR)/share/buildroot/toolchainfile.cmake \
+			-DCMAKE_SYSTEM_NAME=Linux \
+			-DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+			-DCMAKE_C_COMPILER=$(HOST_DIR)/bin/aarch64-buildroot-linux-gnu-gcc \
+			-DCMAKE_CXX_COMPILER=$(HOST_DIR)/bin/aarch64-buildroot-linux-gnu-g++ \
 			-DSC_PATH="$(SUPERCOLLIDER_SRC_DIR)" \
 			-DSUPERNOVA=OFF \
 			-DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 			-DCMAKE_CXX_STANDARD=$$_cxx_std \
-			-DCMAKE_INSTALL_PREFIX="$(PANICOS_SC3_COMMUNITY_PLUGINS_EXT_DIR)/$$plugin" \
 		|| { echo "  WARN: cmake configure failed for $$plugin, skipping"; continue; }; \
 		$(HOST_DIR)/bin/cmake --build "$(@D)/$$plugin/build" \
 			-j$(PARALLEL_JOBS) \
@@ -55,20 +57,14 @@ define PANICOS_SC3_COMMUNITY_PLUGINS_INSTALL_TARGET_CMDS
 		[ -d "$(@D)/$$plugin/build" ] || continue; \
 		_ext_dir="$(TARGET_DIR)$(PANICOS_SC3_COMMUNITY_PLUGINS_EXT_DIR)/$$plugin"; \
 		mkdir -p "$$_ext_dir"; \
-		DESTDIR="$(TARGET_DIR)" \
-			$(HOST_DIR)/bin/cmake --build "$(@D)/$$plugin/build" \
-			--target install 2>/dev/null || true; \
-		_count=$$(find "$$_ext_dir" -name "*.so" 2>/dev/null | wc -l); \
-		if [ "$$_count" -eq 0 ]; then \
-			find "$(@D)/$$plugin/build" -name "*_scsynth.so" \
-				-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
-			find "$(@D)/$$plugin/build" -name "*.so" \
-				-not -name "*_supernova.so" \
-				-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
-			find "$(@D)/$$plugin" -name "*.sc" \
-				-not -path "*/HelpSource/*" \
-				-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
-		fi; \
+		find "$(@D)/$$plugin/build" -name "*_scsynth.so" \
+			-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
+		find "$(@D)/$$plugin/build" -name "*.so" \
+			-not -name "*_supernova.so" \
+			-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
+		find "$(@D)/$$plugin" -name "*.sc" \
+			-not -path "*/HelpSource/*" \
+			-exec cp {} "$$_ext_dir/" \; 2>/dev/null || true; \
 		_final=$$(find "$$_ext_dir" -name "*.so" 2>/dev/null | wc -l); \
 		echo "  $$plugin: $$_final .so file(s) installed to $$_ext_dir"; \
 	done

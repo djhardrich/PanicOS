@@ -18,7 +18,7 @@ SUPERCOLLIDER_LICENSE_FILES = COPYING
 SUPERCOLLIDER_DEPENDENCIES = \
 	alsa-lib \
 	boost \
-	fftw \
+	fftw-single \
 	host-pkgconf \
 	libsndfile \
 	readline
