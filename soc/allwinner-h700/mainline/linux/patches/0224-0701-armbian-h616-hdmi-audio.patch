@@ -386,7 +386,7 @@ new file mode 100644
 index 000000000000..111111111111
 --- /dev/null
 +++ b/sound/soc/sunxi_v2/snd_sunxi_ahub.c
-@@ -0,0 +1,1489 @@
+@@ -0,0 +1,1502 @@
 +/*
 + * sound\soc\sunxi\snd_sunxi_ahub.c
 + * (C) Copyright 2021-2025
@@ -506,19 +506,26 @@ index 000000000000..111111111111
 +                       return -EINVAL;
 +               }
 +       } else {
-+               if (clk_set_parent(clk_info->clk_module, clk_info->clk_pll)) {
-+                       SND_LOG_ERR(HLOG, "set parent of clk_module to pll failed\n");
++               /* pll-fs=1: freq_in = base_rate (24576000 @ 48k, 22579200 @ 44.1k).
++                * clk_pll (audio-codec-1x) is NOT a member of the audio-hub MUX, so
++                * clk_set_parent(clk_module, clk_pll) returns -EINVAL and HDMI audio
++                * never starts (verified live on hw 2026-05-30: "set parent of
++                * clk_module to pll failed"). Use clk_pllx4 (pll-audio-hs, the same
++                * valid MUX parent the IF branch uses): lock it at freq_in*4
++                * (=98304000, an SDM entry) and divide audio-hub down to freq_in.
++                * The driver stores pllclk_freq=freq_in and derives MCLKDIV/BCLKDIV
++                * from it, so clk_module MUST equal freq_in -> BCLKDIV=8 -> 48000. */
++               if (clk_set_rate(clk_info->clk_pllx4, freq_in * 4)) {
++                       SND_LOG_ERR(HLOG, "freq : %u pllx4 clk unsupport\n", freq_in * 4);
 +                       return -EINVAL;
 +               }
-+               if (clk_set_rate(clk_info->clk_pll, freq_in)) {
-+                       SND_LOG_ERR(HLOG, "freq : %u pll clk unsupport\n", freq_in);
++               if (clk_set_parent(clk_info->clk_module, clk_info->clk_pllx4)) {
++                       SND_LOG_ERR(HLOG, "set parent of clk_module to pllx4 failed\n");
 +                       return -EINVAL;
 +               }
-+               if (freq_out > 0) {
-+                       if (clk_set_rate(clk_info->clk_module, freq_out / 2)) {
-+                               SND_LOG_ERR(HLOG, "freq : %u module clk unsupport\n", freq_out);
-+                               return -EINVAL;
-+                       }
++               if (clk_set_rate(clk_info->clk_module, freq_in)) {
++                       SND_LOG_ERR(HLOG, "freq : %u module clk unsupport\n", freq_in);
++                       return -EINVAL;
 +               }
 +       }
 +
@@ -687,9 +694,15 @@ index 000000000000..111111111111
 +               return -EINVAL;
 +       }
 +
++       /* BCLKDIV field encoding == the ratio->map table above (same encoding as
++        * MCLKDIV in set_sysclk, which writes mclk_ratio_map directly). The stock
++        * "- 2" wrote two table steps too low (ratio 8 -> map 5 -> field 3 = /4
++        * instead of /8), clocking HDMI I2S at exactly 2x (LRCLK 96k). Proven on
++        * hw 2026-05-30 by poking CLKD field 3->5 mid-stream (8s tone -> correct
++        * duration). Write the map directly. */
 +       regmap_update_bits(regmap, SUNXI_AHUB_I2S_CLKD(tdm_num),
 +                          0xf << I2S_CLKD_BCLKDIV,
-+                          (bclk_ratio - 2) << I2S_CLKD_BCLKDIV);
++                          bclk_ratio << I2S_CLKD_BCLKDIV);
 +
 +       return 0;
 +}
