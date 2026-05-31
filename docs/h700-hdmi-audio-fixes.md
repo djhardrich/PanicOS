@@ -1,9 +1,11 @@
-# H616/H700 Audio Fixes (Allwinner RG35XX Pro)
+# H616/H700 Audio & HDMI Video Fixes (Allwinner RG35XX Pro)
 
 **Platform:** Allwinner H616/H700 (sun50i-h616 family)  
-**Kernel:** mainline 7.0.x with Armbian sunxi-7.0 audio patches  
+**Kernel:** mainline 7.0.x with Armbian sunxi-7.0 display + audio patches  
 **Display bridge:** Synopsys dw-hdmi (sun8i variant)  
+**HDMI video path:** GPU/fb → DE33 display engine → mixer → H616 TCON-TV → H616 HDMI PHY → dw-hdmi frame composer → HDMI link  
 **HDMI audio path:** app → ALSA → AHUB DMA → I2S TDM1 → dw-hdmi frame composer → HDMI stream  
+**Internal panel path:** DE33 → mixer → TCON-LCD → RGB/DSI panel (+ GPIO backlight)  
 **Internal codec path:** app → ALSA → sun4i-codec DMA → H616 internal I2S → DAC → speaker/headphone  
 **Symptoms fixed:** HDMI audio completely silent, no HDMI ALSA card, no HDMI
 PipeWire sink (audio stuck on the handheld speaker), HDMI audio playing at
@@ -632,7 +634,120 @@ Fix 11 clock correct, S16_LE and S32_LE both play at correct speed.
 
 ---
 
-## Summary — Checklist for H616/H700 Audio
+# HDMI Video (display pipeline)
+
+HDMI **video** is a separate hardware path from HDMI audio. Audio rides the
+AHUB → dw-hdmi *frame composer* (Fixes 1–12); video rides the **DE33 display
+engine → mixer → TCON-TV → H616 HDMI PHY → dw-hdmi**. They share only the
+dw-hdmi controller and the physical connector. Both must be configured for a
+working HDMI experience, but a fault in one does not necessarily affect the
+other (e.g. video can be perfect while audio is silent, which is exactly the
+state Fixes 1–12 address).
+
+```
+                                  ┌─ TCON-LCD ── RGB/DSI panel (+ GPIO backlight)   [internal]
+DE33 display engine ── mixer ─────┤
+                                  └─ TCON-TV ─── H616 HDMI PHY ── dw-hdmi ── HDMI   [external]
+```
+
+## Video V1 — DE33 display engine + H616 HDMI/TCON enablement
+
+**Root cause:** Mainline 7.0.x has no working DE33 (third-gen display engine)
+support, no H616 TCON-TV, and no H616 HDMI PHY. Without them there is no
+display output at all — neither the internal panel nor HDMI.
+
+**Fix:** the Armbian/mainline-WIP **21-patch `0200` series** (named
+`0200-0002-rg35xx-enable-HDMI-LCD.patch` in this tree — it is the whole series
+concatenated). Notable members:
+
+| Patch | What it adds |
+|-------|--------------|
+| 01–04 | DE33 plane/mixer support: VI-layer format limits, DE2 regmap export, `sun50i_planes` driver, new DE33 bindings |
+| 05 | **H616 TCON-TV** (the CRTC that feeds HDMI) |
+| 06 | **H616 HDMI PHY** (`sun8i_hdmi_phy`) |
+| 07 | H616 display-engine compatible |
+| 08–09 | H616 DT display pipeline + enable HDMI |
+| 10–16 | dt-bindings (TCON_TOP_LCD clocks, DE33 bus, compat strings, SRAM C, R40 TCON) |
+| 17–21 | RG35XX DT: LCD/LVDS pins, LCD TCON endpoint, **enable LCD output**, **HDMI connector node**, **GPIO backlight** |
+
+This series is the prerequisite for everything else here — internal panel,
+HDMI video, *and* HDMI audio (the AHUB connects to the same dw-hdmi the TCON-TV
+drives). Kernel config: `CONFIG_DRM_SUN4I=y`, `CONFIG_DRM_SUN8I_MIXER=y`,
+`CONFIG_DRM_SUN8I_DW_HDMI=y` (plus the new `SUN50I_PLANES` symbol the series
+adds).
+
+## Video V2 — EDID/DDC reads fail (mode + audio detection)
+
+**Root cause:** On H700 the dw-hdmi **internal DDC I2C master** returns
+`EAGAIN` for EDID reads — the same fault documented in audio **Fix 3**. The
+binding order with the AHUB corrupts the DDC master.
+
+**Effect on video:** with no EDID, `drm_detect_hdmi_monitor()` returns false
+(→ DVI signalling, see Fix 3 for the audio consequence) and the connector
+exposes no `--preferred` mode. The picture still works because the userspace
+hotplug handler (V3) falls back to fixed modes, but auto-selection of the
+monitor's native resolution is unavailable.
+
+**Mitigations in tree:**
+- Audio Fix 3 (`0227`) forces HDMI mode in `FC_INVIDCONF` so audio is not
+  dropped despite the DVI mis-detection.
+- `handle-hdmi-hotplug` (V3) uses `wlr-randr --preferred` first and falls back
+  to `1024x768` then `800x600` when no preferred/EDID mode is present.
+
+There is no full DDC fix yet — EDID remains best-effort. A proper fix would
+reorder/repair the dw-hdmi DDC master init relative to the AHUB bind.
+
+## Video V3 — HDMI hotplug doesn't switch the picture to the TV
+
+**Root cause:** On cable connect the kernel lights up the HDMI connector, but
+the compositor keeps scanning out to the internal panel (`DSI-1`). Nothing
+moves the active output to `HDMI-A-1`, so the TV stays black while the handheld
+screen keeps the picture. (This is the *video* half of the same hotplug chain
+whose *audio* half is Fixes 4–5.)
+
+**Fix:** `handle-hdmi-hotplug` (fired by the Fix 4 udev rule →
+`hdmi-hotplug.path`/`.service`) drives the switch with `wlr-randr`:
+
+- **On connect:** enable the HDMI output (`wlr-randr --output HDMI-A-1
+  --preferred --on`, falling back to `1024x768` then `800x600` for V2/EDID-less
+  sinks), turn the internal `DSI-1` output **off**, and restart
+  EmulationStation so it re-lays-out for the new resolution.
+- **On disconnect:** re-enable `DSI-1 --preferred` and restart ES.
+- Idempotency guard (`output_enabled`) prevents an ES-restart loop when the
+  `.path` unit fires repeatedly.
+- For USB-C/DisplayPort video paths it also stops `usbgadget` (the DP altmode
+  shares the USB-C data lanes); standard HDMI ports are unaffected.
+
+**Files:** `package/panicos-input-sense/files/scripts/handle-hdmi-hotplug`,
+`udev.d/99-hdmi.rules`, `system.d/hdmi-hotplug.{path,service}`.
+
+## Video V4 — HDMI-to-VGA adapters don't hotplug (known limitation, patch disabled)
+
+**Status:** unsolved; the candidate patch is intentionally **disabled**.
+
+Passive HDMI-to-VGA adapters expose modes but assert HPD differently, and the
+stock sun4i dw-hdmi driver doesn't pick them up. The candidate fix,
+`0228-sun8i-dw-hdmi-bridge-connector-for-vga-adapter-hpd.patch.disabled`,
+reworks the driver to use `drm_bridge_connector` for adapter HPD.
+
+It is shipped as `.disabled` (buildroot only applies `*.patch`) because **it
+blacks the internal panel** on kernel 7.0.2: as written it uses the 2-arg
+`drm_bridge_funcs.attach`, but 7.0.2 requires the 3-arg form `(bridge, encoder,
+flags)`, and when forced to compile the improperly-ported dw-hdmi component
+fails to bind. Because sun4i-drm is a component-framework device, one failed
+component takes the whole DRM device down — so the **internal display goes dark**
+(verified on rg34xx-sp), not just HDMI.
+
+**To revisit:** port the attach hook to the 3-arg signature, re-validate the
+`@@` hunk counts (`scripts/recount-patch-hunks.py`), and confirm
+`drm_bridge_connector` init does not fail component bind — then test on real
+hardware (a black internal panel is the failure mode) before re-enabling.
+Real HDMI monitors, hotplug, and HDMI audio all work with it left disabled;
+only HDMI-to-VGA-adapter HPD is lost.
+
+---
+
+## Summary — Checklist for H616/H700 Audio & HDMI Video
 
 ### HDMI audio
 
@@ -654,6 +769,20 @@ ELSE-branch mux parent that otherwise prevents any sink). Fix 11 fixes the 2×
 clock (and, as a side effect, the periodic gaps). Fix 12 creates the HDMI sink
 in the first place and keeps MMAP from hanging the SoC. With all of these,
 HDMI audio plays at correct 48 kHz, gap-free, with no lockups.
+
+### HDMI video (display pipeline)
+
+| # | What | How |
+|---|------|-----|
+| V1 | No display output at all (DE33/TCON/PHY missing) | Apply the 21-patch `0200` series (DE33 planes, H616 TCON-TV, H616 HDMI PHY, DT pipeline, HDMI connector, GPIO backlight); enable `DRM_SUN4I`/`DRM_SUN8I_MIXER`/`DRM_SUN8I_DW_HDMI`/`SUN50I_PLANES` |
+| V2 | EDID/DDC reads fail (no native mode; DVI mis-detect) | dw-hdmi DDC returns EAGAIN — best-effort only; `0227` forces HDMI mode for audio (Fix 3); `handle-hdmi-hotplug` falls back to fixed modes |
+| V3 | Picture doesn't move to the TV on hotplug | `handle-hdmi-hotplug` (udev → `.path`/`.service`): `wlr-randr` enables `HDMI-A-1`, disables `DSI-1`, restarts ES; reverses on unplug |
+| V4 | HDMI-to-VGA adapters don't hotplug | **Unsolved.** `0228-sun8i…vga-adapter-hpd.patch.disabled` is the candidate; left disabled (2-arg attach → fails component bind → blacks internal panel on 7.0.2) |
+
+V1 is required for any display (internal panel *and* HDMI, *and* HDMI audio,
+since the AHUB feeds the same dw-hdmi the TCON-TV drives). V2 is a best-effort
+limitation. V3 is required for HDMI to actually show the picture on connect.
+V4 is a documented known-limitation, not a regression.
 
 ### Internal codec audio (speaker / 3.5 mm headphone)
 
@@ -699,6 +828,8 @@ PI5 is already gated low by the missing Line Out switch.
 
 ```
 soc/allwinner-h700/mainline/linux/patches/
+  0200-0002-rg35xx-enable-HDMI-LCD.patch                 # Video V1 (DE33+TCON-TV+HDMI PHY+DT, 21-patch series)
+  0228-sun8i-...-vga-adapter-hpd.patch.disabled          # Video V4 (DISABLED — blacks internal panel)
   0216-0152-rg35xx-2024-enable-usb-otg.patch             # Fix 9 (USB OTG mode)
   0221-fix-h616-pll-audio-hs-sdm-table-vco-rates.patch  # Fix 6 (SDM table VCO rates)
   0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import) + Fix 6 set_pll ELSE branch + Fix 11 (BCLKDIV 2x)
