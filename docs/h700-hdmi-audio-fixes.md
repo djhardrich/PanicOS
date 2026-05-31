@@ -715,4 +715,11 @@ soc/allwinner-h700/mainline/rootfs-overlay/
 
 flavors/launcher/rootfs-overlay/
   etc/pipewire/pipewire.conf.d/50-panicos-rates.conf    # Fix 8 (44.1 kHz passthrough)
+
+package/panicos-input-sense/files/                       # HDMI hotplug + sink routing
+  scripts/hdmi_sense                                    # Fix 5 (ahub1_mach sink match)
+  scripts/handle-hdmi-hotplug                           # Fix 4 (pidof, not pgrep -x)
+  udev.d/99-hdmi.rules                                  # Fix 4 (DRM event -> hdmi_sense)
+  system.d/hdmi-hotplug.path                            # Fix 4 (.path watcher)
+  system.d/hdmi-hotplug.service                         # Fix 4 (handle-hdmi-hotplug unit)
 ```
