@@ -5,10 +5,12 @@
 **Display bridge:** Synopsys dw-hdmi (sun8i variant)  
 **HDMI audio path:** app → ALSA → AHUB DMA → I2S TDM1 → dw-hdmi frame composer → HDMI stream  
 **Internal codec path:** app → ALSA → sun4i-codec DMA → H616 internal I2S → DAC → speaker/headphone  
-**Symptoms fixed:** HDMI audio completely silent, no HDMI ALSA card, hotplug
-routing not switching away from handheld speakers, Rescan-HDMI-Audio
-blanking the display, internal speaker/headphone audio playing at half speed,
-44.1 kHz content playing at wrong pitch.
+**Symptoms fixed:** HDMI audio completely silent, no HDMI ALSA card, no HDMI
+PipeWire sink (audio stuck on the handheld speaker), HDMI audio playing at
+exactly 2× speed with periodic gaps, hotplug routing not switching away from
+handheld speakers, Rescan-HDMI-Audio blanking the display, internal
+speaker/headphone audio playing at half speed, 44.1 kHz content playing at
+wrong pitch, SoC hard-hang (16 s watchdog reset) on HDMI playback.
 
 ---
 
@@ -283,6 +285,17 @@ reparent `audio-hub` to it, then set the module clock to `freq_in`. The
 `pll-audio-4x → pll-audio-hs` chain propagates correctly with
 `CLK_SET_RATE_PARENT`.
 
+**Both `set_pll` branches need this.** `set_pll` splits on
+`freq_in > 24576000`: the IF branch (pll-fs=4, freq_in = 98304000) and the
+ELSE branch (pll-fs=1, freq_in = 24576000 — the path actually used by the
+48 kHz HDMI link). The original ELSE branch still reparented to `clk_pll`
+(`audio-codec-1x`), which is **not** a member of the audio-hub MUX, so
+`clk_set_parent` returned `-EINVAL`, `hw_params` aborted, and **no HDMI sink
+was created at all** (verified live: `set parent of clk_module to pll failed`).
+The ELSE branch must also reparent to `clk_pllx4` — locked at `freq_in * 4`
+(= 98304000, an SDM table entry) — with `audio-hub` set to `freq_in`
+(24576000) so the driver's `pllclk_freq`-derived dividers land on BCLKDIV = 8.
+
 **Layer 3 (root cause) — SDM table stores output rates, not VCO rates.**
 `ccu_nm_set_rate()` multiplies the requested rate by `fixed_post_div`
 **before** comparing against the SDM table:
@@ -512,6 +525,113 @@ audio devices silently fail to appear — not because of a missing driver
 
 ---
 
+## Fix 11 — HDMI audio plays at exactly 2× speed (AHUB BCLKDIV off by two steps)
+
+**Affects:** HDMI audio only (AHUB → dw-hdmi TDM1 path). Internal codec and
+USB-C audio are unaffected. This was the final blocker: with Fixes 1–10 and
+the `set_pll` ELSE-branch fix in place, HDMI audio routed correctly but every
+stream played at **exactly double speed** (an 8 s tone finished in 4 s) with
+periodic gaps. The clock topology was correct (`audio-hub` = 24576000 Hz) —
+the divider *register* was wrong.
+
+**Root cause:** `sunxi_ahub_dai_set_bclk_ratio()` in `snd_sunxi_ahub.c` maps
+the requested ratio (`cpu_pll_clk / (rate × slot_width × slots)`) to a 1..15
+table index `bclk_ratio`, then writes it to the I2S `CLKD` BCLKDIV field — but
+subtracts 2 first:
+
+```c
+/* WRONG — two table steps too low */
+regmap_update_bits(regmap, SUNXI_AHUB_I2S_CLKD(tdm_num),
+                   0xf << I2S_CLKD_BCLKDIV,
+                   (bclk_ratio - 2) << I2S_CLKD_BCLKDIV);
+```
+
+That BCLKDIV field encoding **is** the ratio→index table — the exact encoding
+that the sibling `sunxi_ahub_dai_set_sysclk()` writes *directly* (no offset)
+to the adjacent MCLKDIV field. For a 48 kHz / 32-bit-slot / 2-channel stream
+the ratio is 8 → index 5 (÷8), but `- 2` wrote field 3 (÷4), so BCLK and thus
+LRCLK came out at exactly 2× (LRCLK 96000 instead of 48000). The `- 2` also
+produces negative/invalid fields for ratios 1 and 2.
+
+**Fix:** Write `bclk_ratio` directly, matching the MCLKDIV sibling:
+
+```c
+/* CORRECT */
+regmap_update_bits(regmap, SUNXI_AHUB_I2S_CLKD(tdm_num),
+                   0xf << I2S_CLKD_BCLKDIV,
+                   bclk_ratio << I2S_CLKD_BCLKDIV);
+```
+
+**The gaps were a symptom of the 2×, not a separate bug.** The hardware
+drained the DMA ring twice as fast as PipeWire filled it, so the buffer
+periodically underran. Correcting the divider removed the gaps with no
+PipeWire-side change (no `disable-tsched`, no headroom tuning needed).
+
+**Verification — proving a kernel clock fix *without* a 20-min rebuild.** The
+AHUB I2S registers are exposed via `regmap` debugfs, and `/dev/mem` can be
+poked from `python3` (present in the launcher flavor) to change the divider on
+a live stream:
+
+```bash
+# TDM1 I2S CLKD register (AHUB base 0x05097000 + 0x30c) during playback:
+cat /sys/kernel/debug/regmap/5097000.ahub_dam_plat/registers | grep '^30c:'
+# → 30c: 00000030   (BCLKDIV field [7:4] = 3 = ÷4 → 2× too fast)
+
+# While an 8 s tone plays, poke BCLKDIV 3 → 5 (÷4 → ÷8) via /dev/mem mmap and
+# time it: the tone that was finishing in 4 s now finishes in ~8 s. Proven.
+```
+
+`FMT0` (`0x304` = `0x1f77`) confirmed the rest of the chain was already
+correct — slot-width field 7 (32-bit) and LRCK_PERIOD 31 (64-BCLK frame) — so
+the BCLK divider was the *only* error.
+
+**Patch:** folded into `0224-0701-armbian-h616-hdmi-audio.patch`.
+
+---
+
+## Fix 12 — No HDMI sink created by ACP (raw sink + mandatory disable-mmap)
+
+**Affects:** HDMI audio routing. With PipeWire 1.2.8 / WirePlumber 0.5.10 the
+bare `ahub1_mach` I2S DAI card has no mixer, so ACP exposes only
+`off` / `pro-audio` profiles for it — **no usable stereo sink node is ever
+created**, even with a valid EDID/ELD. `hdmi_sense` (Fix 5) then finds no HDMI
+sink and leaves the default on the handheld speaker.
+
+> Note: the `…stereo-fallback` sink named in Fix 5 is the ACP-path sink; on
+> this PipeWire it does not reliably appear. The fix below builds a *raw-PCM*
+> sink instead, whose node name also contains `ahub1_mach`, so the Fix 5
+> `hdmi|ahub1_mach` regex still matches it.
+
+**Fix:** a WirePlumber drop-in that disables ACP for the AHUB card (so
+PipeWire builds a raw sink straight from the playback PCM) and forces RW
+access:
+
+```
+# 91-panicos-h700-ahub-hdmi.conf
+monitor.alsa.rules = [
+  { matches = [ { device.name = "~alsa_card.*ahub1_mach.*" } ]
+    actions = { update-props = { api.alsa.use-acp = false } } }
+  { matches = [ { node.name = "~alsa_output.*ahub.*" } ]
+    actions = { update-props = { api.alsa.disable-mmap = true } } }
+]
+```
+
+`use-acp=false` yields the sink
+`alsa_output…ahub1_mach…playback.0.0` (`object.path alsa:pcm:HDMI:0:playback`),
+which `hdmi_sense` elects on cable connect.
+
+**`disable-mmap=true` is mandatory, not an optimisation.** The sunxi_v2 AHUB
+dmaengine PCM advertises MMAP, but MMAP playback on the AHUB → dw-hdmi path
+**hard-hangs the SoC**; the 16 s `sunxi-wdt` watchdog then resets the board.
+RW access is stable (verified through repeated open/close and sustained
+playback). Do **not** force a sample format — let PipeWire negotiate; with the
+Fix 11 clock correct, S16_LE and S32_LE both play at correct speed.
+
+**Overlay location:**
+`soc/allwinner-h700/mainline/rootfs-overlay/usr/share/wireplumber/wireplumber.conf.d/91-panicos-h700-ahub-hdmi.conf`
+
+---
+
 ## Summary — Checklist for H616/H700 Audio
 
 ### HDMI audio
@@ -523,12 +643,17 @@ audio devices silently fail to appear — not because of a missing driver
 | 3 | dw-hdmi stuck in DVI mode | Patch `dw_hdmi_audio_enable()`: force `FC_INVIDCONF` HDMI mode bit unconditionally |
 | 4 | Hotplug chain never fires | Install udev rule for DRM events; replace `pgrep -x emulationstation` with `pidof` in hotplug scripts |
 | 5 | AHUB sink name not matched | Update `hdmi_sense` to match `ahub1_mach` (case-insensitive) in addition to `hdmi` |
-| 6 | HDMI audio plays at ~80–85% speed | Fix `pll_audio_sdm_table` in `ccu-sun50i-h616.c`: use VCO rates (×2); fix `clk_pll_audio_4x` DTS to bind to index 20; fix `set_pll` to rate `pll-audio-4x` directly |
+| 6 | HDMI audio plays at ~80–85% speed | Fix `pll_audio_sdm_table` in `ccu-sun50i-h616.c`: use VCO rates (×2); fix `clk_pll_audio_4x` DTS to bind to index 20; fix `set_pll` to rate `pll-audio-4x` directly — **in both the IF and the pll-fs=1 ELSE branch** (ELSE reparented to `clk_pll`, not in the mux → no sink) |
+| 11 | HDMI audio plays at exactly 2× speed (+ gaps) | Patch `sunxi_ahub_dai_set_bclk_ratio()`: write `bclk_ratio` to the CLKD BCLKDIV field, not `bclk_ratio - 2` (the `-2` landed ÷4 instead of ÷8) |
+| 12 | No HDMI sink created (audio stays on speaker) | Add `91-panicos-h700-ahub-hdmi.conf`: `api.alsa.use-acp=false` (raw sink, ACP exposes no stereo profile) + `api.alsa.disable-mmap=true` (MMAP hangs the SoC → watchdog reset) |
 
 Fixes 1–3 are kernel-level and required for any HDMI audio at all. Fix 4 is
-required for automatic routing on cable connect/disconnect. Fix 5 is
-required for `hdmi_sense` to actually switch the default sink. Fix 6 is
-required for HDMI audio to play at the correct pitch/speed.
+required for automatic routing on cable connect/disconnect. Fix 5 is required
+for `hdmi_sense` to match the sink name. Fix 6 fixes the PLL lock (and the
+ELSE-branch mux parent that otherwise prevents any sink). Fix 11 fixes the 2×
+clock (and, as a side effect, the periodic gaps). Fix 12 creates the HDMI sink
+in the first place and keeps MMAP from hanging the SoC. With all of these,
+HDMI audio plays at correct 48 kHz, gap-free, with no lockups.
 
 ### Internal codec audio (speaker / 3.5 mm headphone)
 
@@ -576,7 +701,7 @@ PI5 is already gated low by the missing Line Out switch.
 soc/allwinner-h700/mainline/linux/patches/
   0216-0152-rg35xx-2024-enable-usb-otg.patch             # Fix 9 (USB OTG mode)
   0221-fix-h616-pll-audio-hs-sdm-table-vco-rates.patch  # Fix 6 (SDM table VCO rates)
-  0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import)
+  0224-0701-armbian-h616-hdmi-audio.patch                # Fix 1 (Armbian import) + Fix 6 set_pll ELSE branch + Fix 11 (BCLKDIV 2x)
   0225-0702-h616-digital-audio-node.patch                # Fix 1 (companion)
   0226-sunxi_v2-ahub-hdmi-routing-fix.patch              # Fix 2 (AHUB routing)
   0227-dw-hdmi-force-hdmi-mode-on-audio-enable.patch     # Fix 3 (DVI mode)
@@ -585,6 +710,8 @@ soc/allwinner-h700/mainline/linux/patches/
 soc/allwinner-h700/mainline/rootfs-overlay/
   usr/share/alsa/ucm2/conf.d/sun4i-codec/
     h616-audio-codec.conf                               # Fix 10 (speaker Line Out switch)
+  usr/share/wireplumber/wireplumber.conf.d/
+    91-panicos-h700-ahub-hdmi.conf                      # Fix 12 (HDMI raw sink + disable-mmap)
 
 flavors/launcher/rootfs-overlay/
   etc/pipewire/pipewire.conf.d/50-panicos-rates.conf    # Fix 8 (44.1 kHz passthrough)
