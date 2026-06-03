@@ -323,6 +323,78 @@ dump, and `system.cpugovernor=powersave` persisted to `system.cfg`.
 
 ---
 
+## Fix 6 — "Pair Bluetooth Pads Automatically" never pairs
+
+Manual pairing worked; **auto-pair did nothing**. This is a script-side fix
+(`panicos-input-sense`), not an ES code change.
+
+### Flow
+
+```
+ES: Controller Settings -> "PAIR BLUETOOTH PADS AUTOMATICALLY"
+  -> ThreadedBluetooth::start -> ApiSystem::scanNewBluetooth()
+  -> rocknix-bluetooth trust input            (es-app/src/ApiSystem.cpp)
+```
+
+`rocknix-bluetooth trust input` writes `input` to `/run/bt_device`, then polls
+`/run/bt_status` for 60 s. The actual scanning/pairing is done by the Python
+`rocknix-bluetooth-agent` (`bluetooth-agent.service`).
+
+### Root cause
+
+The agent only scans/pairs **while the adapter is in discovery**, and discovery
+is started *only* by writing `start` to `/run/bt_discovery_control`.
+`do_devlist` (the manual "live devices" scan) does this — but **`do_trust` did
+not**. So `trust input` set the mode flag but never started a scan; the adapter
+stayed `Discovering: no` and the agent found nothing.
+
+Confirmed on-device: after `trust input`, `bluetoothctl show` → `Discovering: no`,
+and `/var/log/bluetooth-agent.log` showed only repeated `bt_dev: input`, never
+`Interface added`.
+
+### Fix
+
+`package/panicos-input-sense/files/scripts/rocknix-bluetooth` — `do_trust` now
+starts/stops discovery for auto-pair mode (mirrors `do_devlist`):
+
+```sh
+echo "${TRUSTDEV}" > "${BT_DEVICE_FILE}" || return 1
+if [ "${TRUSTDEV}" = "input" ]; then
+    echo "start" > "${BT_CONTROL_FILE}"     # begin scan
+fi
+# ... 60 s poll loop ...
+if [ "${TRUSTDEV}" = "input" ]; then
+    echo "stop" > "${BT_CONTROL_FILE}"      # end scan
+fi
+```
+
+### Controller filter (already correct — matches ROCKNIX)
+
+The agent pairs a discovered device only if its BlueZ `Icon` property
+`startswith("input")` (so audio devices like `Core400s` are skipped). During
+early discovery `Icon` is often unresolved → log shows
+`Skipping device … (no type, needed for 'input' filter)`; the device pairs once
+`Icon` resolves (e.g. `input-gaming`) via a later PropertiesChanged event. No
+change was needed here.
+
+### Notes / gotchas
+
+- `rocknix-bluetooth` and `rocknix-bluetooth-agent` are shipped by **both**
+  `panicos-input-sense` and `panicos-net-tools`; the **input-sense** copy is the
+  one that lands on-device (`CACHE_PATH=/var/lib`). Edit that one.
+- Pure script change: `pkg-rebuild PACKAGE=panicos-input-sense` + lpddr3
+  `image-variant`. No ES recompile.
+- Debug live: `bluetoothctl show | grep Discovering` and tail
+  `/var/log/bluetooth-agent.log`.
+
+### Verification (on-device)
+
+Controller in pairing mode → ES "PAIR BLUETOOTH PADS AUTOMATICALLY" → adapter
+enters discovery, agent scans, controller pairs/trusts/connects. (Committed
+`d12aa59`.)
+
+---
+
 ## ES fork
 
 These ES-side changes live on the `panicos-main` branch of
