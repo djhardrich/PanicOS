@@ -224,6 +224,14 @@ do_trust() {
     # Write device to control file
     echo "${TRUSTDEV}" > "${BT_DEVICE_FILE}" || return 1
 
+    # Start discovery for auto-pair mode. The agent only scans/pairs while
+    # discovery is active (started via the control file). do_devlist does this
+    # for manual pairing; "trust input" had no preceding scan, so without this
+    # the adapter never entered discovery and no controllers were ever found.
+    if [ "${TRUSTDEV}" = "input" ]; then
+        echo "start" > "${BT_CONTROL_FILE}"
+    fi
+
     local LAST_MSG=""
     local NEW_MSG=""
     local N=60
@@ -246,6 +254,11 @@ do_trust() {
         sleep 1
         N=$((N-1))
     done
+
+    # Stop the discovery we started for auto-pair mode.
+    if [ "${TRUSTDEV}" = "input" ]; then
+        echo "stop" > "${BT_CONTROL_FILE}"
+    fi
 
     do_save
 }
