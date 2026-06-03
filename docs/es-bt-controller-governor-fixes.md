@@ -130,6 +130,199 @@ if (!val.empty() && val != "auto" && val != "default")
 
 ---
 
+## Fix 3 — completing the governor function set (per-game / runemu path)
+
+> **Correction:** an earlier revision of this section claimed adding
+> `conservative()`/`userspace()` fixed the *System Settings* governor menu. That
+> was wrong — see **Fix 4** for the actual ES-menu root cause. The function
+> additions below are still valid, but they only matter for the **per-game**
+> governor path: `runemu.sh` applies the per-game governor by calling the value
+> as a shell function (`${CPU_GOVERNOR}`) after sourcing `099-freqfunctions`,
+> and that path *does* run in a normal shell context. Without these functions,
+> selecting `conservative`/`userspace` as a per-game governor was a no-op.
+
+### Root cause (per-game path)
+
+The governor list in the menu comes straight from the kernel via
+`ApiSystem::getAvailableCpuGovernors()`:
+
+```cpp
+// es-app/src/ApiSystem.cpp
+sh -lc "echo default; tr ' ' '\n' < /sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors" | grep [a-z]
+```
+
+On H700 that yields all six standard cpufreq governors plus `default`:
+`conservative ondemand userspace powersave performance schedutil`. The menu
+therefore *exposes* every governor type already (no ES change needed for that).
+
+`runemu.sh` applies the per-game governor by calling the value as a shell
+function after sourcing `099-freqfunctions` (`${CPU_GOVERNOR}`).
+`099-freqfunctions` defined functions only for `performance`, `ondemand`,
+`schedutil`, `powersave`, and `default` — so a per-game governor of
+**`conservative` or `userspace`** ran `conservative: command not found` and was
+a no-op.
+
+### Fix
+
+Added the two missing functions to
+`package/panicos-input-sense/files/profile.d/099-freqfunctions`, completing the
+full set of six standard cpufreq governors. DRAM (DMC) is mapped to `ondemand`
+to match the dynamic-governor convention already used by `schedutil`/`default`
+(no-op on H700, which does not export a DMC devfreq node):
+
+```bash
+conservative() {
+  set_cpu_gov conservative
+  set_dmc_gov ondemand
+}
+
+userspace() {
+  set_cpu_gov userspace
+  set_dmc_gov ondemand
+}
+```
+
+### Files changed
+
+- `package/panicos-input-sense/files/profile.d/099-freqfunctions` — added `conservative()` and `userspace()`
+
+---
+
+## Fix 4 — System Settings governor menu never applied ANY governor
+
+This is the real cause of "I pick a governor in ES and nothing changes, even
+after a reboot." It is **not** the missing functions (Fix 3) — it affected every
+governor, including `performance`/`powersave`.
+
+### Root cause
+
+`GuiMenu.cpp` applied the *System Settings* governor by handing this string to
+`Utils::Platform::runSystemCommand` (`GuiMenu.cpp:1945`):
+
+```
+/usr/bin/sh -lc ". /etc/profile.d/099-freqfunctions; <selected>"
+```
+
+`runSystemCommand` double-forks and `execl("/usr/bin/sh","sh","-c",<whole string>,NULL)`,
+running the selected value as a `099-freqfunctions` shell function in a login shell.
+
+> **Correction — this command was never even reached.** An earlier revision of
+> this section blamed login-shell sourcing failing in ES's environment. That was
+> wrong. ES *aborts* (SIGABRT) the instant you back out of the menu, inside
+> `OptionListComponent::getSelected()`, **before any save function body runs** —
+> that is the true root cause, documented in **Fix 5**. The echo change below is
+> still worth keeping (it drops the fragile login-shell + per-governor-function
+> indirection and is verified to apply every governor via a direct sysfs write),
+> but on its own it fixed nothing, because ES crashed before it ran.
+
+### Fix
+
+Replace the login-shell + function-call indirection with a direct sysfs write —
+the exact command verified working on-device (`echo <gov> | tee
+scaling_governor`). No profile sourcing, no per-governor functions, works for
+every governor the kernel lists:
+
+```cpp
+// es-app/src/guis/GuiMenu.cpp  (System Settings "DEFAULT SCALING GOVERNOR")
+std::string gov = optionsGovernors->getSelected();
+if (!gov.empty() && gov != "default")
+    Utils::Platform::runSystemCommand(
+        "echo " + gov + " | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null 2>&1",
+        "", nullptr);
+```
+
+`default` is treated as "leave the kernel default in place" (and `SystemConf`
+already excludes `default`/`auto` from persistence — Fix 2 Bug B).
+
+The menu list itself was never the problem: `getAvailableCpuGovernors()` reads
+`scaling_available_governors` directly, so all six governors are already exposed.
+
+### Files changed
+
+- `es-app/src/guis/GuiMenu.cpp` — System Settings governor now echoes to sysfs instead of sourcing `099-freqfunctions` in a login shell
+
+### Verification
+
+Rebuilt ES, confirmed the binary embeds the `tee … scaling_governor` command
+(and no longer the `099-freqfunctions` CPU call), deployed to device. Final
+confirmation is interactive (pick a governor in System Settings → governor
+changes live).
+
+---
+
+## Fix 5 — ES crashes (SIGABRT) on menu exit → the TRUE root cause
+
+This is why the governor (and any System Settings change) "did nothing, even after
+a reboot": **EmulationStation was crashing every time you backed out of the
+settings menu after changing the governor.** It predates all the above changes.
+
+### Evidence
+
+`journalctl -u panicos-es.service`:
+
+```
+panicos-es.service: Main process exited, code=dumped, status=6/ABRT
+panicos-es.service: Failed with result 'core-dump'
+emulationstation[…]: terminate called after throwing an instance of 'std::exception'
+```
+
+Backtrace (gdb, break on `std::__throw_out_of_range_fmt`, unstripped binary):
+
+```
+#1 OptionListComponent<std::string>::getSelected()
+#2 GuiMenu::openSystemSettings()::{lambda()#4}   (the governor save func)
+#3 GuiSettings::close()                           (runs save funcs on back-out)
+#4 GuiSettings::input()
+```
+
+### Root cause
+
+`OptionListComponent`'s single-select **popup pick handler** captured the
+loop-local reference `OptionListData& e = *it` (`[this, &e]`) in a lambda that
+outlives the loop, then did `getSelectedId()`-deselect + `e.selected = true`. The
+net result was that after a pick **zero** entries were left flagged `selected`.
+
+On menu close, `GuiSettings::close()` runs the governor save lambda, which calls
+`optionsGovernors->getSelected()`. `getSelected()` did `getSelectedObjects().at(0)`
+with **no guard** — `.at(0)` on an empty vector throws `std::out_of_range`. The
+`TRYCATCH` macro around the event loop (`Log.h`) logs the error and then
+**re-throws** (`throw e;`), and `main`'s event loop has no handler →
+`std::terminate` → SIGABRT. (`assert(selected.size()==1)` above the `.at(0)` is
+compiled out under `NDEBUG`.)
+
+### Fix
+
+`es-core/src/components/OptionListComponent.h`:
+
+1. **Both single-select popup pick handlers** now capture the entry **index by
+   value** and do an explicit "deselect all → select the chosen index", instead of
+   capturing a loop-local reference. Guarantees exactly one entry is selected:
+
+   ```cpp
+   size_t selIdx = (size_t)(it - mParent->mEntries.begin());
+   row.makeAcceptInputHandler([this, selIdx] {
+       for (auto& en : mParent->mEntries) en.selected = false;
+       mParent->mEntries.at(selIdx).selected = true;
+       mParent->onSelectedChanged();
+       delete this;
+   });
+   ```
+
+2. **`getSelected()` no longer aborts on an empty selection** (defense in depth) —
+   returns `firstSelected` instead of `.at(0)`-throwing.
+
+### Files changed
+
+- `es-core/src/components/OptionListComponent.h` — index-based popup selection (×2) + non-throwing `getSelected()`
+
+### Verification (on-device)
+
+Set governor to `powersave` in System Settings → back out:
+`scaling_governor` = `powersave` (changed live), `NRestarts=0` (no crash), no core
+dump, and `system.cpugovernor=powersave` persisted to `system.cfg`.
+
+---
+
 ## ES fork
 
 These ES-side changes live on the `panicos-main` branch of

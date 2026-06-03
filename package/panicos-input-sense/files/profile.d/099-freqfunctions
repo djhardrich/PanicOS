@@ -94,6 +94,11 @@ ondemand() {
   set_dmc_gov ondemand
 }
 
+conservative() {
+  set_cpu_gov conservative
+  set_dmc_gov ondemand
+}
+
 schedutil() {
   set_cpu_gov schedutil
   set_dmc_gov ondemand
@@ -102,6 +107,11 @@ schedutil() {
 powersave() {
   set_cpu_gov powersave
   set_dmc_gov powersave
+}
+
+userspace() {
+  set_cpu_gov userspace
+  set_dmc_gov ondemand
 }
 
 get_gpu_performance_level() {
