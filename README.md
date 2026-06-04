@@ -42,8 +42,8 @@ or the device vendor BSP):
 |-------------------|-----------------------|------------------------------|
 | `rg35xx-pro`      | Allwinner H700 (LPDDR4) | `make rg35xx-pro`          |
 | `rg35xx-pro-lpddr3` | Allwinner H700 (LPDDR3) | see below — **do not** `make rg35xx-pro-lpddr3` to iterate |
-| `rg353p`          | Rockchip RK3566       | `make rg353p`                |
-| `trimui-brick`    | Allwinner A133 (vendor BSP) | `make trimui-brick`    |
+| `rg353p` (Currently Broken)         | Rockchip RK3566       | `make rg353p`                |
+| `trimui-brick` (Currently Broken)   | Allwinner A133 (vendor BSP) | `make trimui-brick`    |
 
 Each writes its image to `output/<device>-<flavor>-<kernel>/images/panicos-<device>-<flavor>-<rev>.img.gz`.
 
