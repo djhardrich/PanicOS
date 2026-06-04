@@ -12,7 +12,7 @@ You may not use the material for commercial or non-commercial purposes.
 
 Copyright 2026 Stop the Panic (https://stopthepanic.com/)
 
-Original software and scripts developed by the PanicOS/Stop the Panic team are licensed under the terms of the [GNU GPL Version 2](https://choosealicense.com/licenses/gpl-2.0/).  The full license can be found in this project's licenses folder.
+Original software and scripts developed by the PanicOS/Stop the Panic team are licensed under the terms of the [GNU GPL Version 2](https://choosealicense.com/licenses/gpl-2.0/).  The full license can be found in this project's root.
 
 ### Bundled Works
 All other software is provided under each component's respective license.  These licenses can be found in the software sources or in this project's licenses folder.  Modifications to bundled software and scripts by the PanicOS team are licensed under the terms of the software being modified.
