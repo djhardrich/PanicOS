@@ -1,0 +1,18 @@
+## Licenses
+
+PanicOS is a Linux distribution that is made up of many open-source components.  Components are provided under their respective licenses.  This distribution includes components licensed for non-commercial use only.
+
+### PanicOS/Stop the Panic Logo and Branding
+
+PanicOS/Stop the Panic branding and images are property of [Stop the Panic, LLC](https://stopthepanic.com/).
+
+You may not use the material for commercial or non-commercial purposes.
+
+### PanicOS Software
+
+Copyright 2026 Stop the Panic (https://stopthepanic.com/)
+
+Original software and scripts developed by the PanicOS/Stop the Panic team are licensed under the terms of the [GNU GPL Version 2](https://choosealicense.com/licenses/gpl-2.0/).  The full license can be found in this project's licenses folder.
+
+### Bundled Works
+All other software is provided under each component's respective license.  These licenses can be found in the software sources or in this project's licenses folder.  Modifications to bundled software and scripts by the PanicOS team are licensed under the terms of the software being modified.
