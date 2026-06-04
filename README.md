@@ -1,6 +1,6 @@
 # PanicOS
 
-Linux images for ARM handhelds. Buildroot-based.
+Linux images for H700 handhelds. Buildroot-based.
 
 ## Quick start
 
