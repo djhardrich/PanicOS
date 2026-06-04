@@ -17,12 +17,20 @@ DSI_OUTPUT=$(wlr-randr | awk '/^DSI-[0-9]/ {print $1}')
 HDMI_STATE=$(cat /run/hdmi-status.last 2>/dev/null)
 
 # Returns 0 if the named wlr-randr output is currently enabled.
+#
+# NOTE: `exit 0` from a matching rule does NOT set the final status here --
+# awk transfers control to END, and an `exit` in END overrides it. The old
+# code had `END { exit 1 }`, which clobbered every success back to 1, so this
+# function ALWAYS reported "not enabled". That broke the idempotency guards
+# below: handle-hdmi-hotplug then ran `killall emulationstation` on the single
+# boot-time "disconnected" baseline event, restarting ES ~30s into every cold
+# boot. Use a `found` flag and let END alone decide the exit status.
 output_enabled() {
     wlr-randr 2>/dev/null | awk -v o="$1" '
         $1 == o { f=1 }
-        f && /Enabled: yes/ { exit 0 }
-        f && /^[^ ]/ && $1 != o { exit 1 }
-        END { exit 1 }
+        f && /Enabled: yes/ { found=1; exit }
+        f && /^[^ ]/ && $1 != o { exit }
+        END { exit (found ? 0 : 1) }
     '
 }
 
