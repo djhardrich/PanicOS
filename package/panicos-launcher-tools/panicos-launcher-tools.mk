@@ -50,6 +50,16 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	# at /usr/sbin/.
 	$(INSTALL) -D -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/panicos-portmaster-fixup.sh \
 		$(TARGET_DIR)/usr/sbin/panicos-portmaster-fixup
+	# /usr/bin/retroarch — dispatcher shim (NOT a RetroArch build). PanicOS
+	# ships no emulators; PortMaster retroarch ports (e.g. 2048.sh) fall
+	# through their CFW_NAME if/elif to raloc=/usr/bin and call
+	# /usr/bin/retroarch by absolute path. This shim execs the sandboxed
+	# RetroArch that panicos-emu grafts into /storage/emulators/retroarch,
+	# or prints a friendly "run Update Emulators" hint if it's not installed
+	# yet. Baked into the read-only squashfs because /usr can't be written
+	# at runtime.
+	$(INSTALL) -D -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/retroarch \
+		$(TARGET_DIR)/usr/bin/retroarch
 endef
 
 define PANICOS_LAUNCHER_TOOLS_INSTALL_INIT_SYSTEMD

@@ -1,0 +1,21 @@
+#!/bin/bash
+# /usr/bin/retroarch — PanicOS dispatcher shim (NOT a RetroArch build).
+# PanicOS ships no emulators. panicos-emu grafts a sandboxed RetroArch into
+# /storage; PortMaster retroarch ports call /usr/bin/retroarch, so this shim
+# locates the installed sandbox build and execs it with the right runtime.
+#
+# Override the location with PANICOS_RETROARCH if a future provider differs.
+SANDBOX="${PANICOS_RETROARCH_DIR:-/storage/emulators/retroarch}"
+RA="${PANICOS_RETROARCH:-$SANDBOX/bin/retroarch}"
+if [ ! -x "$RA" ]; then
+  echo "RetroArch is not installed on PanicOS." >&2
+  echo "Open Ports > 'Update Emulators' to install it (panicos-emu)." >&2
+  sleep 5
+  exit 127
+fi
+# Mirror panicos-emu's sandbox runtime (config/retroarch.sh):
+#   - lib closure first on the search path
+#   - H700/Panfrost packing quirk
+export LD_LIBRARY_PATH="$SANDBOX/lib:/usr/lib:/lib:${LD_LIBRARY_PATH}"
+export PAN_MESA_DEBUG="${PAN_MESA_DEBUG:-forcepack}"
+exec "$RA" "$@"
