@@ -1,0 +1,310 @@
+#!/usr/bin/env python3
+# panicos-hid-gamepad — expose the handheld's physical controls to a USB host
+# as a standard USB HID gamepad, over USB gadget (configfs f_hid).
+#
+# Requires a kernel with CONFIG_USB_CONFIGFS_F_HID=y (f_hid). On the H700
+# (rg35xx-pro) the controls come from the rocknix-singleadc-joypad evdev node
+# "H700 Gamepad" (/dev/input/eventN). We read evdev events and forward them as
+# 7-byte HID gamepad reports to /dev/hidgN.
+#
+# HID report (7 bytes):
+#   [0] X    int8  (-127..127)  left stick X
+#   [1] Y    int8                left stick Y
+#   [2] Rx   int8                right stick X
+#   [3] Ry   int8                right stick Y
+#   [4] hat  low nibble 0..7 (8=N..) / 0xF = centred, high nibble padding
+#   [5] buttons 1-8  (bitfield)
+#   [6] buttons 9-16 (bitfield)
+#
+# Usage:
+#   panicos-hid-gamepad            # set up gadget + run bridge (Ctrl-C to stop)
+#   panicos-hid-gamepad --teardown # remove the gadget and exit
+
+import ctypes
+import fcntl
+import os
+import struct
+import sys
+import time
+import glob
+
+GADGET = "/sys/kernel/config/usb_gadget/hidpad"
+UDC_DIR = "/sys/class/udc"
+GAMEPAD_NAME = b"H700 Gamepad"
+
+# evdev event: struct input_event { timeval(2*long) time; __u16 type; __u16 code; __s32 value; }
+# On arm64, long is 8 bytes -> 16 bytes timeval + 2+2+4 = 24 bytes total.
+EV_FORMAT = "llHHi"
+EV_SIZE = struct.calcsize(EV_FORMAT)
+EV_KEY = 0x01
+EV_ABS = 0x03
+
+# HID report descriptor: Gamepad, 4 axes (X,Y,Rx,Ry), 1 hat, 16 buttons.
+REPORT_DESC = bytes([
+    0x05, 0x01,        # Usage Page (Generic Desktop)
+    0x09, 0x05,        # Usage (Gamepad)
+    0xA1, 0x01,        # Collection (Application)
+    0x05, 0x01,        #   Usage Page (Generic Desktop)
+    0x09, 0x01,        #   Usage (Pointer)
+    0xA1, 0x00,        #   Collection (Physical)
+    0x09, 0x30,        #     Usage (X)
+    0x09, 0x31,        #     Usage (Y)
+    0x09, 0x33,        #     Usage (Rx)
+    0x09, 0x34,        #     Usage (Ry)
+    0x15, 0x81,        #     Logical Minimum (-127)
+    0x25, 0x7F,        #     Logical Maximum (127)
+    0x75, 0x08,        #     Report Size (8)
+    0x95, 0x04,        #     Report Count (4)
+    0x81, 0x02,        #     Input (Data,Var,Abs)
+    0xC0,              #   End Collection
+    0x09, 0x39,        #   Usage (Hat switch)
+    0x15, 0x00,        #   Logical Minimum (0)
+    0x25, 0x07,        #   Logical Maximum (7)
+    0x35, 0x00,        #   Physical Minimum (0)
+    0x46, 0x3B, 0x01,  #   Physical Maximum (315)
+    0x65, 0x14,        #   Unit (Eng Rot: Angular Pos)
+    0x75, 0x04,        #   Report Size (4)
+    0x95, 0x01,        #   Report Count (1)
+    0x81, 0x42,        #   Input (Data,Var,Abs,Null)
+    0x65, 0x00,        #   Unit (None)
+    0x75, 0x04,        #   Report Size (4)
+    0x95, 0x01,        #   Report Count (1)
+    0x81, 0x03,        #   Input (Const,Var,Abs) padding
+    0x05, 0x09,        #   Usage Page (Button)
+    0x19, 0x01,        #   Usage Minimum (Button 1)
+    0x29, 0x10,        #   Usage Maximum (Button 16)
+    0x15, 0x00,        #   Logical Minimum (0)
+    0x25, 0x01,        #   Logical Maximum (1)
+    0x75, 0x01,        #   Report Size (1)
+    0x95, 0x10,        #   Report Count (16)
+    0x81, 0x02,        #   Input (Data,Var,Abs)
+    0xC0,              # End Collection
+])
+REPORT_LEN = 7
+
+# evdev keycode -> HID button index (1-based).
+BTN_MAP = {
+    0x130: 1,   # BTN_SOUTH  (A)
+    0x131: 2,   # BTN_EAST   (B)
+    0x133: 3,   # BTN_NORTH  (X)
+    0x134: 4,   # BTN_WEST   (Y)
+    0x136: 5,   # BTN_TL     (L1)
+    0x137: 6,   # BTN_TR     (R1)
+    0x138: 7,   # BTN_TL2    (L2)
+    0x139: 8,   # BTN_TR2    (R2)
+    0x13a: 9,   # BTN_SELECT
+    0x13b: 10,  # BTN_START
+    0x13c: 11,  # BTN_MODE   (Guide)
+    0x13d: 12,  # BTN_THUMBL
+    0x13e: 13,  # BTN_THUMBR
+}
+# D-pad buttons -> hat direction flags.
+DPAD = {0x220: "up", 0x221: "down", 0x222: "left", 0x223: "right"}
+# evdev ABS code -> report axis index.
+AXIS_MAP = {0x00: 0, 0x01: 1, 0x03: 2, 0x04: 3}
+AXIS_RANGE = 1800  # |min|, |max| from EVIOCGABS
+
+
+def write(path, data):
+    with open(path, "w") as f:
+        f.write(data)
+
+
+def find_gamepad():
+    for path in sorted(glob.glob("/dev/input/event*")):
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            continue
+        try:
+            name = bytearray(256)
+            # EVIOCGNAME(len)
+            EVIOCGNAME = (2 << 30) | (256 << 16) | (ord("E") << 8) | 0x06
+            fcntl.ioctl(fd, EVIOCGNAME, name, True)
+            if name.split(b"\0")[0] == GAMEPAD_NAME:
+                return path
+        except OSError:
+            pass
+        finally:
+            os.close(fd)
+    return None
+
+
+def first_udc():
+    udcs = os.listdir(UDC_DIR)
+    if not udcs:
+        raise RuntimeError("no UDC available under %s" % UDC_DIR)
+    return udcs[0]
+
+
+def teardown():
+    if not os.path.isdir(GADGET):
+        return
+    try:
+        write(GADGET + "/UDC", "\n")
+    except OSError:
+        pass
+    # unlink function from config, then remove dirs in reverse order
+    for link in glob.glob(GADGET + "/configs/*/hid.*"):
+        try:
+            os.unlink(link)
+        except OSError:
+            pass
+    for d in glob.glob(GADGET + "/configs/*/strings/*"):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+    for d in glob.glob(GADGET + "/configs/*"):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+    for d in glob.glob(GADGET + "/functions/*"):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+    for d in glob.glob(GADGET + "/strings/*"):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+    try:
+        os.rmdir(GADGET)
+    except OSError:
+        pass
+
+
+def setup():
+    if not os.path.isdir("/sys/kernel/config/usb_gadget"):
+        raise RuntimeError("configfs usb_gadget not mounted")
+    if not os.path.exists("/sys/module/usb_f_hid") and \
+       not glob.glob("/sys/kernel/config/usb_gadget/*/functions"):
+        pass  # f_hid may be builtin; the mkdir below is the real test
+    teardown()
+    os.makedirs(GADGET)
+    write(GADGET + "/idVendor", "0x1209")      # pid.codes community VID
+    write(GADGET + "/idProduct", "0x0001")
+    write(GADGET + "/bcdDevice", "0x0100")
+    write(GADGET + "/bcdUSB", "0x0200")
+    os.makedirs(GADGET + "/strings/0x409")
+    write(GADGET + "/strings/0x409/manufacturer", "PanicOS")
+    write(GADGET + "/strings/0x409/product", "H700 Gamepad")
+    write(GADGET + "/strings/0x409/serialnumber", "panicos-hidpad-0001")
+
+    func = GADGET + "/functions/hid.usb0"
+    try:
+        os.makedirs(func)
+    except OSError as e:
+        raise RuntimeError(
+            "could not create hid function (%s) — kernel lacks "
+            "CONFIG_USB_CONFIGFS_F_HID?" % e)
+    write(func + "/protocol", "0")        # 0 = none (not a boot device)
+    write(func + "/subclass", "0")
+    write(func + "/report_length", str(REPORT_LEN))
+    with open(func + "/report_desc", "wb") as f:
+        f.write(REPORT_DESC)
+
+    cfg = GADGET + "/configs/c.1"
+    os.makedirs(cfg + "/strings/0x409")
+    write(cfg + "/strings/0x409/configuration", "HID Gamepad")
+    write(cfg + "/MaxPower", "250")
+    os.symlink(func, cfg + "/hid.usb0")
+
+    udc = first_udc()
+    write(GADGET + "/UDC", udc)
+    print("hidpad gadget bound to UDC %s" % udc)
+
+    # Wait for /dev/hidgN to appear.
+    for _ in range(50):
+        nodes = sorted(glob.glob("/dev/hidg*"))
+        if nodes:
+            return nodes[-1]
+        time.sleep(0.1)
+    raise RuntimeError("/dev/hidg* did not appear after binding UDC")
+
+
+def scale_axis(v):
+    s = int(round(v * 127.0 / AXIS_RANGE))
+    return max(-127, min(127, s))
+
+
+# hat lookup keyed by (up,right,down,left)
+HAT = {
+    (1, 0, 0, 0): 0, (1, 1, 0, 0): 1, (0, 1, 0, 0): 2, (0, 1, 1, 0): 3,
+    (0, 0, 1, 0): 4, (0, 0, 1, 1): 5, (0, 0, 0, 1): 6, (1, 0, 0, 1): 7,
+}
+
+
+def run():
+    evpath = find_gamepad()
+    if not evpath:
+        raise RuntimeError('evdev node for "%s" not found' %
+                           GAMEPAD_NAME.decode())
+    print("reading controls from %s" % evpath)
+    hidpath = setup()
+    print("forwarding HID reports to %s" % hidpath)
+
+    axes = [0, 0, 0, 0]
+    buttons = 0
+    dpad = {"up": 0, "down": 0, "left": 0, "right": 0}
+
+    evfd = open(evpath, "rb", buffering=0)
+    hidfd = open(hidpath, "wb", buffering=0)
+
+    def send():
+        d = (dpad["up"], dpad["right"], dpad["down"], dpad["left"])
+        hat = HAT.get(d, 0xF)
+        report = struct.pack(
+            "<bbbbBBB",
+            axes[0], axes[1], axes[2], axes[3],
+            hat & 0x0F,
+            buttons & 0xFF,
+            (buttons >> 8) & 0xFF,
+        )
+        try:
+            hidfd.write(report)
+        except OSError as e:
+            # ESHUTDOWN/EAGAIN when host not listening — ignore, keep running
+            if e.errno not in (108, 11):
+                raise
+
+    send()  # initial neutral report
+    while True:
+        data = evfd.read(EV_SIZE)
+        if not data or len(data) < EV_SIZE:
+            continue
+        _, _, etype, code, value = struct.unpack(EV_FORMAT, data)
+        if etype == EV_KEY:
+            if code in BTN_MAP:
+                bit = BTN_MAP[code] - 1
+                if value:
+                    buttons |= (1 << bit)
+                else:
+                    buttons &= ~(1 << bit)
+            elif code in DPAD:
+                dpad[DPAD[code]] = 1 if value else 0
+            else:
+                continue
+            send()
+        elif etype == EV_ABS:
+            if code in AXIS_MAP:
+                axes[AXIS_MAP[code]] = scale_axis(value)
+                send()
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--teardown":
+        teardown()
+        print("hidpad gadget removed")
+        return
+    try:
+        run()
+    except KeyboardInterrupt:
+        print("\nstopping, tearing down gadget")
+        teardown()
+
+
+if __name__ == "__main__":
+    main()
