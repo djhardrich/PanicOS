@@ -20,6 +20,7 @@ image boot.vfat {
 			"panicos-active.cfg",
 			"panicos-wifi.cfg",
 			"panicos-modules.tar.gz",
+${PANICOS_RT_FILES}
 			"${PANICOS_OUTPUT_NAME}.squashfs",
 		}
 	}
