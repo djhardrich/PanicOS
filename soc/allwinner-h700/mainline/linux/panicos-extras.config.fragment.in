@@ -25,13 +25,8 @@ CONFIG_INITRAMFS_COMPRESSION_GZIP=y
 CONFIG_EXTRA_FIRMWARE=""
 CONFIG_EXTRA_FIRMWARE_DIR=""
 
-# PREEMPT_RT: full real-time preemption. Mainlined in 6.12; we're on
-# 7.0.2 so it's a Kconfig-only switch (no patch series to apply).
-# Mutually exclusive with CONFIG_PREEMPT (regular voluntary preemption),
-# so unset that. Priority inheritance + threaded IRQ handlers + spinlock
-# rework are the user-visible changes; overhead is small enough to keep
-# on for all flavors so RT-sensitive workloads (PHT audio threads etc)
-# get deterministic scheduling without a separate kernel build.
-# CONFIG_PREEMPT is not set
-# CONFIG_PREEMPT_DYNAMIC is not set
-CONFIG_PREEMPT_RT=y
+# Preemption model: base/default kernel uses CONFIG_PREEMPT=y (low-latency
+# desktop), matching ROCKNIX. The opt-in PREEMPT_RT kernel is built as a
+# separate Image by `make kernel-variant ... RT=1`, which merges
+# panicos-rt.config.fragment on top of this config. Do NOT set
+# CONFIG_PREEMPT_RT here — that would make every build RT again.

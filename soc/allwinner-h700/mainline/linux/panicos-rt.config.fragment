@@ -1,0 +1,8 @@
+# RT variant delta — merged onto the base kernel .config by
+# `make kernel-variant DEVICE=... RT=1`. Produces a second kernel image
+# (Image-rt) whose modules live under /usr/lib/modules/<ver>-rt so they never
+# collide with the non-RT default's /usr/lib/modules/<ver> tree.
+CONFIG_LOCALVERSION="-rt"
+# CONFIG_PREEMPT is not set
+# CONFIG_PREEMPT_DYNAMIC is not set
+CONFIG_PREEMPT_RT=y
