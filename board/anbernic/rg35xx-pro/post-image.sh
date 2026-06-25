@@ -52,12 +52,32 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro/panicos-active.cfg" \
 # Use extlinux.conf (plain text, editable on the FAT without reflashing)
 # rather than a compiled boot.scr. U-Boot's distro_bootcmd scans for
 # /extlinux/extlinux.conf via CONFIG_CMD_SYSBOOT — same path ROCKNIX uses.
+#
+# Two kernels can coexist on the FAT: /Image (default, non-RT) and
+# /Image-rt (opt-in PREEMPT_RT, dropped in by `make kernel-variant`). When
+# Image-rt is present we emit a second LABEL and a DEFAULT/TIMEOUT header so
+# Switch-Kernel.sh can flip the active kernel by rewriting the DEFAULT line.
+APPEND_LINE="console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300 rtw88_core.disable_lps_deep=Y"
 mkdir -p "$BINARIES_DIR/extlinux"
-cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
+RT_LABEL=""
+export PANICOS_RT_FILES=""
+if [ -f "$BINARIES_DIR/Image-rt" ]; then
+    RT_LABEL=$(printf '\n\nLABEL PanicOS-RT\n  LINUX /Image-rt\n  FDT /dtb.img\n  APPEND %s' "$APPEND_LINE")
+    # Tab-indented to match the genimage.cfg.in files block.
+    PANICOS_RT_FILES=$(printf '\t\t\t"Image-rt",\n\t\t\t"panicos-modules-rt.tar.gz",')
+    export PANICOS_RT_FILES
+fi
+# DEFAULT/TIMEOUT are emitted unconditionally (even on base images with no
+# Image-rt) so Switch-Kernel.sh always has a DEFAULT line to rewrite. With a
+# single LABEL it's a harmless no-op; TIMEOUT 0 boots the default immediately.
+cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<EOF
+DEFAULT PanicOS
+TIMEOUT 0
+
 LABEL PanicOS
   LINUX /Image
   FDT /dtb.img
-  APPEND console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300 rtw88_core.disable_lps_deep=Y
+  APPEND ${APPEND_LINE}${RT_LABEL}
 EOF
 
 # Drop the squashfs into BINARIES_DIR with its public name. genimage's
@@ -81,8 +101,11 @@ sed -i "s|^IMAGE=.*|IMAGE=${PANICOS_OUTPUT_NAME}.squashfs|" \
 # lack /lib/modules/<kver> and auto-injects this tarball into their overlayfs
 # upper layer on first boot, so device drivers (wifi, joypad, etc.) work
 # without baking modules into every squashfs variant.
+# Base (default, non-RT) module tarball only. Exclude any linux-*-rt build
+# tree so the RT kernel's modules never end up in panicos-modules.tar.gz.
 KVER=$(ls "${BUILD_DIR:-$(dirname "$BINARIES_DIR")/build}/linux-"*/include/config/kernel.release 2>/dev/null \
-    | sort -V | tail -1 | xargs cat 2>/dev/null || true)
+    | grep -v -- '-rt/' \
+    | sort -V | tail -1 | xargs -r cat 2>/dev/null || true)
 if [ -n "$KVER" ]; then
     MODULES_SRC="${TARGET_DIR}/usr/lib/modules/$KVER"
     FW_SRC="${TARGET_DIR}/usr/lib/firmware"
