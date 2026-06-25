@@ -546,4 +546,66 @@ image-variant:
 	  HOST_DIR="$$BASE_OUT/host" \
 	  "$$BOARD_DIR/post-image.sh" "$$VAR_OUT/images" "$$BOARD_DIR/genimage.cfg.in"
 
+# kernel-variant: build a SECOND kernel (PREEMPT_RT) from BASE's already-built,
+# patched, configured kernel tree and fold it into BASE's image FAT — yielding
+# ONE image that carries two kernels: /Image (default, non-RT) and /Image-rt
+# (opt-in RT). Reuses BASE's cross-toolchain and kernel source; only the
+# preemption Kconfig + LOCALVERSION differ. Kernel rebuild only (~10-20 min).
+#
+# The RT tree is built at $OUT/kernel-rt/ (NOT under $OUT/build/) so
+# post-image.sh's linux-* module glob keeps producing a non-RT base tarball.
+#
+# Usage (after a base build):
+#   make rg35xx-pro FLAVOR=launcher
+#   make kernel-variant DEVICE=rg35xx-pro FLAVOR=launcher RT=1
+.PHONY: kernel-variant
+kernel-variant:
+	@test -n "$(DEVICE)" || (echo "DEVICE not set" >&2; exit 1)
+	@test -n "$(RT)"     || (echo "RT not set (use RT=1 for the PREEMPT_RT variant)" >&2; exit 1)
+	@FL="$${FLAVOR:-minimal}"; K="$(KERNEL)"; \
+	SOC="$(call _device_soc,$(DEVICE))"; \
+	if [ -n "$$SOC" ] && [ -z "$$K" ]; then K="mainline"; fi; \
+	OUT="$(OUTPUT_BASE)/$(DEVICE)-$$FL$${K:+-$$K}"; \
+	test -d "$$OUT/images" || (echo "no base build at $$OUT — run 'make $(DEVICE) FLAVOR=$$FL' first" >&2; exit 1); \
+	RT_FRAG="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/panicos-rt.config.fragment"; \
+	test -f "$$RT_FRAG" || (echo "no RT fragment at $$RT_FRAG" >&2; exit 1); \
+	BASE_KSRC=""; \
+	for d in "$$OUT/build"/linux-*/; do \
+		d="$${d%/}"; \
+		case "$$d" in *-rt) continue;; esac; \
+		if [ -f "$$d/.config" ] && [ -f "$$d/include/config/kernel.release" ] && [ -f "$$d/arch/arm64/boot/Image" ]; then BASE_KSRC="$$d"; break; fi; \
+	done; \
+	test -n "$$BASE_KSRC" || (echo "no built kernel dir under $$OUT/build (need .config + arch/arm64/boot/Image) — base build incomplete?" >&2; exit 1); \
+	RT_KSRC="$$OUT/kernel-rt/$$(basename $$BASE_KSRC)"; \
+	echo ">>> kernel-variant: cloning $$BASE_KSRC -> $$RT_KSRC"; \
+	rm -rf "$$OUT/kernel-rt"; mkdir -p "$$OUT/kernel-rt"; \
+	rsync -a --delete "$$BASE_KSRC/" "$$RT_KSRC/"; \
+	export PATH="$$OUT/host/bin:$$OUT/host/sbin:$$PATH"; \
+	export ARCH=arm64 CROSS_COMPILE="aarch64-buildroot-linux-gnu-"; \
+	echo ">>> kernel-variant: merging RT fragment into .config"; \
+	( cd "$$RT_KSRC" && ./scripts/kconfig/merge_config.sh -m .config "$$RT_FRAG" && $(MAKE) olddefconfig ); \
+	grep -q '^CONFIG_PREEMPT_RT=y' "$$RT_KSRC/.config" || (echo "RT merge failed: CONFIG_PREEMPT_RT not set in $$RT_KSRC/.config" >&2; exit 1); \
+	grep -q '^CONFIG_LOCALVERSION="-rt"' "$$RT_KSRC/.config" || (echo "RT merge failed: CONFIG_LOCALVERSION not -rt in $$RT_KSRC/.config" >&2; exit 1); \
+	echo ">>> kernel-variant: building RT kernel"; \
+	$(MAKE) -C "$$RT_KSRC" -j$$(nproc) Image modules; \
+	REL=$$(cat "$$RT_KSRC/include/config/kernel.release"); \
+	echo "$$REL" | grep -q -- '-rt$$' || (echo "built RT kernel.release ($$REL) missing -rt suffix — LOCALVERSION not applied" >&2; exit 1); \
+	echo ">>> kernel-variant: built RT kernel $$REL"; \
+	STAGING="$$OUT/kernel-rt/modstaging"; rm -rf "$$STAGING"; mkdir -p "$$STAGING/usr"; \
+	$(MAKE) -C "$$RT_KSRC" INSTALL_MOD_PATH="$$STAGING/usr" DEPMOD="$$OUT/host/sbin/depmod" modules_install; \
+	echo ">>> kernel-variant: harvesting Image-rt + module tarball"; \
+	cp "$$RT_KSRC/arch/arm64/boot/Image" "$$OUT/images/Image-rt"; \
+	tar -czf "$$OUT/images/panicos-modules-rt.tar.gz" -C "$$STAGING" "usr/lib/modules/$$REL"; \
+	echo ">>> kernel-variant: re-running post-image to fold both kernels into the FAT"; \
+	BOARD_DIR=$$(find $(PANICOS_ROOT)/board -mindepth 3 -maxdepth 3 -path "*/$(DEVICE)/Config.in" -printf '%h\n' 2>/dev/null | head -1); \
+	test -n "$$BOARD_DIR" || (echo "no board dir for $(DEVICE)" >&2; exit 1); \
+	cd $(PANICOS_ROOT) && \
+	  BR2_EXTERNAL_PANICOS_PATH=$(PANICOS_ROOT) \
+	  BR2_CONFIG="$$OUT/.config" \
+	  BINARIES_DIR="$$OUT/images" \
+	  BUILD_DIR="$$OUT/build" \
+	  TARGET_DIR="$$OUT/target" \
+	  HOST_DIR="$$OUT/host" \
+	  "$$BOARD_DIR/post-image.sh" "$$OUT/images" "$$BOARD_DIR/genimage.cfg.in"
+
 endif
