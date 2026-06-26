@@ -109,6 +109,27 @@ done
 flavor_count=$(echo $flavors | wc -w)
 
 if [ -x /sbin/panicos-mbselect ] && [ "$flavor_count" -gt 1 ]; then
+    # Load the gamepad driver so the menu is navigable. The non-RT and RT
+    # kernels need different-vermagic module builds, so pull the .ko matching
+    # the RUNNING kernel from the boot FAT's module tarball (/boot is already
+    # mounted here). This makes mbselect respond to the joypad no matter which
+    # kernel U-Boot booted.
+    _mbkver=$(uname -r)
+    case "$_mbkver" in
+        *-rt) _mbtar=/boot/panicos-modules-rt.tar.gz ;;
+        *)    _mbtar=/boot/panicos-modules.tar.gz ;;
+    esac
+    if [ -f "$_mbtar" ]; then
+        mkdir -p /mbmod
+        tar -xzf "$_mbtar" -C /mbmod \
+            "usr/lib/modules/$_mbkver/updates/rocknix-joypad.ko" \
+            "usr/lib/modules/$_mbkver/updates/rocknix-singleadc-joypad.ko" 2>/dev/null || true
+        for _ko in /mbmod/usr/lib/modules/"$_mbkver"/updates/*.ko; do
+            [ -f "$_ko" ] && insmod "$_ko" 2>/dev/null || true
+        done
+    fi
+    # Fallback: any joypad .ko bundled directly in the initramfs (matches
+    # whichever kernel the cpio was built against).
     for _ko in /*.ko; do
         [ -f "$_ko" ] && insmod "$_ko" 2>/dev/null || true
     done
