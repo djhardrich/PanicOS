@@ -186,7 +186,14 @@ mount --bind "$OV_BASE/storage" /storage \
 # Sentinel prevents re-injection on every boot; new kver busts it automatically.
 _kver=$(uname -r)
 _sentinel="$OV_BASE/upper/.panicos-modules-$_kver"
-_modules_tar="/boot/panicos-modules.tar.gz"
+# Match the running kernel: the RT kernel (uname -r ends in -rt) has its own
+# module tree shipped as panicos-modules-rt.tar.gz; the non-RT default uses
+# panicos-modules.tar.gz. Picking the wrong one leaves the kernel with no
+# loadable modules (vermagic mismatch).
+case "$_kver" in
+    *-rt) _modules_tar="/boot/panicos-modules-rt.tar.gz" ;;
+    *)    _modules_tar="/boot/panicos-modules.tar.gz" ;;
+esac
 if [ ! -d "/lower/lib/modules/$_kver" ] && \
    [ ! -d "/lower/usr/lib/modules/$_kver" ] && \
    [ -f "$_modules_tar" ] && \
