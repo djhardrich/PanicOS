@@ -596,6 +596,9 @@ kernel-variant:
 	echo ">>> kernel-variant: built RT kernel $$REL"; \
 	STAGING="$$OUT/kernel-rt/modstaging"; rm -rf "$$STAGING"; mkdir -p "$$STAGING/usr"; \
 	$(MAKE) -C "$$RT_KSRC" INSTALL_MOD_PATH="$$STAGING/usr" DEPMOD="$$OUT/host/sbin/depmod" modules_install; \
+	echo ">>> kernel-variant: rebuilding out-of-tree kernel modules against RT kernel"; \
+	$(PANICOS_ROOT)/scripts/build-rt-extmodules.sh \
+	  "$$RT_KSRC" "$$OUT/build" "$$STAGING/usr" "$$REL" "$$OUT/host/sbin/depmod"; \
 	echo ">>> kernel-variant: harvesting Image-rt + module tarball"; \
 	cp "$$RT_KSRC/arch/arm64/boot/Image" "$$OUT/images/Image-rt"; \
 	tar -czf "$$OUT/images/panicos-modules-rt.tar.gz" -C "$$STAGING" "usr/lib/modules/$$REL"; \
