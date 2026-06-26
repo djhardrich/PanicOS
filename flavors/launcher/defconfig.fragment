@@ -420,6 +420,18 @@ BR2_PACKAGE_FLAC=y
 # giflib + libtiff: SDL2_image dlopens these for GIF/TIFF image loading.
 BR2_PACKAGE_GIFLIB=y
 BR2_PACKAGE_LIBTIFF=y
+# X11 client libraries — some ports' binaries (and the SDL2 they bundle) are
+# dynamically linked against X11 and fail to load without these, even though we
+# run Wayland/KMSDRM with no X server (e.g. moddj-mk needs libXcursor.so.1).
+# Standard SDL2-X11 client set; libX11/libXext/libXrender/libXfixes/libxcb/
+# libXau/libXdmcp/xorgproto are auto-selected. Mesa GLX is a separate opt-in we
+# do NOT enable, so the Wayland/EGL stack is unaffected.
+BR2_PACKAGE_XORG7=y
+BR2_PACKAGE_XLIB_LIBXCURSOR=y
+BR2_PACKAGE_XLIB_LIBXI=y
+BR2_PACKAGE_XLIB_LIBXRANDR=y
+BR2_PACKAGE_XLIB_LIBXSCRNSAVER=y
+BR2_PACKAGE_XLIB_LIBXXF86VM=y
 # panicos-libglu — GLU utility library (gluPerspective, gluLookAt, tessellation, etc.).
 # Uses our panicos-gl4es as the libGL provider; bypasses the buildroot libgl virtual
 # package (which needs X11/GLX) by depending on panicos-gl4es directly.
