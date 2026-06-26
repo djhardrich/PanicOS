@@ -41,6 +41,10 @@ define PANICOS_LAUNCHER_TOOLS_INSTALL_TARGET_CMDS
 	# PanicOS-SquashFS-Install.sh — on-device toggle for the Debian multiboot flavor.
 	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/PanicOS-SquashFS-Install.sh \
 		$(TARGET_DIR)/usr/share/panicos-launcher/tools/PanicOS-SquashFS-Install.sh
+	# Switch-Kernel.sh — flip non-RT default <-> PREEMPT_RT by rewriting the
+	# extlinux DEFAULT label on the PANICOS FAT (no auto-reboot).
+	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/Switch-Kernel.sh \
+		$(TARGET_DIR)/usr/share/panicos-launcher/tools/Switch-Kernel.sh
 	# Rescan-HDMI-Audio.sh — manual re-detect for sinks like Xreal Air glasses
 	# that don't advertise audio in EDID until the user enables it physically.
 	$(INSTALL) -m 0755 $(PANICOS_LAUNCHER_TOOLS_PKGDIR)/files/Rescan-HDMI-Audio.sh \
