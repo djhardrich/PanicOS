@@ -47,12 +47,31 @@ cp "$BR2_EXTERNAL_PANICOS_PATH/board/anbernic/rg35xx-pro-lpddr3/panicos-active.c
    "$BINARIES_DIR/panicos-active.cfg"
 
 # Switch to extlinux.conf (plain text editable on the FAT) like rg35xx-pro.
+# Two kernels can coexist on the FAT: /Image (default, non-RT) and /Image-rt
+# (opt-in PREEMPT_RT). image-variant symlinks Image-rt + the RT module tarball
+# in from the base build, so when present we emit a second LABEL + a
+# DEFAULT/TIMEOUT header for Switch-Kernel.sh to flip.
+APPEND_LINE="console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300 rtw88_core.disable_lps_deep=Y"
 mkdir -p "$BINARIES_DIR/extlinux"
-cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<'EOF'
+RT_LABEL=""
+export PANICOS_RT_FILES=""
+if [ -f "$BINARIES_DIR/Image-rt" ]; then
+    RT_LABEL=$(printf '\n\nLABEL PanicOS-RT\n  LINUX /Image-rt\n  FDT /dtb.img\n  APPEND %s' "$APPEND_LINE")
+    # Tab-indented to match the genimage.cfg.in files block.
+    PANICOS_RT_FILES=$(printf '\t\t\t"Image-rt",\n\t\t\t"panicos-modules-rt.tar.gz",')
+    export PANICOS_RT_FILES
+fi
+# DEFAULT/TIMEOUT are emitted unconditionally (even with no Image-rt) so
+# Switch-Kernel.sh always has a DEFAULT line to rewrite; harmless no-op with a
+# single LABEL.
+cat > "$BINARIES_DIR/extlinux/extlinux.conf" <<EOF
+DEFAULT PanicOS
+TIMEOUT 0
+
 LABEL PanicOS
   LINUX /Image
   FDT /dtb.img
-  APPEND console=ttyS0,115200 console=tty1 quiet loglevel=3 panic=0 pause_on_oops=300 rtw88_core.disable_lps_deep=Y
+  APPEND ${APPEND_LINE}${RT_LABEL}
 EOF
 
 GITREV="$(git -C "$BR2_EXTERNAL_PANICOS_PATH" describe --always --dirty 2>/dev/null || echo unknown)"
