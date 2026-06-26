@@ -241,8 +241,13 @@ kernel-variant:
 	test -d "$$OUT/images" || (echo "no base build at $$OUT — run 'make $(DEVICE) FLAVOR=$$FL' first" >&2; exit 1); \
 	RT_FRAG="$(PANICOS_ROOT)/soc/$$SOC/$$K/linux/panicos-rt.config.fragment"; \
 	test -f "$$RT_FRAG" || (echo "no RT fragment at $$RT_FRAG" >&2; exit 1); \
-	BASE_KSRC=$$(find "$$OUT/build" -maxdepth 1 -type d -name 'linux-*' ! -name '*-rt' | head -1); \
-	test -n "$$BASE_KSRC" || (echo "no kernel build dir under $$OUT/build — base build incomplete?" >&2; exit 1); \
+	BASE_KSRC=""; \
+	for d in "$$OUT/build"/linux-*/; do \
+		d="$${d%/}"; \
+		case "$$d" in *-rt) continue;; esac; \
+		if [ -f "$$d/.config" ] && [ -f "$$d/include/config/kernel.release" ] && [ -f "$$d/arch/arm64/boot/Image" ]; then BASE_KSRC="$$d"; break; fi; \
+	done; \
+	test -n "$$BASE_KSRC" || (echo "no built kernel dir under $$OUT/build (need .config + arch/arm64/boot/Image) — base build incomplete?" >&2; exit 1); \
 	RT_KSRC="$$OUT/kernel-rt/$$(basename $$BASE_KSRC)"; \
 	echo ">>> kernel-variant: cloning $$BASE_KSRC -> $$RT_KSRC"; \
 	rm -rf "$$OUT/kernel-rt"; mkdir -p "$$OUT/kernel-rt"; \
@@ -251,10 +256,13 @@ kernel-variant:
 	export ARCH=arm64 CROSS_COMPILE="aarch64-buildroot-linux-gnu-"; \
 	echo ">>> kernel-variant: merging RT fragment into .config"; \
 	( cd "$$RT_KSRC" && ./scripts/kconfig/merge_config.sh -m .config "$$RT_FRAG" && $(MAKE) olddefconfig ); \
-	REL=$$(cat "$$RT_KSRC/include/config/kernel.release"); \
-	echo "$$REL" | grep -q -- '-rt$$' || (echo "RT kernel.release ($$REL) missing -rt suffix — LOCALVERSION not applied" >&2; exit 1); \
-	echo ">>> kernel-variant: building RT kernel ($$REL)"; \
+	grep -q '^CONFIG_PREEMPT_RT=y' "$$RT_KSRC/.config" || (echo "RT merge failed: CONFIG_PREEMPT_RT not set in $$RT_KSRC/.config" >&2; exit 1); \
+	grep -q '^CONFIG_LOCALVERSION="-rt"' "$$RT_KSRC/.config" || (echo "RT merge failed: CONFIG_LOCALVERSION not -rt in $$RT_KSRC/.config" >&2; exit 1); \
+	echo ">>> kernel-variant: building RT kernel"; \
 	$(MAKE) -C "$$RT_KSRC" -j$$(nproc) Image modules; \
+	REL=$$(cat "$$RT_KSRC/include/config/kernel.release"); \
+	echo "$$REL" | grep -q -- '-rt$$' || (echo "built RT kernel.release ($$REL) missing -rt suffix — LOCALVERSION not applied" >&2; exit 1); \
+	echo ">>> kernel-variant: built RT kernel $$REL"; \
 	STAGING="$$OUT/kernel-rt/modstaging"; rm -rf "$$STAGING"; mkdir -p "$$STAGING/usr"; \
 	$(MAKE) -C "$$RT_KSRC" INSTALL_MOD_PATH="$$STAGING/usr" DEPMOD="$$OUT/host/sbin/depmod" modules_install; \
 	echo ">>> kernel-variant: harvesting Image-rt + module tarball"; \
