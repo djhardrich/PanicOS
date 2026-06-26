@@ -390,6 +390,23 @@ run --set nonrt
 # Other labels untouched.
 grep -q '^LABEL PanicOS-RT$' "$CONF" || { echo "FAIL: clobbered a LABEL"; exit 1; }
 
+# Failure path: on a real device /boot is read-only until remount, and the temp
+# file lives on /boot. Simulate a write-failure location with a chmod a-w dir
+# (can't mount in a unit test). The tool must report failure AND leave DEFAULT
+# unchanged. Skipped as root (root bypasses the permission bit).
+if [ "$(id -u)" != 0 ]; then
+    RODIR="$TMP/ro"
+    mkdir -p "$RODIR"
+    cp "$CONF" "$RODIR/extlinux.conf"
+    grep -q '^DEFAULT PanicOS$' "$RODIR/extlinux.conf" || { echo "FAIL: ro test setup"; exit 1; }
+    chmod a-w "$RODIR"
+    rc=0
+    PANICOS_EXTLINUX="$RODIR/extlinux.conf" PANICOS_NO_REMOUNT=1 bash "$TOOL" --set rt >/dev/null 2>&1 || rc=$?
+    chmod u+w "$RODIR"
+    [ "$rc" -ne 0 ] || { echo "FAIL: tool reported success writing to a read-only location"; exit 1; }
+    grep -q '^DEFAULT PanicOS$' "$RODIR/extlinux.conf" || { echo "FAIL: DEFAULT changed despite write failure"; exit 1; }
+fi
+
 echo "PASS"
 ```
 
@@ -422,13 +439,21 @@ boot_ro() { [ -n "${PANICOS_NO_REMOUNT:-}" ] || mount -o remount,ro "$BOOT"; }
 current_default() { awk '/^DEFAULT /{print $2; exit}' "$EXTLINUX"; }
 has_label()       { grep -q "^LABEL $1\$" "$EXTLINUX"; }
 
-# Rewrite the single DEFAULT line to point at $1. Atomic via temp + mv.
+# Rewrite the single DEFAULT line to point at $1. Remount /boot rw FIRST (the
+# temp file lives on the FAT), write+rename inside the rw window, sync (FAT has
+# no journal), then restore ro. Returns non-zero if the write/rename failed.
 set_default() {
-    local target="$1" tmp="${EXTLINUX}.panicos-tmp"
-    sed "s|^DEFAULT .*|DEFAULT ${target}|" "$EXTLINUX" > "$tmp" || return 1
-    boot_rw
-    mv "$tmp" "$EXTLINUX"
-    boot_ro
+    local target="$1" tmp="${EXTLINUX}.panicos-tmp" rc=0
+    boot_rw || { echo "  ERROR: could not remount $BOOT read-write." >&2; return 1; }
+    if sed "s|^DEFAULT .*|DEFAULT ${target}|" "$EXTLINUX" > "$tmp" \
+         && mv "$tmp" "$EXTLINUX"; then
+        sync
+    else
+        rc=1
+    fi
+    rm -f "$tmp" 2>/dev/null
+    boot_ro || true
+    return $rc
 }
 
 # Non-interactive path for tests / scripting.
