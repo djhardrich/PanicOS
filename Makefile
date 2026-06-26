@@ -533,6 +533,9 @@ image-variant:
 	  [ -d "$$d" ] && ln -sfn "$$d" "$$VAR_OUT/images/$$(basename $$d)"; \
 	done; \
 	ln -sf "$$BASE_OUT/images/rootfs.squashfs" "$$VAR_OUT/images/rootfs.squashfs"; \
+	for f in panicos-modules.tar.gz panicos-modules-rt.tar.gz Image-rt; do \
+	  [ -e "$$BASE_OUT/images/$$f" ] && ln -sf "$$BASE_OUT/images/$$f" "$$VAR_OUT/images/$$f"; \
+	done; \
 	cp -L "$$UBOOT_VAR_BUILD/u-boot-sunxi-with-spl.bin" \
 	      "$$VAR_OUT/images/u-boot-sunxi-with-spl.bin"; \
 	cp "$$BASE_OUT/.config" "$$VAR_OUT/.config"; \
