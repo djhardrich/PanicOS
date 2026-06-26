@@ -71,10 +71,38 @@ say `panicos-rg35xx-pro` rather than `-lpddr3` — cosmetic. If you need a
 fully variant-correct rootfs, fall back to `make rg35xx-pro-lpddr3` and
 accept the cold-build time (ccache helps).
 
-Mainline-kernel builds run with `CONFIG_PREEMPT_RT=y` (mainlined in 6.12;
-we're on 7.0.1 so it's a Kconfig-only switch). Adds priority inheritance +
-threaded IRQ handlers; safe for non-RT workloads, dramatically improves
-audio/controller-poll latency for latency-sensitive kiosk apps.
+### Dual kernel (RT / non-RT)
+
+Each H700 image ships **two kernels** on the PANICOS FAT and lets you switch
+between them on the device:
+
+- **`/Image`** — the default, non-RT kernel (`CONFIG_PREEMPT`, CFS scheduler),
+  matching ROCKNIX. `uname -r` → `7.0.2`.
+- **`/Image-rt`** — an opt-in full-`PREEMPT_RT` kernel (priority inheritance,
+  threaded IRQ handlers) for latency-sensitive audio/controller workloads.
+  `uname -r` → `7.0.2-rt`.
+
+Both kernels are built from the same source with the same patch set; they
+differ only in the preemption Kconfig and `LOCALVERSION`. Their module trees
+sit side by side (`/usr/lib/modules/7.0.2` and `/usr/lib/modules/7.0.2-rt`) so
+they never collide.
+
+The base build produces the non-RT kernel. Add the RT kernel with
+`kernel-variant` (it clones the base's already-patched kernel tree, flips the
+preemption config, and folds `Image-rt` + an RT module tarball into the same
+FAT). `image-variant` then carries both kernels into U-Boot variants:
+
+```
+make rg35xx-pro FLAVOR=launcher                                      # base (non-RT)
+make kernel-variant DEVICE=rg35xx-pro FLAVOR=launcher RT=1           # add the RT kernel
+make image-variant DEVICE=rg35xx-pro-lpddr3 BASE=rg35xx-pro \        # lpddr3 inherits both
+                   FLAVOR=launcher
+```
+
+U-Boot boots whichever kernel the `DEFAULT` label in `/extlinux/extlinux.conf`
+points at (default `PanicOS` = non-RT). On the device, **Tools → Switch-Kernel**
+flips that label; reboot to apply (it does not auto-reboot). You can also edit
+`extlinux.conf` on the FAT from a PC without reflashing.
 
 ## Logging in
 

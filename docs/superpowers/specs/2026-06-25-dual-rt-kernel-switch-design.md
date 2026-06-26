@@ -149,14 +149,21 @@ TOOLS menu → Switch-Kernel.sh
   the `CONFIG_PREEMPT_RT=y` line (base becomes non-RT).
 - `soc/allwinner-h700/mainline/linux/panicos-rt.config.fragment` — **new**, RT +
   `-rt` LOCALVERSION.
-- `Makefile` — **new** `kernel-variant` target.
-- `board/anbernic/rg35xx-pro/post-image.sh` — two-LABEL extlinux, copy
-  `Image-rt`, harvest RT artifacts.
-- `board/anbernic/rg35xx-pro/genimage.cfg.in` — add `Image-rt`,
-  `panicos-modules-rt.tar.gz` to FAT.
-- `package/panicos-initramfs/.../init` — extract both module tarballs.
-- `package/panicos-launcher-tools/files/Switch-Kernel.sh` — **new** switcher.
-- `package/panicos-launcher-tools/*.mk` — install the switcher.
+- `Makefile` — **new** `kernel-variant` target; **and** `image-variant` updated
+  to symlink `Image-rt` + both module tarballs from BASE (discovered in
+  integration — variants otherwise come out non-RT-only).
+- `board/anbernic/rg35xx-pro/post-image.sh` — RT-aware two-LABEL extlinux,
+  `PANICOS_RT_FILES`, non-RT-only base module tarball.
+- `board/anbernic/rg35xx-pro/genimage.cfg.in` — add `${PANICOS_RT_FILES}` to FAT.
+- `board/anbernic/rg35xx-pro-lpddr3/post-image.sh` **and** `genimage.cfg.in` —
+  the lpddr3 board has its OWN diverged copies (NOT shared with rg35xx-pro);
+  mirror the same RT-awareness here (discovered in integration).
+- `panicos-initramfs/init` — select the module tarball by `-rt` suffix
+  (`panicos-modules-rt.tar.gz` for the RT kernel; the launcher squashfs only
+  bakes in the non-RT tree).
+- `package/panicos-launcher-tools/files/Switch-Kernel.sh` — **new** switcher
+  (+ `test-switch-kernel.sh`).
+- `package/panicos-launcher-tools/panicos-launcher-tools.mk` — install the switcher.
 
 ## Testing / verification
 
